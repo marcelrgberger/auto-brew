@@ -1,20 +1,544 @@
 {
-  "sourceLanguage" : "de",
+  "sourceLanguage" : "en",
   "strings" : {
     "AutoBrew" : {
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AutoBrew"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "AutoBrew"
-          }
-        }
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "AutoBrew" } }
+      }
+    },
+    "Back" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Retour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Indietro" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Terug" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wstecz" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Voltar" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Atrás" } }
+      }
+    },
+    "Settings" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réglages" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostazioni" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Instellingen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ustawienia" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Configurações" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ajustes" } }
+      }
+    },
+    "Settings..." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen ..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Settings..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Réglages ..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Impostazioni ..." } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Instellingen ..." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ustawienia ..." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Configurações ..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ajustes ..." } }
+      }
+    },
+    "Update Now" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jetzt aktualisieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update Now" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à jour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiorna ora" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nu bijwerken" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Aktualizuj teraz" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizar agora" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar ahora" } }
+      }
+    },
+    "Updating..." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisiere ..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Updating..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mise à jour ..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiornamento ..." } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bijwerken ..." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Aktualizowanie ..." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizando ..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizando ..." } }
+      }
+    },
+    "Check for Updates" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Updates suchen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Check for Updates" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Rechercher les mises à jour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Cerca aggiornamenti" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Controleer op updates" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Sprawdź aktualizacje" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Verificar atualizações" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Buscar actualizaciones" } }
+      }
+    },
+    "Show Log" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Protokoll anzeigen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show Log" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher le journal" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra registro" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Logboek tonen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Pokaż dziennik" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar registro" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar registro" } }
+      }
+    },
+    "Update Log" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierungsprotokoll" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update Log" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Journal de mise à jour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Registro aggiornamenti" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Updatelogboek" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Dziennik aktualizacji" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Registro de atualização" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Registro de actualización" } }
+      }
+    },
+    "Quit" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Beenden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Quit" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Quitter" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Esci" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Stop" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zakończ" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sair" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Salir" } }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bereit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Ready" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Prêt" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Pronto" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gereed" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Gotowy" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pronto" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Listo" } }
+      }
+    },
+    "Waiting for idle..." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Warte auf Leerlauf ..." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Waiting for idle..." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En attente d'inactivité ..." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In attesa di inattività ..." } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wachten op inactiviteit ..." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Oczekiwanie na bezczynność ..." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Aguardando inatividade ..." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Esperando inactividad ..." } }
+      }
+    },
+    "Running" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Läuft" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Running" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "En cours" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "In esecuzione" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Actief" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Działa" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Em execução" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ejecutando" } }
+      }
+    },
+    "Homebrew not installed" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew nicht installiert" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew not installed" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew non installé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew non installato" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew niet geïnstalleerd" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew nie jest zainstalowany" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew não instalado" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew no instalado" } }
+      }
+    },
+    "Update Trigger" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisierungsmodus" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update Trigger" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Déclencheur de mise à jour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modalità aggiornamento" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Updatetrigger" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wyzwalacz aktualizacji" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Gatilho de atualização" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Activador de actualización" } }
+      }
+    },
+    "Mode" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modus" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Mode" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mode" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Modalità" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Modus" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Tryb" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Modo" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Modo" } }
+      }
+    },
+    "After Idle" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Leerlauf" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "After Idle" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Après inactivité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dopo inattività" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Na inactiviteit" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Po bezczynności" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Após inatividade" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Tras inactividad" } }
+      }
+    },
+    "Scheduled Time" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Feste Uhrzeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduled Time" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Heure programmée" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Orario programmato" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gepland tijdstip" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zaplanowana godzina" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Horário agendado" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hora programada" } }
+      }
+    },
+    "Idle Duration" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Leerlaufzeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Idle Duration" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Durée d'inactivité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Durata inattività" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Inactiviteitsduur" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Czas bezczynności" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Duração de inatividade" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Duración de inactividad" } }
+      }
+    },
+    "Time" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Uhrzeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Time" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Heure" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ora" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Tijd" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Godzina" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Hora" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Hora" } }
+      }
+    },
+    "General" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Général" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Generale" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Algemeen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ogólne" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Geral" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
+      }
+    },
+    "Launch at Login" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bei Anmeldung starten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Launch at Login" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Lancer à l'ouverture de session" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Avvia al login" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Open bij inloggen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Uruchom przy logowaniu" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Iniciar no login" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Abrir al iniciar sesión" } }
+      }
+    },
+    "Show Notifications" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Benachrichtigungen anzeigen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show Notifications" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Afficher les notifications" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Mostra notifiche" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Meldingen tonen" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Pokaż powiadomienia" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar notificações" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Mostrar notificaciones" } }
+      }
+    },
+    "Homebrew" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Homebrew" } }
+      }
+    },
+    "Status" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "État" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Stato" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Status" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Estado" } }
+      }
+    },
+    "Installed" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Installiert" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Installed" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Installé" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Installato" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Geïnstalleerd" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zainstalowany" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Instalado" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Instalado" } }
+      }
+    },
+    "Not Found" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht gefunden" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not Found" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Introuvable" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Non trovato" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet gevonden" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Nie znaleziono" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Não encontrado" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "No encontrado" } }
+      }
+    },
+    "Path" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pfad" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Path" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Chemin" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Percorso" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Pad" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ścieżka" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Caminho" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Ruta" } }
+      }
+    },
+    "About" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "About" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "À propos" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Informazioni" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Over" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "O aplikacji" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Sobre" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Acerca de" } }
+      }
+    },
+    "Version" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Version" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Versione" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Versie" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wersja" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Versão" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Versión" } }
+      }
+    },
+    "Developer" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Entwickler" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Developer" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Développeur" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sviluppatore" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Ontwikkelaar" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Deweloper" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Desenvolvedor" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Desarrollador" } }
+      }
+    },
+    "Support this Project" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt unterstützen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Support this Project" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Soutenir ce projet" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Sostieni questo progetto" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Steun dit project" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wesprzyj ten projekt" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Apoie este projeto" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Apoyar este proyecto" } }
+      }
+    },
+    "Source Code" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Quellcode" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Source Code" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Code source" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Codice sorgente" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Broncode" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Kod źródłowy" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Código-fonte" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Código fuente" } }
+      }
+    },
+    "No output yet." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Noch keine Ausgabe." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "No output yet." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Aucune sortie pour le moment." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Nessun output ancora." } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nog geen uitvoer." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Brak danych wyjściowych." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Nenhuma saída ainda." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Sin salida aún." } }
+      }
+    },
+    "%lld outdated" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld veraltet" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld outdated" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld obsolètes" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld obsoleti" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%lld verouderd" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "%lld nieaktualne" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld desatualizados" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld desactualizados" } }
+      }
+    },
+    "Last run: %@" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Letzter Lauf: %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last run: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Dernière exécution : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ultima esecuzione: %@" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Laatste keer: %@" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ostatnie uruchomienie: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Última execução: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Última ejecución: %@" } }
+      }
+    },
+    "After %lld min idle" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach %lld Min. Leerlauf" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "After %lld min idle" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Après %lld min d'inactivité" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Dopo %lld min di inattività" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Na %lld min inactiviteit" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Po %lld min bezczynności" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Após %lld min de inatividade" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Después de %lld min de inactividad" } }
+      }
+    },
+    "Daily at %@" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Täglich um %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Daily at %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Chaque jour à %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Ogni giorno alle %@" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Dagelijks om %@" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Codziennie o %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Diariamente às %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Diariamente a las %@" } }
+      }
+    },
+    "Scheduled: %@" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Geplant: %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Scheduled: %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Programmé : %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Programmato: %@" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Gepland: %@" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zaplanowano: %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Agendado: %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Programado: %@" } }
+      }
+    },
+    "Completed %@" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Abgeschlossen %@" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Completed %@" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Terminé %@" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Completato %@" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Voltooid %@" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Ukończono %@" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Concluído %@" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Completado %@" } }
+      }
+    },
+    "%lld min" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld Min." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "%lld min" } }
+      }
+    },
+    "All Homebrew packages have been updated." : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Homebrew-Pakete wurden aktualisiert." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All Homebrew packages have been updated." } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Tous les paquets Homebrew ont été mis à jour." } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Tutti i pacchetti Homebrew sono stati aggiornati." } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Alle Homebrew-pakketten zijn bijgewerkt." } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Wszystkie pakiety Homebrew zostały zaktualizowane." } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Todos os pacotes Homebrew foram atualizados." } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Todos los paquetes de Homebrew han sido actualizados." } }
+      }
+    },
+    "The scheduled brew update was missed. Run it now in the background?" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Das geplante Brew-Update wurde verpasst. Jetzt im Hintergrund ausführen?" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "The scheduled brew update was missed. Run it now in the background?" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "La mise à jour Brew prévue a été manquée. L'exécuter maintenant en arrière-plan ?" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "L'aggiornamento Brew programmato è stato saltato. Eseguirlo ora in background?" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "De geplande Brew-update is gemist. Nu op de achtergrond uitvoeren?" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Zaplanowana aktualizacja Brew została pominięta. Uruchomić teraz w tle?" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "A atualização agendada do Brew foi perdida. Executar agora em segundo plano?" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "La actualización programada de Brew no se realizó. ¿Ejecutarla ahora en segundo plano?" } }
+      }
+    },
+    "Update Now" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Jetzt aktualisieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Update Now" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Mettre à jour" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Aggiorna ora" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Nu bijwerken" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Aktualizuj teraz" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Atualizar agora" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Actualizar ahora" } }
+      }
+    },
+    "Skip" : {
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Überspringen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip" } },
+        "fr" : { "stringUnit" : { "state" : "translated", "value" : "Ignorer" } },
+        "it" : { "stringUnit" : { "state" : "translated", "value" : "Salta" } },
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Overslaan" } },
+        "pl" : { "stringUnit" : { "state" : "translated", "value" : "Pomiń" } },
+        "pt-BR" : { "stringUnit" : { "state" : "translated", "value" : "Pular" } },
+        "es" : { "stringUnit" : { "state" : "translated", "value" : "Omitir" } }
       }
     }
   },

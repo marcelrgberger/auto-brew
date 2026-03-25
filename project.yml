@@ -7,6 +7,17 @@ options:
   minimumXcodeGenVersion: "2.42.0"
   generateEmptyDirectories: true
   groupSortPosition: top
+  defaultConfig: Debug
+
+localizations:
+  - en
+  - de
+  - fr
+  - it
+  - nl
+  - pl
+  - pt-BR
+  - es
 
 settings:
   base:
