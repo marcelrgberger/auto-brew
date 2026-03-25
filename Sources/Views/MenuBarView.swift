@@ -72,8 +72,16 @@ struct MenuBarView: View {
             Button {
                 Task { await scheduler.triggerManualRun() }
             } label: {
-                Label("Update Now", systemImage: "arrow.triangle.2.circlepath")
+                HStack {
+                    Spacer()
+                    Label("Update Now", systemImage: "arrow.triangle.2.circlepath")
+                        .font(.system(.body, weight: .semibold))
+                    Spacer()
+                }
+                .padding(.vertical, 6)
             }
+            .buttonStyle(.borderedProminent)
+            .tint(.accentColor)
             .disabled(brewManager.isRunning)
 
             Button {
