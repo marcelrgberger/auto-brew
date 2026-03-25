@@ -1,13 +1,32 @@
 import SwiftUI
 
+enum MenuPage {
+    case main
+    case settings
+    case log
+}
+
 struct MenuBarView: View {
     @State private var scheduler = SchedulerService.shared
     @State private var brewManager = BrewManager.shared
     @State private var settings = SettingsStore.shared
-    @State private var showSettings = false
-    @State private var showLog = false
+    @State private var currentPage: MenuPage = .main
 
     var body: some View {
+        Group {
+            switch currentPage {
+            case .main:
+                mainView
+            case .settings:
+                SettingsView(onBack: { currentPage = .main })
+            case .log:
+                LogView(output: brewManager.lastOutput, onBack: { currentPage = .main })
+            }
+        }
+        .animation(.easeInOut(duration: 0.15), value: currentPage)
+    }
+
+    private var mainView: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "mug.fill")
@@ -42,7 +61,6 @@ struct MenuBarView: View {
                 }
             }
 
-            // Outdated packages
             if !brewManager.outdatedPackages.isEmpty {
                 Divider()
                 VStack(alignment: .leading, spacing: 4) {
@@ -93,14 +111,14 @@ struct MenuBarView: View {
 
             if !brewManager.lastOutput.isEmpty {
                 Button {
-                    showLog.toggle()
+                    currentPage = .log
                 } label: {
                     Label("Show Log", systemImage: "doc.text")
                 }
             }
 
             Button {
-                showSettings.toggle()
+                currentPage = .settings
             } label: {
                 Label("Settings...", systemImage: "gear")
             }
@@ -128,12 +146,6 @@ struct MenuBarView: View {
         }
         .padding()
         .frame(width: 280)
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
-        }
-        .sheet(isPresented: $showLog) {
-            LogView(output: brewManager.lastOutput)
-        }
         .task {
             await brewManager.fetchOutdated()
         }

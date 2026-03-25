@@ -2,11 +2,17 @@ import SwiftUI
 
 struct LogView: View {
     let output: String
-    @Environment(\.dismiss) private var dismiss
+    var onBack: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
+                Button(action: onBack) {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.system(.body, weight: .medium))
+                }
+                .buttonStyle(.plain)
+                Spacer()
                 Text("Update Log")
                     .font(.headline)
                 Spacer()
@@ -18,12 +24,6 @@ struct LogView: View {
                 }
                 .buttonStyle(.plain)
                 .help("Copy to clipboard")
-
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
             }
             .padding()
 

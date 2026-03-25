@@ -4,19 +4,22 @@ struct SettingsView: View {
     @State private var settings = SettingsStore.shared
     @State private var scheduler = SchedulerService.shared
     @State private var brewManager = BrewManager.shared
-    @Environment(\.dismiss) private var dismiss
+    var onBack: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("AutoBrew Settings")
-                    .font(.headline)
-                Spacer()
-                Button { dismiss() } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(.secondary)
+                Button(action: onBack) {
+                    Label("Back", systemImage: "chevron.left")
+                        .font(.system(.body, weight: .medium))
                 }
                 .buttonStyle(.plain)
+                Spacer()
+                Text("Settings")
+                    .font(.headline)
+                Spacer()
+                // Balance the back button width
+                Color.clear.frame(width: 50)
             }
             .padding()
 
