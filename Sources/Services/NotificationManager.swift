@@ -9,9 +9,9 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "Notifications")
     private let center = UNUserNotificationCenter.current()
 
-    private nonisolated(unsafe) static let missedRunCategory = "MISSED_RUN"
-    private nonisolated(unsafe) static let runNowAction = "RUN_NOW"
-    private nonisolated(unsafe) static let skipAction = "SKIP"
+    nonisolated private static let missedRunCategory = "MISSED_RUN"
+    nonisolated private static let runNowAction = "RUN_NOW"
+    nonisolated private static let skipAction = "SKIP"
 
     var onRunNowRequested: (@MainActor () -> Void)?
 
