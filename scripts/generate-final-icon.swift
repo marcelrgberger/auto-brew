@@ -1,250 +1,297 @@
 #!/usr/bin/env swift
-
 import AppKit
+import CoreGraphics
 
-func color(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColor {
-    CGColor(red: r, green: g, blue: b, alpha: a)
+let size = 1024
+let canvas = CGFloat(size)
+let outputURL = URL(fileURLWithPath: "/Users/marcelrgberger/Developer/projects/auto-brew/AutoBrew/Assets.xcassets/AppIcon.appiconset/icon_source_1024.png")
+
+func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColor {
+    CGColor(red: r / 255, green: g / 255, blue: b / 255, alpha: a)
 }
 
-func generateIcon(pixels: Int) -> Data? {
-    let p = CGFloat(pixels)
-
-    let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil, pixelsWide: pixels, pixelsHigh: pixels,
-        bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
-        colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0
-    )!
-
-    let ctx = NSGraphicsContext(bitmapImageRep: rep)!
-    NSGraphicsContext.current = ctx
-    let g = ctx.cgContext
-
-    // ═══════════════════════════════════════════════
-    // 1. BACKGROUND — Rich deep gradient
-    // ═══════════════════════════════════════════════
-    let bgGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.08, 0.22, 0.15),
-        color(0.04, 0.12, 0.08),
-        color(0.02, 0.06, 0.04),
-    ] as CFArray, locations: [0.0, 0.6, 1.0])!
-    g.drawLinearGradient(bgGrad, start: CGPoint(x: 0, y: p), end: CGPoint(x: p, y: 0), options: [])
-
-    // Subtle radial highlight
-    let highlightGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.15, 0.35, 0.22, 0.4),
-        color(0.05, 0.15, 0.08, 0.0),
-    ] as CFArray, locations: [0.0, 1.0])!
-    g.drawRadialGradient(highlightGrad,
-        startCenter: CGPoint(x: p * 0.45, y: p * 0.55), startRadius: 0,
-        endCenter: CGPoint(x: p * 0.45, y: p * 0.55), endRadius: p * 0.45, options: [])
-
-    // ═══════════════════════════════════════════════
-    // 2. BEER BOTTLE — Elegant green glass
-    // ═══════════════════════════════════════════════
-    let bottle = CGMutablePath()
-
-    let cx = p * 0.44
-    let bodyW = p * 0.28
-    let neckW = p * 0.10
-    let capW = p * 0.12
-
-    let botY = p * 0.14
-    let shoulderY = p * 0.56
-    let neckStartY = p * 0.68
-    let neckTopY = p * 0.82
-    let capTopY = p * 0.87
-
-    let bL = cx - bodyW/2, bR = cx + bodyW/2
-    let nL = cx - neckW/2, nR = cx + neckW/2
-    let cL = cx - capW/2, cR = cx + capW/2
-
-    bottle.move(to: CGPoint(x: bL + p*0.02, y: botY))
-    bottle.addArc(tangent1End: CGPoint(x: bL, y: botY), tangent2End: CGPoint(x: bL, y: botY + p*0.02), radius: p*0.02)
-    bottle.addLine(to: CGPoint(x: bL, y: shoulderY))
-    bottle.addCurve(to: CGPoint(x: nL, y: neckStartY),
-        control1: CGPoint(x: bL, y: shoulderY + p*0.08),
-        control2: CGPoint(x: nL, y: neckStartY - p*0.04))
-    bottle.addLine(to: CGPoint(x: nL, y: neckTopY))
-    bottle.addCurve(to: CGPoint(x: cL, y: neckTopY + p*0.01),
-        control1: CGPoint(x: nL - p*0.005, y: neckTopY + p*0.005),
-        control2: CGPoint(x: cL, y: neckTopY + p*0.005))
-    bottle.addLine(to: CGPoint(x: cL, y: capTopY))
-    bottle.addArc(tangent1End: CGPoint(x: cL, y: capTopY + p*0.008), tangent2End: CGPoint(x: cx, y: capTopY + p*0.008), radius: p*0.008)
-    bottle.addArc(tangent1End: CGPoint(x: cR, y: capTopY + p*0.008), tangent2End: CGPoint(x: cR, y: capTopY), radius: p*0.008)
-    bottle.addLine(to: CGPoint(x: cR, y: neckTopY + p*0.01))
-    bottle.addCurve(to: CGPoint(x: nR, y: neckTopY),
-        control1: CGPoint(x: cR, y: neckTopY + p*0.005),
-        control2: CGPoint(x: nR + p*0.005, y: neckTopY + p*0.005))
-    bottle.addLine(to: CGPoint(x: nR, y: neckStartY))
-    bottle.addCurve(to: CGPoint(x: bR, y: shoulderY),
-        control1: CGPoint(x: nR, y: neckStartY - p*0.04),
-        control2: CGPoint(x: bR, y: shoulderY + p*0.08))
-    bottle.addLine(to: CGPoint(x: bR, y: botY + p*0.02))
-    bottle.addArc(tangent1End: CGPoint(x: bR, y: botY), tangent2End: CGPoint(x: bR - p*0.02, y: botY), radius: p*0.02)
-    bottle.closeSubpath()
-
-    // ═══════════════════════════════════════════════
-    // 3. BOTTLE RENDERING
-    // ═══════════════════════════════════════════════
-
-    // Shadow
-    g.saveGState()
-    g.setShadow(offset: CGSize(width: p*0.01, height: -p*0.02), blur: p*0.06, color: color(0, 0, 0, 0.5))
-    g.setFillColor(color(0, 0, 0, 0.01))
-    g.addPath(bottle)
-    g.fillPath()
-    g.restoreGState()
-
-    // Glass gradient
-    g.saveGState()
-    g.addPath(bottle)
-    g.clip()
-    let bottleGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.30, 0.55, 0.25, 0.95),
-        color(0.20, 0.42, 0.18, 0.92),
-        color(0.12, 0.30, 0.10, 0.90),
-        color(0.08, 0.20, 0.06, 0.88),
-    ] as CFArray, locations: [0.0, 0.35, 0.7, 1.0])!
-    g.drawLinearGradient(bottleGrad, start: CGPoint(x: bL, y: p*0.5), end: CGPoint(x: bR + p*0.05, y: p*0.5), options: [])
-
-    // Beer visible through glass
-    let beerTop = shoulderY - p*0.02
-    g.saveGState()
-    g.clip(to: CGRect(x: bL, y: botY, width: bodyW, height: beerTop - botY))
-    let beerGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.85, 0.60, 0.15, 0.7),
-        color(0.75, 0.45, 0.10, 0.6),
-    ] as CFArray, locations: [0.0, 1.0])!
-    g.drawLinearGradient(beerGrad, start: CGPoint(x: cx, y: beerTop), end: CGPoint(x: cx, y: botY), options: [])
-    g.restoreGState()
-
-    // Left edge specular highlight
-    g.setFillColor(color(1, 1, 1, 0.25))
-    g.fill(CGRect(x: bL + p*0.015, y: botY + p*0.03, width: p*0.025, height: shoulderY - botY - p*0.06))
-
-    // Neck highlight
-    g.setFillColor(color(1, 1, 1, 0.2))
-    g.fill(CGRect(x: nL + p*0.01, y: neckStartY, width: p*0.015, height: neckTopY - neckStartY))
-
-    g.restoreGState()
-
-    // Subtle outline
-    g.setStrokeColor(color(1, 1, 1, 0.08))
-    g.setLineWidth(p * 0.003)
-    g.addPath(bottle)
-    g.strokePath()
-
-    // ═══════════════════════════════════════════════
-    // 4. LABEL — Cream with hop leaf
-    // ═══════════════════════════════════════════════
-    let labelH = p * 0.14
-    let labelY = botY + p * 0.10
-    let labelRect = CGRect(x: bL + p*0.025, y: labelY, width: bodyW - p*0.05, height: labelH)
-    let labelPath = CGPath(roundedRect: labelRect, cornerWidth: p*0.01, cornerHeight: p*0.01, transform: nil)
-
-    g.saveGState()
-    g.addPath(labelPath)
-    g.clip()
-    let labelGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.95, 0.92, 0.85, 0.9),
-        color(0.88, 0.84, 0.76, 0.85),
-    ] as CFArray, locations: [0.0, 1.0])!
-    g.drawLinearGradient(labelGrad, start: CGPoint(x: cx, y: labelY + labelH), end: CGPoint(x: cx, y: labelY), options: [])
-    g.restoreGState()
-
-    // Hop leaf
-    let leafCy = labelY + labelH * 0.5
-    let leafW = p * 0.045, leafH = p * 0.06
-    let leaf = CGMutablePath()
-    leaf.move(to: CGPoint(x: cx, y: leafCy + leafH/2))
-    leaf.addCurve(to: CGPoint(x: cx, y: leafCy - leafH/2),
-        control1: CGPoint(x: cx + leafW, y: leafCy + leafH*0.2),
-        control2: CGPoint(x: cx + leafW, y: leafCy - leafH*0.2))
-    leaf.addCurve(to: CGPoint(x: cx, y: leafCy + leafH/2),
-        control1: CGPoint(x: cx - leafW, y: leafCy - leafH*0.2),
-        control2: CGPoint(x: cx - leafW, y: leafCy + leafH*0.2))
-    leaf.closeSubpath()
-    g.setFillColor(color(0.15, 0.45, 0.20, 0.7))
-    g.addPath(leaf)
-    g.fillPath()
-    g.setStrokeColor(color(0.15, 0.45, 0.20, 0.5))
-    g.setLineWidth(p * 0.003)
-    g.move(to: CGPoint(x: cx, y: leafCy - leafH*0.35))
-    g.addLine(to: CGPoint(x: cx, y: leafCy + leafH*0.35))
-    g.strokePath()
-
-    // ═══════════════════════════════════════════════
-    // 5. REFRESH BADGE
-    // ═══════════════════════════════════════════════
-    let bSz = p * 0.22, bBx = p * 0.65, bBy = p * 0.10
-    let bCenter = CGPoint(x: bBx + bSz/2, y: bBy + bSz/2)
-    let bBRect = CGRect(x: bBx, y: bBy, width: bSz, height: bSz)
-
-    g.saveGState()
-    g.setShadow(offset: CGSize(width: 0, height: -p*0.008), blur: p*0.025, color: color(0, 0, 0, 0.4))
-    g.setFillColor(color(0.2, 0.7, 0.35))
-    g.fillEllipse(in: bBRect)
-    g.restoreGState()
-
-    g.saveGState()
-    g.addEllipse(in: bBRect)
-    g.clip()
-    let badgeGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(0.35, 0.88, 0.50),
-        color(0.18, 0.62, 0.30),
-    ] as CFArray, locations: [0.0, 1.0])!
-    g.drawLinearGradient(badgeGrad, start: CGPoint(x: bBx, y: bBy + bSz), end: CGPoint(x: bBx + bSz, y: bBy), options: [])
-    let glossGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
-        color(1, 1, 1, 0.35), color(1, 1, 1, 0.0),
-    ] as CFArray, locations: [0.0, 1.0])!
-    g.drawLinearGradient(glossGrad,
-        start: CGPoint(x: bBx + bSz/2, y: bBy + bSz*0.92),
-        end: CGPoint(x: bBx + bSz/2, y: bBy + bSz*0.5), options: [])
-    g.restoreGState()
-
-    // Arrows
-    let aR = bSz * 0.30
-    g.setStrokeColor(color(1, 1, 1, 0.95))
-    g.setLineWidth(p * 0.018)
-    g.setLineCap(.round)
-    for sa: CGFloat in [0.2, 1.2] {
-        let arc = CGMutablePath()
-        arc.addArc(center: bCenter, radius: aR, startAngle: .pi * sa, endAngle: .pi * (sa + 0.6), clockwise: false)
-        g.addPath(arc)
-        g.strokePath()
-        let ta = CGFloat.pi * (sa + 0.6)
-        let tp = CGPoint(x: bCenter.x + aR * cos(ta), y: bCenter.y + aR * sin(ta))
-        let td = ta + .pi / 2, tl = p * 0.028
-        let tip = CGMutablePath()
-        tip.move(to: tp)
-        tip.addLine(to: CGPoint(x: tp.x + tl * cos(td + 2.4), y: tp.y + tl * sin(td + 2.4)))
-        tip.addLine(to: CGPoint(x: tp.x + tl * cos(td - 2.4), y: tp.y + tl * sin(td - 2.4)))
-        tip.closeSubpath()
-        g.setFillColor(color(1, 1, 1, 0.95))
-        g.addPath(tip)
-        g.fillPath()
-    }
-
-    NSGraphicsContext.current = nil
-    return rep.representation(using: .png, properties: [:])
+func drawLinearGradient(_ context: CGContext, in rect: CGRect, colors: [CGColor], locations: [CGFloat], start: CGPoint, end: CGPoint) {
+    let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: locations)!
+    context.saveGState()
+    context.addRect(rect)
+    context.clip()
+    context.drawLinearGradient(gradient, start: start, end: end, options: [])
+    context.restoreGState()
 }
 
-let outputDir = "AutoBrew/Assets.xcassets/AppIcon.appiconset"
-let sizes: [(Int, String)] = [
-    (16, "icon_16x16.png"), (32, "icon_16x16@2x.png"),
-    (32, "icon_32x32.png"), (64, "icon_32x32@2x.png"),
-    (128, "icon_128x128.png"), (256, "icon_128x128@2x.png"),
-    (256, "icon_256x256.png"), (512, "icon_256x256@2x.png"),
-    (512, "icon_512x512.png"), (1024, "icon_512x512@2x.png"),
-]
-
-for (px, name) in sizes {
-    guard let png = generateIcon(pixels: px) else { print("FAIL: \(name)"); continue }
-    try! png.write(to: URL(fileURLWithPath: "\(outputDir)/\(name)"))
-    print("\(name) (\(px)px)")
+func drawRadialGradient(_ context: CGContext, in rect: CGRect, colors: [CGColor], locations: [CGFloat], startCenter: CGPoint, startRadius: CGFloat, endCenter: CGPoint, endRadius: CGFloat) {
+    let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: locations)!
+    context.saveGState()
+    context.addRect(rect)
+    context.clip()
+    context.drawRadialGradient(gradient, startCenter: startCenter, startRadius: startRadius, endCenter: endCenter, endRadius: endRadius, options: [])
+    context.restoreGState()
 }
 
-if let src = generateIcon(pixels: 1024) {
-    try! src.write(to: URL(fileURLWithPath: "\(outputDir)/icon_source_1024.png"))
+func roundedRectPath(_ rect: CGRect, radius: CGFloat) -> CGPath {
+    CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
 }
-print("\nDone!")
+
+func foamPath(in rect: CGRect) -> CGPath {
+    let path = CGMutablePath()
+    let minX = rect.minX
+    let maxX = rect.maxX
+    let minY = rect.minY
+    let maxY = rect.maxY
+    let midX = rect.midX
+
+    path.move(to: CGPoint(x: minX + rect.width * 0.04, y: minY + rect.height * 0.18))
+    path.addCurve(
+        to: CGPoint(x: minX + rect.width * 0.20, y: maxY - rect.height * 0.08),
+        control1: CGPoint(x: minX - rect.width * 0.02, y: minY + rect.height * 0.56),
+        control2: CGPoint(x: minX + rect.width * 0.05, y: maxY + rect.height * 0.02)
+    )
+    path.addCurve(
+        to: CGPoint(x: midX, y: maxY - rect.height * 0.02),
+        control1: CGPoint(x: minX + rect.width * 0.30, y: maxY + rect.height * 0.10),
+        control2: CGPoint(x: midX - rect.width * 0.12, y: maxY + rect.height * 0.10)
+    )
+    path.addCurve(
+        to: CGPoint(x: maxX - rect.width * 0.20, y: maxY - rect.height * 0.08),
+        control1: CGPoint(x: midX + rect.width * 0.12, y: maxY + rect.height * 0.08),
+        control2: CGPoint(x: maxX - rect.width * 0.30, y: maxY + rect.height * 0.10)
+    )
+    path.addCurve(
+        to: CGPoint(x: maxX - rect.width * 0.04, y: minY + rect.height * 0.20),
+        control1: CGPoint(x: maxX - rect.width * 0.06, y: maxY + rect.height * 0.02),
+        control2: CGPoint(x: maxX + rect.width * 0.02, y: minY + rect.height * 0.58)
+    )
+    path.addCurve(
+        to: CGPoint(x: maxX - rect.width * 0.10, y: minY + rect.height * 0.06),
+        control1: CGPoint(x: maxX - rect.width * 0.02, y: minY + rect.height * 0.06),
+        control2: CGPoint(x: maxX - rect.width * 0.06, y: minY - rect.height * 0.02)
+    )
+    path.addLine(to: CGPoint(x: minX + rect.width * 0.10, y: minY + rect.height * 0.06))
+    path.addCurve(
+        to: CGPoint(x: minX + rect.width * 0.04, y: minY + rect.height * 0.18),
+        control1: CGPoint(x: minX + rect.width * 0.04, y: minY - rect.height * 0.02),
+        control2: CGPoint(x: minX + rect.width * 0.00, y: minY + rect.height * 0.06)
+    )
+    path.closeSubpath()
+    return path
+}
+
+func arrowHandlePath(center: CGPoint, radius: CGFloat, thickness: CGFloat) -> CGPath {
+    let startAngle = CGFloat.pi * 0.20
+    let endAngle = -CGFloat.pi * 1.15
+    let tipAngle = CGFloat.pi * 0.22
+
+    let outerRadius = radius + thickness / 2
+    let innerRadius = radius - thickness / 2
+
+    let path = CGMutablePath()
+    path.addArc(center: center, radius: outerRadius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
+    path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: false)
+    path.closeSubpath()
+
+    let tip = CGPoint(x: center.x + cos(tipAngle) * outerRadius, y: center.y + sin(tipAngle) * outerRadius)
+    let tangentAngle = tipAngle - .pi / 2
+    let arrowLength = thickness * 1.15
+    let arrowWidth = thickness * 0.95
+
+    let base = CGPoint(
+        x: center.x + cos(tipAngle) * (radius + thickness * 0.04),
+        y: center.y + sin(tipAngle) * (radius + thickness * 0.04)
+    )
+    let left = CGPoint(
+        x: base.x - cos(tangentAngle) * arrowWidth * 0.5 - cos(tipAngle) * arrowLength * 0.45,
+        y: base.y - sin(tangentAngle) * arrowWidth * 0.5 - sin(tipAngle) * arrowLength * 0.45
+    )
+    let right = CGPoint(
+        x: base.x + cos(tangentAngle) * arrowWidth * 0.5 - cos(tipAngle) * arrowLength * 0.45,
+        y: base.y + sin(tangentAngle) * arrowWidth * 0.5 - sin(tipAngle) * arrowLength * 0.45
+    )
+
+    path.move(to: tip)
+    path.addLine(to: left)
+    path.addLine(to: right)
+    path.closeSubpath()
+
+    return path
+}
+
+let rep = NSBitmapImageRep(
+    bitmapDataPlanes: nil,
+    pixelsWide: size,
+    pixelsHigh: size,
+    bitsPerSample: 8,
+    samplesPerPixel: 4,
+    hasAlpha: true,
+    isPlanar: false,
+    colorSpaceName: .deviceRGB,
+    bytesPerRow: 0,
+    bitsPerPixel: 0
+)!
+
+let graphicsContext = NSGraphicsContext(bitmapImageRep: rep)!
+NSGraphicsContext.current = graphicsContext
+let context = graphicsContext.cgContext
+
+let fullRect = CGRect(x: 0, y: 0, width: canvas, height: canvas)
+
+drawLinearGradient(
+    context,
+    in: fullRect,
+    colors: [rgb(25, 32, 42), rgb(9, 13, 20)],
+    locations: [0, 1],
+    start: CGPoint(x: 0, y: canvas),
+    end: CGPoint(x: canvas, y: 0)
+)
+
+drawRadialGradient(
+    context,
+    in: fullRect,
+    colors: [rgb(255, 176, 62, 0.40), rgb(255, 176, 62, 0.05), rgb(255, 176, 62, 0.0)],
+    locations: [0, 0.55, 1],
+    startCenter: CGPoint(x: canvas * 0.48, y: canvas * 0.58),
+    startRadius: 0,
+    endCenter: CGPoint(x: canvas * 0.48, y: canvas * 0.58),
+    endRadius: canvas * 0.55
+)
+
+let mugRect = CGRect(x: 252, y: 202, width: 420, height: 520)
+let mugPath = roundedRectPath(mugRect, radius: 88)
+let innerInset: CGFloat = 28
+let beerRect = mugRect.insetBy(dx: innerInset, dy: innerInset + 6)
+let beerPath = roundedRectPath(beerRect, radius: 66)
+
+context.saveGState()
+context.setShadow(offset: CGSize(width: 0, height: -26), blur: 54, color: rgb(0, 0, 0, 0.30))
+context.addPath(mugPath)
+context.setFillColor(rgb(248, 249, 252, 0.97))
+context.fillPath()
+context.restoreGState()
+
+context.saveGState()
+context.addPath(beerPath)
+context.clip()
+drawLinearGradient(
+    context,
+    in: beerRect,
+    colors: [rgb(255, 207, 86), rgb(240, 147, 29), rgb(169, 78, 17)],
+    locations: [0, 0.58, 1],
+    start: CGPoint(x: beerRect.midX, y: beerRect.maxY),
+    end: CGPoint(x: beerRect.midX, y: beerRect.minY)
+)
+drawRadialGradient(
+    context,
+    in: beerRect,
+    colors: [rgb(255, 240, 176, 0.36), rgb(255, 240, 176, 0.0)],
+    locations: [0, 1],
+    startCenter: CGPoint(x: beerRect.minX + beerRect.width * 0.30, y: beerRect.maxY - beerRect.height * 0.16),
+    startRadius: 0,
+    endCenter: CGPoint(x: beerRect.minX + beerRect.width * 0.30, y: beerRect.maxY - beerRect.height * 0.16),
+    endRadius: beerRect.width * 0.7
+)
+context.restoreGState()
+
+let foamRect = CGRect(x: mugRect.minX - 20, y: mugRect.maxY - 38, width: mugRect.width + 40, height: 176)
+let foam = foamPath(in: foamRect)
+context.saveGState()
+context.setShadow(offset: CGSize(width: 0, height: -10), blur: 24, color: rgb(255, 255, 255, 0.14))
+context.addPath(foam)
+context.setFillColor(rgb(255, 250, 240, 0.98))
+context.fillPath()
+context.restoreGState()
+
+context.saveGState()
+context.addPath(foam)
+context.clip()
+drawLinearGradient(
+    context,
+    in: foamRect,
+    colors: [rgb(255, 255, 255, 0.95), rgb(238, 229, 214, 0.92)],
+    locations: [0, 1],
+    start: CGPoint(x: foamRect.midX, y: foamRect.maxY),
+    end: CGPoint(x: foamRect.midX, y: foamRect.minY)
+)
+drawRadialGradient(
+    context,
+    in: foamRect,
+    colors: [rgb(255, 255, 255, 0.55), rgb(255, 255, 255, 0.0)],
+    locations: [0, 1],
+    startCenter: CGPoint(x: foamRect.minX + foamRect.width * 0.36, y: foamRect.maxY - 18),
+    startRadius: 0,
+    endCenter: CGPoint(x: foamRect.minX + foamRect.width * 0.36, y: foamRect.maxY - 18),
+    endRadius: foamRect.width * 0.44
+)
+context.restoreGState()
+
+let handleCenter = CGPoint(x: mugRect.maxX + 34, y: mugRect.midY + 36)
+let handle = arrowHandlePath(center: handleCenter, radius: 125, thickness: 82)
+context.saveGState()
+context.setShadow(offset: CGSize(width: 0, height: -18), blur: 40, color: rgb(0, 0, 0, 0.24))
+context.addPath(handle)
+context.setFillColor(rgb(247, 186, 71, 0.98))
+context.fillPath()
+context.restoreGState()
+
+context.saveGState()
+context.addPath(handle)
+context.clip()
+let handleBounds = CGRect(x: handleCenter.x - 220, y: handleCenter.y - 220, width: 440, height: 440)
+drawLinearGradient(
+    context,
+    in: handleBounds,
+    colors: [rgb(255, 221, 110), rgb(222, 130, 28), rgb(154, 76, 16)],
+    locations: [0, 0.65, 1],
+    start: CGPoint(x: handleBounds.minX, y: handleBounds.maxY),
+    end: CGPoint(x: handleBounds.maxX, y: handleBounds.minY)
+)
+context.restoreGState()
+
+context.saveGState()
+context.addPath(mugPath)
+context.setStrokeColor(rgb(255, 255, 255, 0.16))
+context.setLineWidth(8)
+context.strokePath()
+context.restoreGState()
+
+let glassHighlight = CGMutablePath()
+glassHighlight.move(to: CGPoint(x: mugRect.minX + 58, y: mugRect.minY + 92))
+glassHighlight.addCurve(
+    to: CGPoint(x: mugRect.minX + 114, y: mugRect.maxY - 72),
+    control1: CGPoint(x: mugRect.minX + 46, y: mugRect.minY + 248),
+    control2: CGPoint(x: mugRect.minX + 74, y: mugRect.maxY - 180)
+)
+context.saveGState()
+context.addPath(mugPath)
+context.clip()
+context.addPath(glassHighlight)
+context.setStrokeColor(rgb(255, 255, 255, 0.24))
+context.setLineWidth(34)
+context.setLineCap(.round)
+context.strokePath()
+context.restoreGState()
+
+drawRadialGradient(
+    context,
+    in: fullRect,
+    colors: [rgb(255, 255, 255, 0.18), rgb(255, 255, 255, 0.0)],
+    locations: [0, 1],
+    startCenter: CGPoint(x: 250, y: 856),
+    startRadius: 0,
+    endCenter: CGPoint(x: 250, y: 856),
+    endRadius: 240
+)
+
+NSGraphicsContext.current = nil
+
+guard let pngData = rep.representation(using: .png, properties: [:]) else {
+    fputs("Failed to encode PNG\n", stderr)
+    exit(1)
+}
+
+do {
+    try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try pngData.write(to: outputURL)
+    print("Wrote \(outputURL.path)")
+} catch {
+    fputs("Failed to write icon: \(error)\n", stderr)
+    exit(1)
+}
