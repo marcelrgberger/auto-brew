@@ -1,0 +1,22 @@
+{
+  "sourceLanguage" : "de",
+  "strings" : {
+    "AutoBrew" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoBrew"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AutoBrew"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

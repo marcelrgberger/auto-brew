@@ -1,0 +1,57 @@
+name: AutoBrew
+options:
+  bundleIdPrefix: za.co.digitalfreedom
+  deploymentTarget:
+    macOS: "26.0"
+  xcodeVersion: "26"
+  minimumXcodeGenVersion: "2.42.0"
+  generateEmptyDirectories: true
+  groupSortPosition: top
+
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: ""
+    PRODUCT_BUNDLE_IDENTIFIER: za.co.digitalfreedom.AutoBrew
+    PRODUCT_NAME: AutoBrew
+    INFOPLIST_FILE: AutoBrew/Info.plist
+    CODE_SIGN_ENTITLEMENTS: AutoBrew/AutoBrew.entitlements
+    ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    ENABLE_HARDENED_RUNTIME: true
+
+targets:
+  AutoBrew:
+    type: application
+    platform: macOS
+    sources:
+      - Sources
+    resources:
+      - path: AutoBrew/Assets.xcassets
+      - path: AutoBrew/Localizable.xcstrings
+    settings:
+      base:
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+    scheme:
+      testTargets:
+        - AutoBrewTests
+      environmentVariables:
+        - variable: AUTOBREW_DEBUG
+          value: "1"
+          isEnabled: true
+
+  AutoBrewTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - Tests
+    dependencies:
+      - target: AutoBrew
+    settings:
+      base:
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AutoBrew.app/Contents/MacOS/AutoBrew"
