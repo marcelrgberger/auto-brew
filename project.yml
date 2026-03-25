@@ -8,16 +8,16 @@ options:
   generateEmptyDirectories: true
   groupSortPosition: top
   defaultConfig: Debug
-
-localizations:
-  - en
-  - de
-  - fr
-  - it
-  - nl
-  - pl
-  - pt-BR
-  - es
+  knownRegions:
+    - en
+    - de
+    - fr
+    - it
+    - nl
+    - pl
+    - pt-BR
+    - es
+    - Base
 
 settings:
   base:
