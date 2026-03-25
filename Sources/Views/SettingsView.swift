@@ -11,17 +11,16 @@ struct SettingsView: View {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
-                        .font(.system(.body, weight: .medium))
                 }
                 .buttonStyle(.plain)
                 Spacer()
                 Text("Settings")
                     .font(.headline)
                 Spacer()
-                // Balance the back button width
-                Color.clear.frame(width: 50)
+                Color.clear.frame(width: 44)
             }
-            .padding()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
 
             Divider()
 

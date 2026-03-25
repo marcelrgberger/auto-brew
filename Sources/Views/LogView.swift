@@ -9,7 +9,6 @@ struct LogView: View {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
-                        .font(.system(.body, weight: .medium))
                 }
                 .buttonStyle(.plain)
                 Spacer()
@@ -25,7 +24,8 @@ struct LogView: View {
                 .buttonStyle(.plain)
                 .help("Copy to clipboard")
             }
-            .padding()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
 
             Divider()
 
