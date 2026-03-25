@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum MenuPage {
+enum MenuPage: Equatable {
     case main
     case settings
     case log
@@ -17,20 +17,34 @@ struct MenuBarView: View {
             switch currentPage {
             case .main:
                 mainView
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .leading).combined(with: .opacity),
+                        removal: .move(edge: .leading).combined(with: .opacity)
+                    ))
             case .settings:
                 SettingsView(onBack: { currentPage = .main })
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
             case .log:
                 LogView(output: brewManager.lastOutput, onBack: { currentPage = .main })
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
             }
         }
-        .animation(.easeInOut(duration: 0.15), value: currentPage)
+        .animation(.spring(duration: 0.3, bounce: 0.15), value: currentPage)
     }
 
     private var mainView: some View {
         VStack(alignment: .leading, spacing: 12) {
+            // Header with subtle pulse on mug icon when running
             HStack {
                 Image(systemName: "mug.fill")
                     .foregroundStyle(.brown)
+                    .symbolEffect(.pulse, isActive: brewManager.isRunning)
                 Text("AutoBrew")
                     .font(.headline)
                 Spacer()
@@ -41,6 +55,7 @@ struct MenuBarView: View {
 
             VStack(alignment: .leading, spacing: 6) {
                 statusRow
+                    .contentTransition(.numericText())
 
                 if let lastRun = settings.lastRunDate {
                     HStack {
@@ -50,24 +65,33 @@ struct MenuBarView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
+                    .transition(.push(from: .bottom))
                 }
 
                 HStack {
                     Image(systemName: settings.triggerMode == .idle ? "hourglass" : "calendar.badge.clock")
                         .foregroundStyle(.secondary)
+                        .contentTransition(.symbolEffect(.replace))
                     Text(triggerDescription)
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .contentTransition(.numericText())
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: scheduler.state)
 
+            // Outdated packages with staggered appearance
             if !brewManager.outdatedPackages.isEmpty {
                 Divider()
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("\(brewManager.outdatedPackages.count) outdated")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
-                    ForEach(brewManager.outdatedPackages.prefix(5)) { pkg in
+                    HStack {
+                        Text("\(brewManager.outdatedPackages.count) outdated")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                            .contentTransition(.numericText())
+                        Spacer()
+                    }
+                    ForEach(Array(brewManager.outdatedPackages.prefix(5).enumerated()), id: \.element.id) { index, pkg in
                         HStack {
                             Text(pkg.name)
                                 .font(.caption2)
@@ -76,6 +100,7 @@ struct MenuBarView: View {
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
+                        .transition(.push(from: .bottom).combined(with: .opacity))
                     }
                     if brewManager.outdatedPackages.count > 5 {
                         Text("+ \(brewManager.outdatedPackages.count - 5) more...")
@@ -83,24 +108,37 @@ struct MenuBarView: View {
                             .foregroundStyle(.tertiary)
                     }
                 }
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
 
             Divider()
 
+            // Update button with bounce on press
             Button {
                 Task { await scheduler.triggerManualRun() }
             } label: {
                 HStack {
                     Spacer()
-                    Label("Update Now", systemImage: "arrow.triangle.2.circlepath")
-                        .font(.system(.body, weight: .semibold))
+                    if brewManager.isRunning {
+                        ProgressView()
+                            .controlSize(.small)
+                            .transition(.scale.combined(with: .opacity))
+                    }
+                    Label(
+                        brewManager.isRunning ? "Updating..." : "Update Now",
+                        systemImage: "arrow.triangle.2.circlepath"
+                    )
+                    .font(.system(.body, weight: .semibold))
+                    .symbolEffect(.rotate, isActive: brewManager.isRunning)
                     Spacer()
                 }
                 .padding(.vertical, 6)
+                .animation(.easeInOut(duration: 0.2), value: brewManager.isRunning)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.accentColor)
+            .tint(brewManager.isRunning ? .orange : .accentColor)
             .disabled(brewManager.isRunning)
+            .animation(.easeInOut(duration: 0.3), value: brewManager.isRunning)
 
             Button {
                 Task { await brewManager.fetchOutdated() }
@@ -115,6 +153,7 @@ struct MenuBarView: View {
                 } label: {
                     Label("Show Log", systemImage: "doc.text")
                 }
+                .transition(.push(from: .bottom).combined(with: .opacity))
             }
 
             Button {
@@ -134,6 +173,7 @@ struct MenuBarView: View {
                     Text("Homebrew not installed")
                         .font(.caption2)
                         .foregroundStyle(.red)
+                        .symbolEffect(.pulse)
                 }
                 Spacer()
             }
@@ -162,16 +202,22 @@ struct MenuBarView: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
+            .transition(.scale.combined(with: .opacity))
         case .completed:
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(.green)
+                .symbolEffect(.bounce, value: scheduler.state)
+                .transition(.scale.combined(with: .opacity))
         case .failed:
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.red)
+                .symbolEffect(.bounce, value: scheduler.state)
+                .transition(.scale.combined(with: .opacity))
         default:
             Image(systemName: "circle.fill")
                 .foregroundStyle(.secondary)
                 .font(.caption2)
+                .transition(.opacity)
         }
     }
 
@@ -182,11 +228,13 @@ struct MenuBarView: View {
             Label("Ready", systemImage: "checkmark")
         case .waitingForIdle:
             Label("Waiting for idle...", systemImage: "hourglass")
+                .symbolEffect(.variableColor.iterative, isActive: true)
         case .waitingForSchedule:
             Label("Scheduled: \(formattedSchedule)", systemImage: "calendar.badge.clock")
         case .running(let stage):
             Label(stage.rawValue, systemImage: "arrow.triangle.2.circlepath")
                 .foregroundStyle(.orange)
+                .symbolEffect(.rotate, isActive: true)
         case .completed(let date):
             Label("Completed \(date.formatted(date: .omitted, time: .shortened))", systemImage: "checkmark.circle")
                 .foregroundStyle(.green)
