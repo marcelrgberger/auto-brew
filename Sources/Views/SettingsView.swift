@@ -9,7 +9,7 @@ struct SettingsView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("AutoBrew Einstellungen")
+                Text("AutoBrew Settings")
                     .font(.headline)
                 Spacer()
                 Button { dismiss() } label: {
@@ -23,25 +23,25 @@ struct SettingsView: View {
             Divider()
 
             Form {
-                Section("Aktualisierungsmodus") {
-                    Picker("Modus", selection: Binding(
+                Section("Update Trigger") {
+                    Picker("Mode", selection: Binding(
                         get: { settings.triggerMode },
                         set: {
                             settings.triggerMode = $0
                             scheduler.restartScheduling()
                         }
                     )) {
-                        Text("Nach Leerlauf").tag(TriggerMode.idle)
-                        Text("Zu fester Uhrzeit").tag(TriggerMode.scheduled)
+                        Text("After Idle").tag(TriggerMode.idle)
+                        Text("Scheduled Time").tag(TriggerMode.scheduled)
                     }
                     .pickerStyle(.segmented)
 
                     if settings.triggerMode == .idle {
                         HStack {
-                            Text("Leerlaufzeit")
+                            Text("Idle Duration")
                             Spacer()
                             Stepper(
-                                "\(settings.idleMinutes) Min.",
+                                "\(settings.idleMinutes) min",
                                 value: Binding(
                                     get: { settings.idleMinutes },
                                     set: { settings.idleMinutes = $0 }
@@ -52,7 +52,7 @@ struct SettingsView: View {
                         }
                     } else {
                         DatePicker(
-                            "Uhrzeit",
+                            "Time",
                             selection: scheduledTimeBinding,
                             displayedComponents: .hourAndMinute
                         )
@@ -62,8 +62,8 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Allgemein") {
-                    Toggle("Mit System starten", isOn: Binding(
+                Section("General") {
+                    Toggle("Launch at Login", isOn: Binding(
                         get: { settings.loginItemEnabled },
                         set: {
                             settings.loginItemEnabled = $0
@@ -71,7 +71,7 @@ struct SettingsView: View {
                         }
                     ))
 
-                    Toggle("Benachrichtigungen anzeigen", isOn: Binding(
+                    Toggle("Show Notifications", isOn: Binding(
                         get: { settings.showNotifications },
                         set: { settings.showNotifications = $0 }
                     ))
@@ -82,17 +82,17 @@ struct SettingsView: View {
                         Text("Status")
                         Spacer()
                         if brewManager.isHomebrewInstalled {
-                            Label("Installiert", systemImage: "checkmark.circle.fill")
+                            Label("Installed", systemImage: "checkmark.circle.fill")
                                 .foregroundStyle(.green)
                         } else {
-                            Label("Nicht gefunden", systemImage: "xmark.circle.fill")
+                            Label("Not Found", systemImage: "xmark.circle.fill")
                                 .foregroundStyle(.red)
                         }
                     }
 
                     if let path = brewManager.brewExecutable {
                         HStack {
-                            Text("Pfad")
+                            Text("Path")
                             Spacer()
                             Text(path)
                                 .font(.caption)
@@ -101,7 +101,7 @@ struct SettingsView: View {
                     }
                 }
 
-                Section("Info") {
+                Section("About") {
                     HStack {
                         Text("Version")
                         Spacer()
@@ -109,14 +109,23 @@ struct SettingsView: View {
                             .foregroundStyle(.secondary)
                     }
                     HStack {
-                        Text("Entwickler")
+                        Text("Developer")
                         Spacer()
                         Text("Marcel R. G. Berger")
                             .foregroundStyle(.secondary)
                     }
                     Link(destination: URL(string: "https://github.com/sponsors/marcelrgberger")!) {
                         HStack {
-                            Label("Projekt unterstützen", systemImage: "heart")
+                            Label("Support this Project", systemImage: "heart")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Link(destination: URL(string: "https://github.com/marcelrgberger/auto-brew")!) {
+                        HStack {
+                            Label("Source Code", systemImage: "chevron.left.forwardslash.chevron.right")
                             Spacer()
                             Image(systemName: "arrow.up.right")
                                 .font(.caption)
@@ -127,7 +136,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
         }
-        .frame(width: 380, height: 440)
+        .frame(width: 380, height: 500)
     }
 
     private var scheduledTimeBinding: Binding<Date> {

@@ -21,12 +21,12 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
 
         let runAction = UNNotificationAction(
             identifier: Self.runNowAction,
-            title: "Jetzt aktualisieren",
+            title: "Update Now",
             options: .foreground
         )
         let skipAction = UNNotificationAction(
             identifier: Self.skipAction,
-            title: "Überspringen",
+            title: "Skip",
             options: .destructive
         )
         let category = UNNotificationCategory(
@@ -49,7 +49,7 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
     func showMissedRunNotification() {
         let content = UNMutableNotificationContent()
         content.title = "AutoBrew"
-        content.body = "Das geplante Brew-Update konnte nicht ausgeführt werden. Soll es jetzt im Hintergrund laufen?"
+        content.body = "The scheduled brew update was missed. Run it now in the background?"
         content.sound = .default
         content.categoryIdentifier = Self.missedRunCategory
 
@@ -70,8 +70,8 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
         let content = UNMutableNotificationContent()
         content.title = "AutoBrew"
         content.body = success
-            ? "Alle Homebrew-Pakete wurden aktualisiert."
-            : "Update fehlgeschlagen: \(detail ?? "Unbekannter Fehler")"
+            ? "All Homebrew packages have been updated."
+            : "Update failed: \(detail ?? "Unknown error")"
         content.sound = .default
 
         let request = UNNotificationRequest(

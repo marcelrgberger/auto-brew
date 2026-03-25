@@ -5,6 +5,7 @@ struct MenuBarView: View {
     @State private var brewManager = BrewManager.shared
     @State private var settings = SettingsStore.shared
     @State private var showSettings = false
+    @State private var showLog = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -26,7 +27,7 @@ struct MenuBarView: View {
                     HStack {
                         Image(systemName: "clock")
                             .foregroundStyle(.secondary)
-                        Text("Letzter Lauf: \(lastRun.formatted(.relative(presentation: .named)))")
+                        Text("Last run: \(lastRun.formatted(.relative(presentation: .named)))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -41,19 +42,59 @@ struct MenuBarView: View {
                 }
             }
 
+            // Outdated packages
+            if !brewManager.outdatedPackages.isEmpty {
+                Divider()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(brewManager.outdatedPackages.count) outdated")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                    ForEach(brewManager.outdatedPackages.prefix(5)) { pkg in
+                        HStack {
+                            Text(pkg.name)
+                                .font(.caption2)
+                            Spacer()
+                            Text("\(pkg.currentVersion) → \(pkg.newVersion)")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    if brewManager.outdatedPackages.count > 5 {
+                        Text("+ \(brewManager.outdatedPackages.count - 5) more...")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                }
+            }
+
             Divider()
 
             Button {
                 Task { await scheduler.triggerManualRun() }
             } label: {
-                Label("Jetzt aktualisieren", systemImage: "arrow.triangle.2.circlepath")
+                Label("Update Now", systemImage: "arrow.triangle.2.circlepath")
             }
             .disabled(brewManager.isRunning)
 
             Button {
+                Task { await brewManager.fetchOutdated() }
+            } label: {
+                Label("Check for Updates", systemImage: "magnifyingglass")
+            }
+            .disabled(brewManager.isRunning)
+
+            if !brewManager.lastOutput.isEmpty {
+                Button {
+                    showLog.toggle()
+                } label: {
+                    Label("Show Log", systemImage: "doc.text")
+                }
+            }
+
+            Button {
                 showSettings.toggle()
             } label: {
-                Label("Einstellungen...", systemImage: "gear")
+                Label("Settings...", systemImage: "gear")
             }
 
             Divider()
@@ -64,7 +105,7 @@ struct MenuBarView: View {
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 } else {
-                    Text("Homebrew nicht installiert")
+                    Text("Homebrew not installed")
                         .font(.caption2)
                         .foregroundStyle(.red)
                 }
@@ -74,13 +115,19 @@ struct MenuBarView: View {
             Button {
                 NSApplication.shared.terminate(nil)
             } label: {
-                Label("Beenden", systemImage: "power")
+                Label("Quit", systemImage: "power")
             }
         }
         .padding()
         .frame(width: 280)
         .sheet(isPresented: $showSettings) {
             SettingsView()
+        }
+        .sheet(isPresented: $showLog) {
+            LogView(output: brewManager.lastOutput)
+        }
+        .task {
+            await brewManager.fetchOutdated()
         }
     }
 
@@ -91,7 +138,7 @@ struct MenuBarView: View {
             HStack(spacing: 4) {
                 ProgressView()
                     .controlSize(.mini)
-                Text("Läuft")
+                Text("Running")
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
@@ -112,16 +159,16 @@ struct MenuBarView: View {
     private var statusRow: some View {
         switch scheduler.state {
         case .idle:
-            Label("Bereit", systemImage: "checkmark")
+            Label("Ready", systemImage: "checkmark")
         case .waitingForIdle:
-            Label("Warte auf Leerlauf...", systemImage: "hourglass")
+            Label("Waiting for idle...", systemImage: "hourglass")
         case .waitingForSchedule:
-            Label("Geplanter Lauf: \(formattedSchedule)", systemImage: "calendar.badge.clock")
+            Label("Scheduled: \(formattedSchedule)", systemImage: "calendar.badge.clock")
         case .running(let stage):
             Label(stage.rawValue, systemImage: "arrow.triangle.2.circlepath")
                 .foregroundStyle(.orange)
         case .completed(let date):
-            Label("Abgeschlossen \(date.formatted(date: .omitted, time: .shortened))", systemImage: "checkmark.circle")
+            Label("Completed \(date.formatted(date: .omitted, time: .shortened))", systemImage: "checkmark.circle")
                 .foregroundStyle(.green)
         case .failed(let msg):
             Label(msg, systemImage: "exclamationmark.triangle")
@@ -134,9 +181,9 @@ struct MenuBarView: View {
     private var triggerDescription: String {
         switch settings.triggerMode {
         case .idle:
-            "Nach \(settings.idleMinutes) Min. Leerlauf"
+            "After \(settings.idleMinutes) min idle"
         case .scheduled:
-            "Täglich um \(formattedSchedule)"
+            "Daily at \(formattedSchedule)"
         }
     }
 

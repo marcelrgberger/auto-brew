@@ -10,6 +10,7 @@ final class BrewManager {
     private(set) var currentStage: BrewStage?
     private(set) var lastError: String?
     private(set) var lastOutput: String = ""
+    private(set) var outdatedPackages: [OutdatedPackage] = []
 
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "BrewManager")
 
@@ -67,6 +68,7 @@ final class BrewManager {
 
         logger.info("Starting full brew update cycle")
 
+        // Update formulae list
         currentStage = .updating
         let updateResult = try await BrewProcess.run("\(brew) update", brewPath: path)
         if !updateResult.succeeded {
@@ -75,6 +77,7 @@ final class BrewManager {
         }
         lastOutput += updateResult.stdout
 
+        // Upgrade formulae
         currentStage = .upgrading
         let upgradeResult = try await BrewProcess.run("\(brew) upgrade", brewPath: path)
         if !upgradeResult.succeeded {
@@ -83,6 +86,17 @@ final class BrewManager {
         }
         lastOutput += upgradeResult.stdout
 
+        // Upgrade casks
+        currentStage = .upgradingCasks
+        let caskResult = try await BrewProcess.run("\(brew) upgrade --cask --greedy", brewPath: path)
+        // Cask upgrade failures are non-fatal (some casks auto-update)
+        lastOutput += caskResult.stdout
+        if !caskResult.succeeded {
+            logger.warning("Cask upgrade had issues: \(caskResult.stderr)")
+            lastOutput += "\n[Cask-Warnung] \(caskResult.stderr)"
+        }
+
+        // Cleanup
         currentStage = .cleanup
         let cleanupResult = try await BrewProcess.run("\(brew) cleanup --prune=7", brewPath: path)
         if !cleanupResult.succeeded {
@@ -92,6 +106,52 @@ final class BrewManager {
         lastOutput += cleanupResult.stdout
 
         logger.info("Full brew update cycle completed successfully")
+    }
+
+    func fetchOutdated() async {
+        guard let brew = brewExecutable, let path = brewPath else { return }
+
+        let result = try? await BrewProcess.run("\(brew) outdated --json=v2", brewPath: path)
+        guard let result, result.succeeded else { return }
+
+        guard let data = result.stdout.data(using: .utf8) else { return }
+
+        struct BrewOutdated: Decodable {
+            struct Formula: Decodable {
+                let name: String
+                let installed_versions: [String]
+                let current_version: String
+            }
+            struct Cask: Decodable {
+                let name: String
+                let installed_versions: String
+                let current_version: String
+            }
+            let formulae: [Formula]
+            let casks: [Cask]
+        }
+
+        guard let outdated = try? JSONDecoder().decode(BrewOutdated.self, from: data) else { return }
+
+        var packages: [OutdatedPackage] = []
+        for f in outdated.formulae {
+            packages.append(OutdatedPackage(
+                name: f.name,
+                currentVersion: f.installed_versions.first ?? "?",
+                newVersion: f.current_version,
+                isCask: false
+            ))
+        }
+        for c in outdated.casks {
+            packages.append(OutdatedPackage(
+                name: c.name,
+                currentVersion: c.installed_versions,
+                newVersion: c.current_version,
+                isCask: true
+            ))
+        }
+
+        outdatedPackages = packages
     }
 
     private init() {}

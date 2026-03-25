@@ -1,10 +1,11 @@
 import Foundation
 
 enum BrewStage: String, Sendable {
-    case detecting = "Homebrew suchen..."
-    case installing = "Homebrew installieren..."
+    case detecting = "Detecting Homebrew..."
+    case installing = "Installing Homebrew..."
     case updating = "brew update..."
     case upgrading = "brew upgrade..."
+    case upgradingCasks = "brew upgrade --cask..."
     case cleanup = "brew cleanup..."
-    case done = "Fertig"
+    case done = "Done"
 }
