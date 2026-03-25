@@ -2,7 +2,7 @@
 
 import AppKit
 
-let sizes: [(CGFloat, String)] = [
+let icons: [(pixels: Int, filename: String)] = [
     (16, "icon_16x16.png"),
     (32, "icon_16x16@2x.png"),
     (32, "icon_32x32.png"),
@@ -19,161 +19,158 @@ let outputDir = CommandLine.arguments.count > 1
     ? CommandLine.arguments[1]
     : "AutoBrew/Assets.xcassets/AppIcon.appiconset"
 
-func generateIcon(size: CGFloat) -> NSImage {
-    let image = NSImage(size: NSSize(width: size, height: size))
-    image.lockFocus()
+func color(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> CGColor {
+    CGColor(red: r, green: g, blue: b, alpha: a)
+}
 
-    guard let ctx = NSGraphicsContext.current?.cgContext else {
-        image.unlockFocus()
-        return image
-    }
+func generateIcon(pixels: Int) -> Data? {
+    let px = CGFloat(pixels)
 
-    let s = size
+    let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: pixels,
+        pixelsHigh: pixels,
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 0
+    )!
 
-    // --- Rounded rect background with warm brown gradient ---
-    let cornerRadius = s * 0.22
-    let bgRect = CGRect(x: 0, y: 0, width: s, height: s)
-    let bgPath = CGPath(roundedRect: bgRect, cornerWidth: cornerRadius, cornerHeight: cornerRadius, transform: nil)
+    let ctx = NSGraphicsContext(bitmapImageRep: rep)!
+    NSGraphicsContext.current = ctx
+    let g = ctx.cgContext
+    let p = px
 
-    ctx.saveGState()
-    ctx.addPath(bgPath)
-    ctx.clip()
+    // --- Rounded rect background ---
+    let corner = p * 0.22
+    let bgPath = CGPath(roundedRect: CGRect(x: 0, y: 0, width: p, height: p), cornerWidth: corner, cornerHeight: corner, transform: nil)
 
-    let bgColors = [
-        CGColor(red: 0.52, green: 0.30, blue: 0.12, alpha: 1.0),
-        CGColor(red: 0.32, green: 0.16, blue: 0.06, alpha: 1.0),
-    ]
-    let bgGradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: bgColors as CFArray, locations: [0.0, 1.0])!
-    ctx.drawLinearGradient(bgGradient, start: CGPoint(x: 0, y: s), end: CGPoint(x: 0, y: 0), options: [])
-    ctx.restoreGState()
+    g.saveGState()
+    g.addPath(bgPath)
+    g.clip()
+    let bgGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
+        color(0.75, 0.45, 0.15),
+        color(0.35, 0.18, 0.05),
+    ] as CFArray, locations: [0.0, 1.0])!
+    g.drawLinearGradient(bgGrad, start: CGPoint(x: p * 0.2, y: p), end: CGPoint(x: p * 0.8, y: 0), options: [])
+    g.restoreGState()
+
+    // --- Inner glow ---
+    g.saveGState()
+    g.addPath(bgPath)
+    g.clip()
+    let glowGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
+        color(1, 1, 1, 0.12),
+        color(1, 1, 1, 0.0),
+    ] as CFArray, locations: [0.0, 0.5])!
+    g.drawRadialGradient(glowGrad, startCenter: CGPoint(x: p * 0.35, y: p * 0.7), startRadius: 0, endCenter: CGPoint(x: p * 0.5, y: p * 0.5), endRadius: p * 0.6, options: [])
+    g.restoreGState()
 
     // --- Mug body ---
-    let mugLeft = s * 0.18
-    let mugBottom = s * 0.18
-    let mugWidth = s * 0.42
-    let mugHeight = s * 0.52
-    let mugCorner = s * 0.06
-    let mugRect = CGRect(x: mugLeft, y: mugBottom, width: mugWidth, height: mugHeight)
-    let mugPath = CGPath(roundedRect: mugRect, cornerWidth: mugCorner, cornerHeight: mugCorner, transform: nil)
+    let mugL = p * 0.2, mugB = p * 0.18, mugW = p * 0.38, mugH = p * 0.48
+    let mugR = p * 0.07
+    let mugRect = CGRect(x: mugL, y: mugB, width: mugW, height: mugH)
+    let mugPath = CGPath(roundedRect: mugRect, cornerWidth: mugR, cornerHeight: mugR, transform: nil)
 
-    ctx.setFillColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.92))
-    ctx.addPath(mugPath)
-    ctx.fillPath()
+    g.saveGState()
+    g.addPath(mugPath)
+    g.clip()
+    let mugGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
+        color(1, 1, 1, 0.95),
+        color(0.92, 0.92, 0.92, 0.95),
+    ] as CFArray, locations: [0.0, 1.0])!
+    g.drawLinearGradient(mugGrad, start: CGPoint(x: 0, y: mugB + mugH), end: CGPoint(x: 0, y: mugB), options: [])
+    g.restoreGState()
 
-    // --- Mug handle (right side arc) ---
-    let handleCenterX = mugLeft + mugWidth
-    let handleCenterY = mugBottom + mugHeight * 0.5
-    let handleOuterR = s * 0.13
-    let handleInnerR = s * 0.07
+    // --- Handle ---
+    let hx = mugL + mugW, hy = mugB + mugH * 0.48, hr = p * 0.095
+    g.setStrokeColor(color(1, 1, 1, 0.92))
+    g.setLineWidth(p * 0.04)
+    g.setLineCap(.round)
+    let handle = CGMutablePath()
+    handle.addArc(center: CGPoint(x: hx, y: hy), radius: hr, startAngle: -.pi / 2.2, endAngle: .pi / 2.2, clockwise: true)
+    g.addPath(handle)
+    g.strokePath()
 
-    ctx.setStrokeColor(CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.92))
-    ctx.setLineWidth(s * 0.045)
-
-    let handlePath = CGMutablePath()
-    handlePath.addArc(center: CGPoint(x: handleCenterX, y: handleCenterY), radius: (handleOuterR + handleInnerR) / 2, startAngle: -.pi / 2, endAngle: .pi / 2, clockwise: true)
-    ctx.addPath(handlePath)
-    ctx.strokePath()
-
-    // --- Steam lines ---
-    let steamColor = CGColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.5)
-    ctx.setStrokeColor(steamColor)
-    ctx.setLineWidth(s * 0.02)
-    ctx.setLineCap(.round)
-
-    let steamBaseY = mugBottom + mugHeight + s * 0.04
-    let steamTopY = steamBaseY + s * 0.14
-    let steamXPositions = [mugLeft + mugWidth * 0.25, mugLeft + mugWidth * 0.5, mugLeft + mugWidth * 0.75]
-
-    for (i, x) in steamXPositions.enumerated() {
-        let steam = CGMutablePath()
-        let wave = s * 0.025 * (i % 2 == 0 ? 1.0 : -1.0)
-        steam.move(to: CGPoint(x: x, y: steamBaseY))
-        steam.addCurve(
-            to: CGPoint(x: x, y: steamTopY),
-            control1: CGPoint(x: x + wave, y: steamBaseY + (steamTopY - steamBaseY) * 0.33),
-            control2: CGPoint(x: x - wave, y: steamBaseY + (steamTopY - steamBaseY) * 0.66)
-        )
-        ctx.addPath(steam)
-        ctx.strokePath()
+    // --- Steam ---
+    g.setStrokeColor(color(1, 1, 1, 0.4))
+    g.setLineWidth(p * 0.018)
+    g.setLineCap(.round)
+    let sBase = mugB + mugH + p * 0.035, sH = p * 0.13
+    for (i, x) in [mugL + mugW * 0.3, mugL + mugW * 0.55, mugL + mugW * 0.8].enumerated() {
+        let w = p * 0.022 * (i % 2 == 0 ? 1.0 : -1.0)
+        let s = CGMutablePath()
+        s.move(to: CGPoint(x: x, y: sBase))
+        s.addCurve(to: CGPoint(x: x + w * 0.5, y: sBase + sH),
+                   control1: CGPoint(x: x + w, y: sBase + sH * 0.35),
+                   control2: CGPoint(x: x - w, y: sBase + sH * 0.65))
+        g.addPath(s)
+        g.strokePath()
     }
 
-    // --- Green refresh badge (bottom right) ---
-    let badgeSize = s * 0.28
-    let badgeX = s * 0.65
-    let badgeY = s * 0.08
-    let badgeCenter = CGPoint(x: badgeX + badgeSize / 2, y: badgeY + badgeSize / 2)
+    // --- Green badge ---
+    let bSz = p * 0.26, bX = p * 0.66, bY = p * 0.08
+    let bC = CGPoint(x: bX + bSz / 2, y: bY + bSz / 2)
 
-    // Badge background
-    ctx.setFillColor(CGColor(red: 0.18, green: 0.72, blue: 0.33, alpha: 1.0))
-    ctx.fillEllipse(in: CGRect(x: badgeX, y: badgeY, width: badgeSize, height: badgeSize))
+    g.saveGState()
+    g.setShadow(offset: CGSize(width: 0, height: -p * 0.008), blur: p * 0.02, color: color(0, 0, 0, 0.3))
+    g.setFillColor(color(0.22, 0.78, 0.40))
+    g.fillEllipse(in: CGRect(x: bX, y: bY, width: bSz, height: bSz))
+    g.restoreGState()
 
-    // Circular arrow in badge
-    let arrowRadius = badgeSize * 0.30
-    let arrowLineWidth = s * 0.025
+    g.saveGState()
+    g.addEllipse(in: CGRect(x: bX, y: bY, width: bSz, height: bSz))
+    g.clip()
+    let bGrad = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: [
+        color(0.30, 0.85, 0.48),
+        color(0.15, 0.65, 0.30),
+    ] as CFArray, locations: [0.0, 1.0])!
+    g.drawLinearGradient(bGrad, start: CGPoint(x: bX, y: bY + bSz), end: CGPoint(x: bX, y: bY), options: [])
+    g.restoreGState()
 
-    ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.95))
-    ctx.setLineWidth(arrowLineWidth)
-    ctx.setLineCap(.round)
+    // Badge arrows
+    let aR = bSz * 0.28, aLW = p * 0.022
+    g.setStrokeColor(color(1, 1, 1, 0.95))
+    g.setLineWidth(aLW)
+    g.setLineCap(.round)
 
-    // Top arc
-    let arc1 = CGMutablePath()
-    arc1.addArc(center: badgeCenter, radius: arrowRadius, startAngle: .pi * 0.15, endAngle: .pi * 0.85, clockwise: false)
-    ctx.addPath(arc1)
-    ctx.strokePath()
-
-    // Bottom arc
-    let arc2 = CGMutablePath()
-    arc2.addArc(center: badgeCenter, radius: arrowRadius, startAngle: .pi * 1.15, endAngle: .pi * 1.85, clockwise: false)
-    ctx.addPath(arc2)
-    ctx.strokePath()
+    for start: CGFloat in [0.2, 1.2] {
+        let arc = CGMutablePath()
+        arc.addArc(center: bC, radius: aR, startAngle: .pi * start, endAngle: .pi * (start + 0.6), clockwise: false)
+        g.addPath(arc)
+        g.strokePath()
+    }
 
     // Arrow tips
-    let tipSize = s * 0.035
-    func drawArrowTip(at point: CGPoint, angle: CGFloat) {
-        ctx.saveGState()
-        ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 0.95))
+    let tL = p * 0.032
+    for angle: CGFloat in [0.8, 1.8] {
+        let pt = CGPoint(x: bC.x + aR * cos(.pi * angle), y: bC.y + aR * sin(.pi * angle))
+        let dir = .pi * angle + .pi / 2
+        g.setFillColor(color(1, 1, 1, 0.95))
         let tip = CGMutablePath()
-        tip.move(to: point)
-        tip.addLine(to: CGPoint(x: point.x + tipSize * cos(angle + 2.5), y: point.y + tipSize * sin(angle + 2.5)))
-        tip.addLine(to: CGPoint(x: point.x + tipSize * cos(angle - 2.5), y: point.y + tipSize * sin(angle - 2.5)))
+        tip.move(to: pt)
+        tip.addLine(to: CGPoint(x: pt.x + tL * cos(dir + 2.3), y: pt.y + tL * sin(dir + 2.3)))
+        tip.addLine(to: CGPoint(x: pt.x + tL * cos(dir - 2.3), y: pt.y + tL * sin(dir - 2.3)))
         tip.closeSubpath()
-        ctx.addPath(tip)
-        ctx.fillPath()
-        ctx.restoreGState()
+        g.addPath(tip)
+        g.fillPath()
     }
 
-    let tip1 = CGPoint(
-        x: badgeCenter.x + arrowRadius * cos(.pi * 0.85),
-        y: badgeCenter.y + arrowRadius * sin(.pi * 0.85)
-    )
-    drawArrowTip(at: tip1, angle: .pi * 0.85 + .pi / 2)
-
-    let tip2 = CGPoint(
-        x: badgeCenter.x + arrowRadius * cos(.pi * 1.85),
-        y: badgeCenter.y + arrowRadius * sin(.pi * 1.85)
-    )
-    drawArrowTip(at: tip2, angle: .pi * 1.85 + .pi / 2)
-
-    image.unlockFocus()
-    return image
+    NSGraphicsContext.current = nil
+    return rep.representation(using: .png, properties: [:])
 }
 
-for (size, filename) in sizes {
-    let image = generateIcon(size: size)
-    guard let tiff = image.tiffRepresentation,
-          let bitmap = NSBitmapImageRep(data: tiff),
-          let png = bitmap.representation(using: .png, properties: [:]) else {
-        print("Failed to generate \(filename)")
+for icon in icons {
+    guard let png = generateIcon(pixels: icon.pixels) else {
+        print("Failed: \(icon.filename)")
         continue
     }
-
-    let path = "\(outputDir)/\(filename)"
-    do {
-        try png.write(to: URL(fileURLWithPath: path))
-        print("Generated \(filename) (\(Int(size))x\(Int(size)))")
-    } catch {
-        print("Failed to write \(filename): \(error)")
-    }
+    let path = "\(outputDir)/\(icon.filename)"
+    try! png.write(to: URL(fileURLWithPath: path))
+    print("Generated \(icon.filename) (\(icon.pixels)x\(icon.pixels) px)")
 }
 
-print("\nAll icons generated!")
+print("\nDone!")
