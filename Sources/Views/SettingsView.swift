@@ -114,6 +114,15 @@ struct SettingsView: View {
                         Text("Marcel R. G. Berger")
                             .foregroundStyle(.secondary)
                     }
+                    Link(destination: URL(string: "https://github.com/sponsors/marcelrgberger")!) {
+                        HStack {
+                            Label("Projekt unterstützen", systemImage: "heart")
+                            Spacer()
+                            Image(systemName: "arrow.up.right")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
             .formStyle(.grouped)

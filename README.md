@@ -237,18 +237,12 @@ auto-brew/
     └── SettingsStoreTests.swift
 ```
 
-## Download
+## Support
 
-Available on the [Mac App Store](https://apps.apple.com/app/autobrew) for a one-time purchase of **$2.99 / 2,99 EUR**.
+If you find AutoBrew useful, consider [sponsoring the project](https://github.com/sponsors/marcelrgberger).
 
 ## License
 
-**Source Available — All Rights Reserved**
+MIT License — see [LICENSE](LICENSE) for details.
 
-This source code is publicly visible for transparency and educational purposes only.
-Copying, redistribution, modification, and derivative works are **not permitted**.
-See [LICENSE](LICENSE) for the full terms.
-
-The official distribution is exclusively through the Apple App Store.
-
-Copyright 2026 Marcel R. G. Berger. All rights reserved.
+Copyright 2026 Marcel R. G. Berger.
