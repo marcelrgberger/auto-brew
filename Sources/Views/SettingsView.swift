@@ -25,7 +25,8 @@ struct SettingsView: View {
 
             Divider()
 
-            Form {
+            ScrollView {
+              Form {
                 Section("Update Trigger") {
                     Picker("Mode", selection: Binding(
                         get: { settings.triggerMode },
@@ -138,8 +139,9 @@ struct SettingsView: View {
                 }
             }
             .formStyle(.grouped)
+            }
         }
-        .frame(width: 380, height: 500)
+        .frame(maxWidth: 320, maxHeight: 460)
     }
 
     private var scheduledTimeBinding: Binding<Date> {
