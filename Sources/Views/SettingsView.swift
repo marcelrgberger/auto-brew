@@ -7,7 +7,7 @@ struct SettingsView: View {
     var onBack: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
@@ -17,15 +17,15 @@ struct SettingsView: View {
                 Text("Settings")
                     .font(.headline)
                 Spacer()
-                Color.clear.frame(width: 44)
+                Color.clear.frame(width: 44, height: 1)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
 
             Divider()
 
-            ScrollView {
-              Form {
+            Form {
                 Section("Update Trigger") {
                     Picker("Mode", selection: Binding(
                         get: { settings.triggerMode },
@@ -138,7 +138,6 @@ struct SettingsView: View {
                 }
             }
             .formStyle(.grouped)
-            }
         }
         .frame(maxWidth: 320, maxHeight: 460)
     }

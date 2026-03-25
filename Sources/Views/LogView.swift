@@ -5,7 +5,7 @@ struct LogView: View {
     var onBack: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
@@ -25,18 +25,18 @@ struct LogView: View {
                 .help("Copy to clipboard")
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.top, 10)
+            .padding(.bottom, 4)
 
             Divider()
 
-            ScrollView {
-                Text(output.isEmpty ? "No output yet." : output)
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-                    .textSelection(.enabled)
-            }
+            Text(output.isEmpty ? "No output yet." : output)
+                .font(.system(.caption, design: .monospaced))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .textSelection(.enabled)
         }
-        .frame(width: 500, height: 400)
+        .frame(maxWidth: 320, maxHeight: 400)
     }
 }

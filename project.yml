@@ -41,9 +41,10 @@ targets:
     platform: macOS
     sources:
       - Sources
-    resources:
-      - path: AutoBrew/Assets.xcassets
       - path: AutoBrew/Localizable.xcstrings
+        buildPhase: resources
+      - path: AutoBrew/Assets.xcassets
+        buildPhase: resources
     settings:
       base:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
