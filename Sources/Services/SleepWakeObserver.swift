@@ -11,12 +11,18 @@ final class SleepWakeObserver {
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "SleepWake")
     private let settings = SettingsStore.shared
 
+    private var sleepObserverToken: NSObjectProtocol?
+    private var wakeObserverToken: NSObjectProtocol?
+
     var onWakeWithMissedRun: (@MainActor () -> Void)?
 
     func startObserving() {
+        // Remove existing observers to prevent duplicates
+        stopObserving()
+
         let center = NSWorkspace.shared.notificationCenter
 
-        center.addObserver(
+        sleepObserverToken = center.addObserver(
             forName: NSWorkspace.willSleepNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
@@ -25,7 +31,7 @@ final class SleepWakeObserver {
             }
         }
 
-        center.addObserver(
+        wakeObserverToken = center.addObserver(
             forName: NSWorkspace.didWakeNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
@@ -35,6 +41,18 @@ final class SleepWakeObserver {
         }
 
         logger.info("Sleep/Wake observer started")
+    }
+
+    func stopObserving() {
+        let center = NSWorkspace.shared.notificationCenter
+        if let token = sleepObserverToken {
+            center.removeObserver(token)
+            sleepObserverToken = nil
+        }
+        if let token = wakeObserverToken {
+            center.removeObserver(token)
+            wakeObserverToken = nil
+        }
     }
 
     private func handleSleep() {
