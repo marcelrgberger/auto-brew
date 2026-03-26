@@ -3,6 +3,7 @@ name: Build, Notarize & Release
 on:
   push:
     branches: [test, beta, main]
+  workflow_dispatch:
 
 concurrency:
   group: macos-build-${{ github.ref_name }}
