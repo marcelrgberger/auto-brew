@@ -11,7 +11,23 @@ A native macOS menu bar app that automatically keeps Homebrew and all installed 
 - **Missed Run Recovery** — If the Mac was asleep during a scheduled run, prompts the user on wake
 - **Homebrew Auto-Install** — Installs Homebrew automatically if not present
 - **Login Item** — Starts automatically with the system via SMAppService
-- **Zero Dependencies** — Built entirely with Apple frameworks (SwiftUI, IOKit, UserNotifications, ServiceManagement)
+- **Auto-Updates** — Keeps itself up to date via Sparkle
+- **8 Languages** — English, German, French, Italian, Dutch, Polish, Portuguese, Spanish
+
+## Install
+
+### Via Homebrew (recommended)
+
+```bash
+brew tap marcelrgberger/tap
+brew install --cask autobrew
+```
+
+### Manual Download
+
+Download the latest DMG from [GitHub Releases](https://github.com/marcelrgberger/auto-brew/releases), open it, and drag AutoBrew to your Applications folder.
+
+The app is signed and notarized by Apple — no Gatekeeper warnings.
 
 ## Requirements
 
@@ -236,10 +252,6 @@ auto-brew/
     ├── IdleDetectorTests.swift
     └── SettingsStoreTests.swift
 ```
-
-## Download
-
-Download the latest release from [GitHub Releases](https://github.com/marcelrgberger/auto-brew/releases). The app is notarized by Apple and updates automatically via Sparkle.
 
 ## Support
 
