@@ -45,6 +45,22 @@ targets:
         buildPhase: resources
       - path: AutoBrew/Assets.xcassets
         buildPhase: resources
+      - path: AutoBrew/en.lproj
+        buildPhase: resources
+      - path: AutoBrew/de.lproj
+        buildPhase: resources
+      - path: AutoBrew/fr.lproj
+        buildPhase: resources
+      - path: AutoBrew/it.lproj
+        buildPhase: resources
+      - path: AutoBrew/nl.lproj
+        buildPhase: resources
+      - path: AutoBrew/pl.lproj
+        buildPhase: resources
+      - path: AutoBrew/pt-BR.lproj
+        buildPhase: resources
+      - path: AutoBrew/es.lproj
+        buildPhase: resources
     settings:
       base:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
