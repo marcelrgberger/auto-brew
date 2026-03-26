@@ -154,7 +154,7 @@ struct MenuBarView: View {
             Button {
                 Task { await brewManager.fetchOutdated() }
             } label: {
-                Label("Check for Updates", systemImage: "magnifyingglass")
+                Label("Check Outdated Packages", systemImage: "magnifyingglass")
             }
             .disabled(brewManager.isRunning)
 
