@@ -27,7 +27,7 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: 7TSZJCJY88
     PRODUCT_BUNDLE_IDENTIFIER: za.co.digitalfreedom.AutoBrew
     PRODUCT_NAME: AutoBrew
     INFOPLIST_FILE: AutoBrew/Info.plist
