@@ -5,5 +5,18 @@
         <link>https://github.com/marcelrgberger/auto-brew</link>
         <description>AutoBrew update feed</description>
         <language>en</language>
+        <item>
+            <title>Version 1.0.2</title>
+            <pubDate>Thu, 26 Mar 2026 16:06:22 +0000</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://github.com/marcelrgberger/auto-brew/releases/download/v1.0.2/AutoBrew.zip"
+                length="2885224"
+                type="application/octet-stream"
+                sparkle:edSignature="2885224"
+            />
+        </item>
     </channel>
 </rss>
