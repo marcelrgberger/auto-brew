@@ -132,28 +132,31 @@ final class SchedulerService {
     private func runBrewUpdate() async {
         guard !brewManager.isRunning else { return }
 
-        if !brewManager.isHomebrewInstalled {
-            logger.info("Homebrew not installed, attempting installation")
-            do {
-                try await brewManager.installHomebrew()
-            } catch {
-                state = .failed(error.localizedDescription)
-                notificationManager.showCompletionNotification(success: false, detail: error.localizedDescription)
-                return
-            }
+        guard brewManager.isHomebrewInstalled else {
+            state = .failed("Homebrew not installed")
+            logger.warning("Brew update skipped — Homebrew not installed")
+            return
         }
 
         do {
             state = .running(.updating)
             try await brewManager.runFullUpdate()
             settings.lastRunDate = Date()
+            // Mirror the final stage from BrewManager
+            if let stage = brewManager.currentStage {
+                state = .running(stage)
+            }
             state = .completed(Date())
             sleepWakeObserver.clearMissedRun()
-            notificationManager.showCompletionNotification(success: true)
+            if settings.showNotifications {
+                notificationManager.showCompletionNotification(success: true)
+            }
             logger.info("Brew update completed successfully")
         } catch {
             state = .failed(error.localizedDescription)
-            notificationManager.showCompletionNotification(success: false, detail: error.localizedDescription)
+            if settings.showNotifications {
+                notificationManager.showCompletionNotification(success: false, detail: error.localizedDescription)
+            }
             logger.error("Brew update failed: \(error.localizedDescription)")
         }
     }
