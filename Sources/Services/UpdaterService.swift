@@ -17,11 +17,9 @@ final class UpdaterService {
 
     private init() {
         updaterController = SPUStandardUpdaterController(
-            startingUpdater: false,
+            startingUpdater: true,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
-        // Don't auto-check until we have a signed appcast
-        updaterController.updater.automaticallyChecksForUpdates = false
     }
 }
