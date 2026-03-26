@@ -24,5 +24,9 @@
     <string>Copyright 2026 Marcel R. G. Berger. All rights reserved.</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
+    <key>SUFeedURL</key>
+    <string>https://raw.githubusercontent.com/marcelrgberger/auto-brew/main/appcast.xml</string>
+    <key>SUPublicEDKey</key>
+    <string></string>
 </dict>
 </plist>

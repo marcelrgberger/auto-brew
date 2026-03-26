@@ -19,6 +19,11 @@ options:
     - es
     - Base
 
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.0.0"
+
 settings:
   base:
     MARKETING_VERSION: "1.0.0"
@@ -61,6 +66,8 @@ targets:
         buildPhase: resources
       - path: AutoBrew/es.lproj
         buildPhase: resources
+    dependencies:
+      - package: Sparkle
     settings:
       base:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
