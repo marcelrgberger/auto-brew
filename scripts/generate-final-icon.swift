@@ -76,42 +76,52 @@ func foamPath(in rect: CGRect) -> CGPath {
     return path
 }
 
-func arrowHandlePath(center: CGPoint, radius: CGFloat, thickness: CGFloat) -> CGPath {
-    let startAngle = CGFloat.pi * 0.20
-    let endAngle = -CGFloat.pi * 1.15
-    let tipAngle = CGFloat.pi * 0.22
-
-    let outerRadius = radius + thickness / 2
-    let innerRadius = radius - thickness / 2
+func clockHandlePath(center: CGPoint, radius: CGFloat, bezelThickness: CGFloat, connectorWidth: CGFloat, connectorHeight: CGFloat) -> CGPath {
+    let outerRadius = radius + bezelThickness / 2
+    let connectorRect = CGRect(
+        x: center.x - outerRadius - connectorWidth * 0.62,
+        y: center.y - connectorHeight / 2,
+        width: connectorWidth,
+        height: connectorHeight
+    )
 
     let path = CGMutablePath()
-    path.addArc(center: center, radius: outerRadius, startAngle: startAngle, endAngle: endAngle, clockwise: true)
-    path.addArc(center: center, radius: innerRadius, startAngle: endAngle, endAngle: startAngle, clockwise: false)
-    path.closeSubpath()
+    path.addPath(CGPath(ellipseIn: CGRect(
+        x: center.x - outerRadius,
+        y: center.y - outerRadius,
+        width: outerRadius * 2,
+        height: outerRadius * 2
+    ), transform: nil))
+    path.addPath(roundedRectPath(connectorRect, radius: connectorHeight * 0.48))
+    return path
+}
 
-    let tip = CGPoint(x: center.x + cos(tipAngle) * outerRadius, y: center.y + sin(tipAngle) * outerRadius)
-    let tangentAngle = tipAngle - .pi / 2
-    let arrowLength = thickness * 1.15
-    let arrowWidth = thickness * 0.95
+func clockFacePath(center: CGPoint, radius: CGFloat) -> CGPath {
+    CGPath(ellipseIn: CGRect(
+        x: center.x - radius,
+        y: center.y - radius,
+        width: radius * 2,
+        height: radius * 2
+    ), transform: nil)
+}
 
-    let base = CGPoint(
-        x: center.x + cos(tipAngle) * (radius + thickness * 0.04),
-        y: center.y + sin(tipAngle) * (radius + thickness * 0.04)
-    )
-    let left = CGPoint(
-        x: base.x - cos(tangentAngle) * arrowWidth * 0.5 - cos(tipAngle) * arrowLength * 0.45,
-        y: base.y - sin(tangentAngle) * arrowWidth * 0.5 - sin(tipAngle) * arrowLength * 0.45
-    )
-    let right = CGPoint(
-        x: base.x + cos(tangentAngle) * arrowWidth * 0.5 - cos(tipAngle) * arrowLength * 0.45,
-        y: base.y + sin(tangentAngle) * arrowWidth * 0.5 - sin(tipAngle) * arrowLength * 0.45
-    )
+func clockHandsPath(center: CGPoint, radius: CGFloat) -> CGPath {
+    let path = CGMutablePath()
 
-    path.move(to: tip)
-    path.addLine(to: left)
-    path.addLine(to: right)
-    path.closeSubpath()
+    path.move(to: center)
+    path.addLine(to: CGPoint(
+        x: center.x,
+        y: center.y + radius * 0.48
+    ))
 
+    let minuteAngle = -CGFloat.pi * 0.18
+    path.move(to: center)
+    path.addLine(to: CGPoint(
+        x: center.x + cos(minuteAngle) * radius * 0.60,
+        y: center.y + sin(minuteAngle) * radius * 0.60
+    ))
+
+    path.addEllipse(in: CGRect(x: center.x - radius * 0.09, y: center.y - radius * 0.09, width: radius * 0.18, height: radius * 0.18))
     return path
 }
 
@@ -222,8 +232,8 @@ drawRadialGradient(
 )
 context.restoreGState()
 
-let handleCenter = CGPoint(x: mugRect.maxX + 34, y: mugRect.midY + 36)
-let handle = arrowHandlePath(center: handleCenter, radius: 125, thickness: 82)
+let handleCenter = CGPoint(x: mugRect.maxX + 118, y: mugRect.midY + 38)
+let handle = clockHandlePath(center: handleCenter, radius: 98, bezelThickness: 58, connectorWidth: 122, connectorHeight: 130)
 context.saveGState()
 context.setShadow(offset: CGSize(width: 0, height: -18), blur: 40, color: rgb(0, 0, 0, 0.24))
 context.addPath(handle)
@@ -243,6 +253,45 @@ drawLinearGradient(
     start: CGPoint(x: handleBounds.minX, y: handleBounds.maxY),
     end: CGPoint(x: handleBounds.maxX, y: handleBounds.minY)
 )
+context.restoreGState()
+
+let clockFace = clockFacePath(center: handleCenter, radius: 70)
+context.saveGState()
+context.setShadow(offset: CGSize(width: 0, height: -8), blur: 18, color: rgb(255, 255, 255, 0.10))
+context.addPath(clockFace)
+context.setFillColor(rgb(255, 247, 228, 0.96))
+context.fillPath()
+context.restoreGState()
+
+context.saveGState()
+context.addPath(clockFace)
+context.clip()
+let clockFaceBounds = CGRect(x: handleCenter.x - 84, y: handleCenter.y - 84, width: 168, height: 168)
+drawLinearGradient(
+    context,
+    in: clockFaceBounds,
+    colors: [rgb(255, 252, 244, 0.98), rgb(242, 228, 196, 0.95)],
+    locations: [0, 1],
+    start: CGPoint(x: clockFaceBounds.minX, y: clockFaceBounds.maxY),
+    end: CGPoint(x: clockFaceBounds.maxX, y: clockFaceBounds.minY)
+)
+context.restoreGState()
+
+context.saveGState()
+context.addPath(clockFace)
+context.setStrokeColor(rgb(255, 255, 255, 0.32))
+context.setLineWidth(6)
+context.strokePath()
+context.restoreGState()
+
+let clockHands = clockHandsPath(center: handleCenter, radius: 58)
+context.saveGState()
+context.addPath(clockHands)
+context.setStrokeColor(rgb(88, 66, 32, 0.92))
+context.setLineWidth(15)
+context.setLineCap(.round)
+context.setLineJoin(.round)
+context.strokePath()
 context.restoreGState()
 
 context.saveGState()
