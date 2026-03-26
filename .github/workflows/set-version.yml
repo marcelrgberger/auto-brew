@@ -1,0 +1,101 @@
+name: 03. Set new Version for next Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        required: true
+        default: PATCH
+        type: choice
+        description: >
+          Which version segment to bump.
+          MAJOR for incompatible changes,
+          MINOR for new features,
+          PATCH for bug fixes only.
+        options:
+          - MAJOR
+          - MINOR
+          - PATCH
+
+permissions:
+  contents: write
+
+jobs:
+  set-version:
+    name: Set new Version
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Validate branch
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          if [ "$BRANCH" != "development" ]; then
+            echo "::error ::Version bump only allowed on 'development' branch, not '$BRANCH'"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: development
+          fetch-depth: 0
+
+      - name: Increment version
+        env:
+          RELEASE_KIND: ${{ github.event.inputs.release_version }}
+        run: |
+          set -euo pipefail
+          FILE="project.yml"
+
+          VERSION=$(grep 'MARKETING_VERSION:' "$FILE" | head -1 | awk '{print $2}' | tr -d '"')
+          BUILD=$(grep 'CURRENT_PROJECT_VERSION:' "$FILE" | head -1 | awk '{print $2}' | tr -d '"')
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          case "${RELEASE_KIND}" in
+            MAJOR) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            MINOR) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            PATCH) PATCH=$((PATCH + 1)) ;;
+          esac
+
+          NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+          NEW_BUILD=$((BUILD + 1))
+
+          sed -i "s/MARKETING_VERSION: .*/MARKETING_VERSION: \"$NEW_VERSION\"/" "$FILE"
+          sed -i "s/CURRENT_PROJECT_VERSION: .*/CURRENT_PROJECT_VERSION: \"$NEW_BUILD\"/" "$FILE"
+
+          echo "NEW_VERSION=$NEW_VERSION" >> "$GITHUB_ENV"
+          echo "NEW_BUILD=$NEW_BUILD" >> "$GITHUB_ENV"
+          echo "Bumped to $NEW_VERSION (build $NEW_BUILD)"
+
+      - name: Commit and push
+        env:
+          NEW_VERSION: ${{ env.NEW_VERSION }}
+          NEW_BUILD: ${{ env.NEW_BUILD }}
+        run: |
+          set -e
+          git config user.name "Marcel R. G. Berger"
+          git config user.email "hello@marcelrgberger.com"
+          git add project.yml
+          git commit -m "Version $NEW_VERSION (build $NEW_BUILD)"
+          git tag -a "v$NEW_VERSION" -m "Release v$NEW_VERSION"
+          git push origin development
+          git push origin --tags
+
+      - name: Job Summary
+        if: always()
+        env:
+          RELEASE_KIND: ${{ github.event.inputs.release_version }}
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << EOF
+          ## Version Bump Summary
+
+          | Field | Value |
+          |-------|-------|
+          | Release Type | ${RELEASE_KIND} |
+          | New Version | ${NEW_VERSION:-n/a} |
+          | Build Number | ${NEW_BUILD:-n/a} |
+          | Tag | v${NEW_VERSION:-n/a} |
+          | Branch | development |
+          EOF
