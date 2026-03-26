@@ -53,6 +53,11 @@ final class SettingsStore {
         set { defaults.set(newValue, forKey: "showNotifications") }
     }
 
+    var onboardingCompleted: Bool {
+        get { defaults.bool(forKey: "onboardingCompleted") }
+        set { defaults.set(newValue, forKey: "onboardingCompleted") }
+    }
+
     var didRunToday: Bool {
         guard let last = lastRunDate else { return false }
         return Calendar.current.isDateInToday(last)
