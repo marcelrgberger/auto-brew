@@ -9,7 +9,8 @@ enum LoginItemManager: Sendable {
         SMAppService.mainApp.status == .enabled
     }
 
-    static func setEnabled(_ enabled: Bool) {
+    @discardableResult
+    static func setEnabled(_ enabled: Bool) -> Bool {
         do {
             if enabled {
                 try SMAppService.mainApp.register()
@@ -18,8 +19,10 @@ enum LoginItemManager: Sendable {
                 try SMAppService.mainApp.unregister()
                 logger.info("Login item unregistered")
             }
+            return true
         } catch {
             logger.error("Login item toggle failed: \(error.localizedDescription)")
+            return false
         }
     }
 }

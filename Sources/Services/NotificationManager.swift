@@ -9,9 +9,9 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "Notifications")
     private let center = UNUserNotificationCenter.current()
 
-    private nonisolated(unsafe) static let missedRunCategory = "MISSED_RUN"
-    private nonisolated(unsafe) static let runNowAction = "RUN_NOW"
-    private nonisolated(unsafe) static let skipAction = "SKIP"
+    nonisolated private static let missedRunCategory = "MISSED_RUN"
+    nonisolated private static let runNowAction = "RUN_NOW"
+    nonisolated private static let skipAction = "SKIP"
 
     var onRunNowRequested: (@MainActor () -> Void)?
 
@@ -21,12 +21,12 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
 
         let runAction = UNNotificationAction(
             identifier: Self.runNowAction,
-            title: "Jetzt aktualisieren",
+            title: String(localized: "Update Now"),
             options: .foreground
         )
         let skipAction = UNNotificationAction(
             identifier: Self.skipAction,
-            title: "Überspringen",
+            title: String(localized: "Skip"),
             options: .destructive
         )
         let category = UNNotificationCategory(
@@ -49,7 +49,7 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
     func showMissedRunNotification() {
         let content = UNMutableNotificationContent()
         content.title = "AutoBrew"
-        content.body = "Das geplante Brew-Update konnte nicht ausgeführt werden. Soll es jetzt im Hintergrund laufen?"
+        content.body = String(localized: "The scheduled brew update was missed. Run it now in the background?")
         content.sound = .default
         content.categoryIdentifier = Self.missedRunCategory
 
@@ -70,8 +70,8 @@ final class NotificationManager: NSObject, @unchecked Sendable, UNUserNotificati
         let content = UNMutableNotificationContent()
         content.title = "AutoBrew"
         content.body = success
-            ? "Alle Homebrew-Pakete wurden aktualisiert."
-            : "Update fehlgeschlagen: \(detail ?? "Unbekannter Fehler")"
+            ? String(localized: "All Homebrew packages have been updated.")
+            : String(localized: "Update failed: \(detail ?? "Unknown error")")
         content.sound = .default
 
         let request = UNNotificationRequest(

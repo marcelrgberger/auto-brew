@@ -1,14 +1,56 @@
 import Foundation
 
 enum BrewProcess: Sendable {
-    static func run(_ command: String, brewPath: String) async throws -> ProcessResult {
-        try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
+    private static let timeout: TimeInterval = 600
+
+    /// Execute brew binary directly with argument array — no shell interpolation.
+    static func run(executable: String, arguments: [String], brewPath: String) async throws -> ProcessResult {
+        let process = Process()
+
+        return try await withThrowingTaskGroup(of: ProcessResult?.self) { group in
+            group.addTask {
+                try await execute(process: process, executable: executable, arguments: arguments, brewPath: brewPath)
+            }
+            group.addTask {
+                do {
+                    try await Task.sleep(for: .seconds(timeout))
+                } catch is CancellationError {
+                    return nil // Normal: process finished before timeout
+                }
+                if process.isRunning { process.terminate() }
+                throw BrewProcessError.timeout
+            }
+
+            while let next = try await group.next() {
+                if let result = next {
+                    group.cancelAll()
+                    if process.isRunning { process.terminate() }
+                    return result
+                }
+            }
+            throw BrewProcessError.timeout
+        }
+    }
+
+    private static func execute(
+        process: Process,
+        executable: String,
+        arguments: [String],
+        brewPath: String
+    ) async throws -> ProcessResult {
+        final class PipeBuffer: @unchecked Sendable {
+            private let lock = NSLock()
+            private var data = Data()
+            func append(_ chunk: Data) { lock.withLock { data.append(chunk) } }
+            func finalize() -> Data { lock.withLock { data } }
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
             let stdoutPipe = Pipe()
             let stderrPipe = Pipe()
 
-            process.executableURL = URL(fileURLWithPath: "/bin/zsh")
-            process.arguments = ["-l", "-c", command]
+            process.executableURL = URL(fileURLWithPath: executable)
+            process.arguments = arguments
             var env = ProcessInfo.processInfo.environment
             env["HOMEBREW_NO_AUTO_UPDATE"] = "1"
             env["PATH"] = "\(brewPath):/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
@@ -16,13 +58,28 @@ enum BrewProcess: Sendable {
             process.standardOutput = stdoutPipe
             process.standardError = stderrPipe
 
+            let stdoutBuffer = PipeBuffer()
+            let stderrBuffer = PipeBuffer()
+
+            stdoutPipe.fileHandleForReading.readabilityHandler = { handle in
+                let chunk = handle.availableData
+                if !chunk.isEmpty { stdoutBuffer.append(chunk) }
+            }
+            stderrPipe.fileHandleForReading.readabilityHandler = { handle in
+                let chunk = handle.availableData
+                if !chunk.isEmpty { stderrBuffer.append(chunk) }
+            }
+
             process.terminationHandler = { proc in
-                let outData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                let errData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                stdoutPipe.fileHandleForReading.readabilityHandler = nil
+                stderrPipe.fileHandleForReading.readabilityHandler = nil
+                stdoutBuffer.append(stdoutPipe.fileHandleForReading.readDataToEndOfFile())
+                stderrBuffer.append(stderrPipe.fileHandleForReading.readDataToEndOfFile())
+
                 let result = ProcessResult(
                     exitCode: proc.terminationStatus,
-                    stdout: String(data: outData, encoding: .utf8) ?? "",
-                    stderr: String(data: errData, encoding: .utf8) ?? ""
+                    stdout: String(data: stdoutBuffer.finalize(), encoding: .utf8) ?? "",
+                    stderr: String(data: stderrBuffer.finalize(), encoding: .utf8) ?? ""
                 )
                 continuation.resume(returning: result)
             }
@@ -32,6 +89,16 @@ enum BrewProcess: Sendable {
             } catch {
                 continuation.resume(throwing: error)
             }
+        }
+    }
+}
+
+enum BrewProcessError: LocalizedError, Sendable {
+    case timeout
+
+    var errorDescription: String? {
+        switch self {
+        case .timeout: "Process timed out after 10 minutes"
         }
     }
 }
