@@ -104,6 +104,15 @@ struct SettingsView: View {
                     }
                 }
 
+                Section("Updates") {
+                    Button {
+                        UpdaterService.shared.checkForUpdates()
+                    } label: {
+                        Label("Check for Updates", systemImage: "arrow.clockwise")
+                    }
+                    .disabled(!UpdaterService.shared.canCheckForUpdates)
+                }
+
                 Section("About") {
                     HStack {
                         Text("Version")
