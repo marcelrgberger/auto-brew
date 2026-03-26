@@ -187,6 +187,68 @@ jobs:
             build/AutoBrew.dmg
             build/AutoBrew.zip
 
+      - name: Sign update for Sparkle
+        if: github.ref == 'refs/heads/main'
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
+        run: |
+          set -e
+          # Get Sparkle tools from SPM cache
+          SPARKLE_BIN=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "sign_update" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
+          if [ -z "$SPARKLE_BIN" ]; then
+            echo "sign_update not found, downloading Sparkle tools..."
+            curl -sL "https://github.com/sparkle-project/Sparkle/releases/latest/download/Sparkle-2.9.0.tar.xz" | tar xJ -C /tmp
+            SPARKLE_BIN="/tmp/bin/sign_update"
+          fi
+
+          # Sign the ZIP
+          echo "$SPARKLE_KEY" > /tmp/sparkle_key
+          SIGNATURE=$("$SPARKLE_BIN" "build/$APP_NAME.zip" --ed-key-file /tmp/sparkle_key 2>&1 | grep "sparkle:edSignature" | sed 's/.*"\(.*\)".*/\1/')
+          LENGTH=$(stat -f%z "build/$APP_NAME.zip")
+          rm -f /tmp/sparkle_key
+
+          echo "SPARKLE_SIGNATURE=$SIGNATURE" >> "$GITHUB_ENV"
+          echo "ZIP_LENGTH=$LENGTH" >> "$GITHUB_ENV"
+
+      - name: Update appcast.xml
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          set -e
+          cat > appcast.xml << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+              <channel>
+                  <title>AutoBrew</title>
+                  <link>https://github.com/marcelrgberger/auto-brew</link>
+                  <description>AutoBrew update feed</description>
+                  <language>en</language>
+                  <item>
+                      <title>Version $VERSION</title>
+                      <pubDate>$(date -R)</pubDate>
+                      <sparkle:version>$BUILD</sparkle:version>
+                      <sparkle:shortVersionString>$VERSION</sparkle:shortVersionString>
+                      <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
+                      <enclosure
+                          url="https://github.com/marcelrgberger/auto-brew/releases/download/v$VERSION/AutoBrew.zip"
+                          length="$ZIP_LENGTH"
+                          type="application/octet-stream"
+                          sparkle:edSignature="$SPARKLE_SIGNATURE"
+                      />
+                  </item>
+              </channel>
+          </rss>
+          EOF
+
+          git config user.name "Marcel R. G. Berger"
+          git config user.email "hello@marcelrgberger.com"
+          git add appcast.xml
+          git commit -m "Update appcast for v$VERSION" || true
+          git push origin HEAD:main || true
+
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         env:
