@@ -60,7 +60,7 @@ struct OnboardingView: View {
                         .controlSize(.large)
 
                     if let stage = brewManager.currentStage {
-                        Text(stage.rawValue)
+                        Text(stage.displayName)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .contentTransition(.numericText())

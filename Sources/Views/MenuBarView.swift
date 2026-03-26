@@ -243,7 +243,7 @@ struct MenuBarView: View {
         case .waitingForSchedule:
             Label("Scheduled: \(formattedSchedule)", systemImage: "calendar.badge.clock")
         case .running(let stage):
-            Label(stage.rawValue, systemImage: "arrow.triangle.2.circlepath")
+            Label(stage.displayName, systemImage: "arrow.triangle.2.circlepath")
                 .foregroundStyle(.orange)
                 .symbolEffect(.rotate, isActive: true)
         case .completed(let date):

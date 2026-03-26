@@ -7,26 +7,28 @@ enum BrewProcess: Sendable {
     static func run(executable: String, arguments: [String], brewPath: String) async throws -> ProcessResult {
         let process = Process()
 
-        return try await withThrowingTaskGroup(of: ProcessResult.self) { group in
+        return try await withThrowingTaskGroup(of: ProcessResult?.self) { group in
             group.addTask {
                 try await execute(process: process, executable: executable, arguments: arguments, brewPath: brewPath)
             }
             group.addTask {
-                try await Task.sleep(for: .seconds(timeout))
-                // Kill the process on timeout so it doesn't linger
-                if process.isRunning {
-                    process.terminate()
+                do {
+                    try await Task.sleep(for: .seconds(timeout))
+                } catch is CancellationError {
+                    return nil // Normal: process finished before timeout
                 }
+                if process.isRunning { process.terminate() }
                 throw BrewProcessError.timeout
             }
 
-            let result = try await group.next()!
-            group.cancelAll()
-            // Ensure process is stopped if the other task won
-            if process.isRunning {
-                process.terminate()
+            while let next = try await group.next() {
+                if let result = next {
+                    group.cancelAll()
+                    if process.isRunning { process.terminate() }
+                    return result
+                }
             }
-            return result
+            throw BrewProcessError.timeout
         }
     }
 

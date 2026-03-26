@@ -4,6 +4,11 @@
 
 PBXPROJ="AutoBrew.xcodeproj/project.pbxproj"
 
+if [ ! -f "$PBXPROJ" ]; then
+    echo "Error: $PBXPROJ not found" >&2
+    exit 1
+fi
+
 python3 -c "
 path = '$PBXPROJ'
 with open(path, 'r') as f:
@@ -13,6 +18,10 @@ old = '''knownRegions = (
 				Base,
 				en,
 			);'''
+
+if old not in content:
+    print('Warning: knownRegions pattern not found — may already be patched or format changed')
+    exit(0)
 
 new = '''knownRegions = (
 				en,

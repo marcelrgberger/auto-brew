@@ -21,8 +21,7 @@ final class BrewManager {
         if FileManager.default.fileExists(atPath: "\(arm)/brew") { return arm }
         if FileManager.default.fileExists(atPath: "\(intel)/brew") { return intel }
         // Try resolving from PATH via which
-        let whichResult = try? shellWhich("brew")
-        if let resolved = whichResult {
+        if let resolved = (try? shellWhich("brew")).flatMap({ $0 }) {
             return (resolved as NSString).deletingLastPathComponent
         }
         return nil
@@ -35,7 +34,7 @@ final class BrewManager {
 
     var isHomebrewInstalled: Bool { brewPath != nil }
 
-    /// Opens the official Homebrew install page — no in-app curl|bash execution.
+    /// Runs the official Homebrew installer non-interactively via bash.
     func installHomebrew() async throws {
         guard !isRunning else { return }
         isRunning = true
