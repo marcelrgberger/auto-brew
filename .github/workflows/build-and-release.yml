@@ -1,0 +1,171 @@
+name: Build, Notarize & Release
+
+on:
+  push:
+    branches: [test, beta, main]
+
+env:
+  APP_NAME: AutoBrew
+  SCHEME: AutoBrew
+  BUNDLE_ID: za.co.digitalfreedom.AutoBrew
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate
+          bash scripts/patch-localizations.sh || true
+
+      - name: Install certificates
+        env:
+          CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          security create-keychain -p "" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "" "$KEYCHAIN_PATH"
+          echo "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+      - name: Resolve packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME"
+
+      - name: Archive
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          xcodebuild archive \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TEAM_ID"
+
+      - name: Export app
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          cat > build/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>developer-id</string>
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Notarize app
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          APP_PATH="build/export/$APP_NAME.app"
+          ditto -c -k --keepParent "$APP_PATH" "build/$APP_NAME.zip"
+
+          xcrun notarytool submit "build/$APP_NAME.zip" \
+            --apple-id "$NOTARY_APPLE_ID" \
+            --password "$NOTARY_PASSWORD" \
+            --team-id "$NOTARY_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$APP_PATH"
+
+      - name: Create DMG
+        env:
+          NOTARY_APPLE_ID: ${{ secrets.APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          APP_PATH="build/export/$APP_NAME.app"
+          DMG_PATH="build/$APP_NAME.dmg"
+
+          mkdir -p build/dmg
+          cp -R "$APP_PATH" build/dmg/
+          ln -s /Applications build/dmg/Applications
+
+          hdiutil create -volname "$APP_NAME" \
+            -srcfolder build/dmg \
+            -ov -format UDZO \
+            "$DMG_PATH"
+
+          xcrun notarytool submit "$DMG_PATH" \
+            --apple-id "$NOTARY_APPLE_ID" \
+            --password "$NOTARY_PASSWORD" \
+            --team-id "$NOTARY_TEAM_ID" \
+            --wait
+
+          xcrun stapler staple "$DMG_PATH"
+
+      - name: Get version
+        id: version
+        run: |
+          VERSION=$(grep MARKETING_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
+          BUILD=$(grep CURRENT_PROJECT_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: AutoBrew-${{ steps.version.outputs.version }}
+          path: |
+            build/AutoBrew.dmg
+            build/AutoBrew.zip
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          gh release create "v$VERSION" \
+            --title "AutoBrew v$VERSION" \
+            --notes "## AutoBrew v$VERSION
+
+          Download \`AutoBrew.dmg\`, open it, and drag AutoBrew to your Applications folder.
+
+          See [commits](https://github.com/marcelrgberger/auto-brew/commits/main) for details." \
+            "build/$APP_NAME.dmg" \
+            "build/$APP_NAME.zip"
+
+      - name: Create GitHub Pre-Release
+        if: github.ref == 'refs/heads/test' || github.ref == 'refs/heads/beta'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BRANCH: ${{ github.ref_name }}
+          RUN: ${{ github.run_number }}
+        run: |
+          gh release create "v$VERSION-$BRANCH.$RUN" \
+            --title "AutoBrew v$VERSION ($BRANCH)" \
+            --notes "Pre-release for testing. Download \`AutoBrew.dmg\` to test." \
+            --prerelease \
+            "build/$APP_NAME.dmg" \
+            "build/$APP_NAME.zip"
