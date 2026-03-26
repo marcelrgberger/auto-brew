@@ -21,9 +21,15 @@ jobs:
     steps:
       - name: Determine environment
         id: determine
-        uses: marcelrgberger/org-ci-config/.github/actions/determine-build-environment@main
-        with:
-          branch: ${{ github.ref_name }}
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          case "$BRANCH" in
+            main)   echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+            beta)   echo "environment=beta" >> "$GITHUB_OUTPUT" ;;
+            test)   echo "environment=test" >> "$GITHUB_OUTPUT" ;;
+            *)      echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
+          esac
 
   build:
     name: Build, Sign & Notarize
