@@ -12,30 +12,41 @@ struct MenuBarView: View {
     @State private var settings = SettingsStore.shared
     @State private var currentPage: MenuPage = .main
 
+    @State private var needsOnboarding: Bool = !BrewManager.shared.isHomebrewInstalled
+
     var body: some View {
         Group {
-            switch currentPage {
-            case .main:
-                mainView
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .leading).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
-            case .settings:
-                SettingsView(onBack: { currentPage = .main })
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
-            case .log:
-                LogView(output: brewManager.lastOutput, onBack: { currentPage = .main })
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+            if needsOnboarding {
+                OnboardingView {
+                    needsOnboarding = false
+                    scheduler.start()
+                }
+                .transition(.opacity)
+            } else {
+                switch currentPage {
+                case .main:
+                    mainView
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .leading).combined(with: .opacity),
+                            removal: .move(edge: .leading).combined(with: .opacity)
+                        ))
+                case .settings:
+                    SettingsView(onBack: { currentPage = .main })
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                case .log:
+                    LogView(output: brewManager.lastOutput, onBack: { currentPage = .main })
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .trailing).combined(with: .opacity),
+                            removal: .move(edge: .trailing).combined(with: .opacity)
+                        ))
+                }
             }
         }
         .animation(.spring(duration: 0.3, bounce: 0.15), value: currentPage)
+        .animation(.easeInOut(duration: 0.3), value: needsOnboarding)
     }
 
     private var mainView: some View {
