@@ -15,10 +15,16 @@ final class BrewManager {
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "BrewManager")
 
     var brewPath: String? {
+        // Check standard locations first
         let arm = "/opt/homebrew/bin"
         let intel = "/usr/local/bin"
         if FileManager.default.fileExists(atPath: "\(arm)/brew") { return arm }
         if FileManager.default.fileExists(atPath: "\(intel)/brew") { return intel }
+        // Try resolving from PATH via which
+        let whichResult = try? shellWhich("brew")
+        if let resolved = whichResult {
+            return (resolved as NSString).deletingLastPathComponent
+        }
         return nil
     }
 
@@ -29,6 +35,7 @@ final class BrewManager {
 
     var isHomebrewInstalled: Bool { brewPath != nil }
 
+    /// Opens the official Homebrew install page — no in-app curl|bash execution.
     func installHomebrew() async throws {
         guard !isRunning else { return }
         isRunning = true
@@ -36,10 +43,14 @@ final class BrewManager {
         lastError = nil
         defer { isRunning = false }
 
-        logger.info("Installing Homebrew...")
+        logger.info("Installing Homebrew via official script...")
 
-        let script = "/bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""
-        let result = try await BrewProcess.run(script, brewPath: "/usr/local/bin")
+        // Run the official installer non-interactively
+        let result = try await BrewProcess.run(
+            executable: "/bin/bash",
+            arguments: ["-c", "NONINTERACTIVE=1 /bin/bash -c \"$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)\""],
+            brewPath: "/usr/local/bin"
+        )
 
         if !result.succeeded {
             let msg = result.stderr.isEmpty ? "Unknown error" : result.stderr
@@ -68,37 +79,32 @@ final class BrewManager {
 
         logger.info("Starting full brew update cycle")
 
-        // Update formulae list
         currentStage = .updating
-        let updateResult = try await BrewProcess.run("\(brew) update", brewPath: path)
+        let updateResult = try await BrewProcess.run(executable: brew, arguments: ["update"], brewPath: path)
         if !updateResult.succeeded {
             lastError = updateResult.stderr
             throw BrewError.updateFailed(updateResult.stderr)
         }
         lastOutput += updateResult.stdout
 
-        // Upgrade formulae
         currentStage = .upgrading
-        let upgradeResult = try await BrewProcess.run("\(brew) upgrade", brewPath: path)
+        let upgradeResult = try await BrewProcess.run(executable: brew, arguments: ["upgrade"], brewPath: path)
         if !upgradeResult.succeeded {
             lastError = upgradeResult.stderr
             throw BrewError.upgradeFailed(upgradeResult.stderr)
         }
         lastOutput += upgradeResult.stdout
 
-        // Upgrade casks
         currentStage = .upgradingCasks
-        let caskResult = try await BrewProcess.run("\(brew) upgrade --cask --greedy", brewPath: path)
-        // Cask upgrade failures are non-fatal (some casks auto-update)
+        let caskResult = try await BrewProcess.run(executable: brew, arguments: ["upgrade", "--cask", "--greedy"], brewPath: path)
         lastOutput += caskResult.stdout
         if !caskResult.succeeded {
             logger.warning("Cask upgrade had issues: \(caskResult.stderr)")
-            lastOutput += "\n[Cask-Warnung] \(caskResult.stderr)"
+            lastOutput += "\n[Cask warning] \(caskResult.stderr)"
         }
 
-        // Cleanup
         currentStage = .cleanup
-        let cleanupResult = try await BrewProcess.run("\(brew) cleanup --prune=7", brewPath: path)
+        let cleanupResult = try await BrewProcess.run(executable: brew, arguments: ["cleanup", "--prune=7"], brewPath: path)
         if !cleanupResult.succeeded {
             lastError = cleanupResult.stderr
             throw BrewError.cleanupFailed(cleanupResult.stderr)
@@ -109,11 +115,11 @@ final class BrewManager {
     }
 
     func fetchOutdated() async {
+        guard !isRunning else { return }
         guard let brew = brewExecutable, let path = brewPath else { return }
 
-        let result = try? await BrewProcess.run("\(brew) outdated --json=v2", brewPath: path)
+        let result = try? await BrewProcess.run(executable: brew, arguments: ["outdated", "--json=v2"], brewPath: path)
         guard let result, result.succeeded else { return }
-
         guard let data = result.stdout.data(using: .utf8) else { return }
 
         struct BrewOutdated: Decodable {
@@ -150,8 +156,21 @@ final class BrewManager {
                 isCask: true
             ))
         }
-
         outdatedPackages = packages
+    }
+
+    private func shellWhich(_ command: String) throws -> String? {
+        let process = Process()
+        let pipe = Pipe()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/which")
+        process.arguments = [command]
+        process.standardOutput = pipe
+        process.standardError = FileHandle.nullDevice
+        try process.run()
+        process.waitUntilExit()
+        guard process.terminationStatus == 0 else { return nil }
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private init() {}

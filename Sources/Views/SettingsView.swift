@@ -67,10 +67,10 @@ struct SettingsView: View {
 
                 Section("General") {
                     Toggle("Launch at Login", isOn: Binding(
-                        get: { settings.loginItemEnabled },
-                        set: {
-                            settings.loginItemEnabled = $0
-                            LoginItemManager.setEnabled($0)
+                        get: { LoginItemManager.isEnabled },
+                        set: { newValue in
+                            let success = LoginItemManager.setEnabled(newValue)
+                            settings.loginItemEnabled = success ? newValue : LoginItemManager.isEnabled
                         }
                     ))
 
