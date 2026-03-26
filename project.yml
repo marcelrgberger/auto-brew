@@ -7,6 +7,22 @@ options:
   minimumXcodeGenVersion: "2.42.0"
   generateEmptyDirectories: true
   groupSortPosition: top
+  defaultConfig: Debug
+  knownRegions:
+    - en
+    - de
+    - fr
+    - it
+    - nl
+    - pl
+    - pt-BR
+    - es
+    - Base
+
+packages:
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.0.0"
 
 settings:
   base:
@@ -16,7 +32,7 @@ settings:
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "26.0"
     CODE_SIGN_STYLE: Automatic
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: 7TSZJCJY88
     PRODUCT_BUNDLE_IDENTIFIER: za.co.digitalfreedom.AutoBrew
     PRODUCT_NAME: AutoBrew
     INFOPLIST_FILE: AutoBrew/Info.plist
@@ -30,9 +46,28 @@ targets:
     platform: macOS
     sources:
       - Sources
-    resources:
-      - path: AutoBrew/Assets.xcassets
       - path: AutoBrew/Localizable.xcstrings
+        buildPhase: resources
+      - path: AutoBrew/Assets.xcassets
+        buildPhase: resources
+      - path: AutoBrew/en.lproj
+        buildPhase: resources
+      - path: AutoBrew/de.lproj
+        buildPhase: resources
+      - path: AutoBrew/fr.lproj
+        buildPhase: resources
+      - path: AutoBrew/it.lproj
+        buildPhase: resources
+      - path: AutoBrew/nl.lproj
+        buildPhase: resources
+      - path: AutoBrew/pl.lproj
+        buildPhase: resources
+      - path: AutoBrew/pt-BR.lproj
+        buildPhase: resources
+      - path: AutoBrew/es.lproj
+        buildPhase: resources
+    dependencies:
+      - package: Sparkle
     settings:
       base:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"

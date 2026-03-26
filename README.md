@@ -237,6 +237,10 @@ auto-brew/
     └── SettingsStoreTests.swift
 ```
 
+## Download
+
+Download the latest release from [GitHub Releases](https://github.com/marcelrgberger/auto-brew/releases). The app is notarized by Apple and updates automatically via Sparkle.
+
 ## Support
 
 If you find AutoBrew useful, consider [sponsoring the project](https://github.com/sponsors/marcelrgberger).

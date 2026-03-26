@@ -11,12 +11,18 @@ final class SleepWakeObserver {
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "SleepWake")
     private let settings = SettingsStore.shared
 
+    private var sleepObserverToken: NSObjectProtocol?
+    private var wakeObserverToken: NSObjectProtocol?
+
     var onWakeWithMissedRun: (@MainActor () -> Void)?
 
     func startObserving() {
+        // Remove existing observers to prevent duplicates
+        stopObserving()
+
         let center = NSWorkspace.shared.notificationCenter
 
-        center.addObserver(
+        sleepObserverToken = center.addObserver(
             forName: NSWorkspace.willSleepNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
@@ -25,7 +31,7 @@ final class SleepWakeObserver {
             }
         }
 
-        center.addObserver(
+        wakeObserverToken = center.addObserver(
             forName: NSWorkspace.didWakeNotification,
             object: nil, queue: .main
         ) { [weak self] _ in
@@ -35,6 +41,18 @@ final class SleepWakeObserver {
         }
 
         logger.info("Sleep/Wake observer started")
+    }
+
+    func stopObserving() {
+        let center = NSWorkspace.shared.notificationCenter
+        if let token = sleepObserverToken {
+            center.removeObserver(token)
+            sleepObserverToken = nil
+        }
+        if let token = wakeObserverToken {
+            center.removeObserver(token)
+            wakeObserverToken = nil
+        }
     }
 
     private func handleSleep() {
@@ -55,7 +73,13 @@ final class SleepWakeObserver {
         case .scheduled:
             didMiss = checkMissedScheduledRun()
         case .idle:
-            didMiss = true
+            // Only treat as missed if we slept long enough that an idle run was due
+            if let sleepDate = lastSleepDate {
+                let sleepDuration = Date().timeIntervalSince(sleepDate)
+                didMiss = sleepDuration >= TimeInterval(settings.idleMinutes * 60)
+            } else {
+                didMiss = false
+            }
         }
 
         if didMiss {
@@ -69,13 +93,31 @@ final class SleepWakeObserver {
         guard let sleepDate = lastSleepDate else { return false }
 
         let calendar = Calendar.current
-        var scheduled = calendar.dateComponents([.year, .month, .day], from: Date())
-        scheduled.hour = settings.scheduledHour
-        scheduled.minute = settings.scheduledMinute
+        let now = Date()
 
-        guard let scheduledDate = calendar.date(from: scheduled) else { return false }
+        // Check today's scheduled time
+        var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
+        todayComponents.hour = settings.scheduledHour
+        todayComponents.minute = settings.scheduledMinute
 
-        return sleepDate < scheduledDate && scheduledDate < Date()
+        if let todayScheduled = calendar.date(from: todayComponents),
+           sleepDate < todayScheduled && todayScheduled < now {
+            return true
+        }
+
+        // Check yesterday's scheduled time (overnight sleep)
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: now) {
+            var yesterdayComponents = calendar.dateComponents([.year, .month, .day], from: yesterday)
+            yesterdayComponents.hour = settings.scheduledHour
+            yesterdayComponents.minute = settings.scheduledMinute
+
+            if let yesterdayScheduled = calendar.date(from: yesterdayComponents),
+               sleepDate < yesterdayScheduled && yesterdayScheduled < now {
+                return true
+            }
+        }
+
+        return false
     }
 
     func clearMissedRun() {

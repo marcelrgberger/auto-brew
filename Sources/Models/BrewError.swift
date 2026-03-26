@@ -9,11 +9,11 @@ enum BrewError: LocalizedError, Sendable {
 
     var errorDescription: String? {
         switch self {
-        case .notFound: "Homebrew nicht gefunden"
-        case .installFailed(let msg): "Installation fehlgeschlagen: \(msg)"
-        case .updateFailed(let msg): "Update fehlgeschlagen: \(msg)"
-        case .upgradeFailed(let msg): "Upgrade fehlgeschlagen: \(msg)"
-        case .cleanupFailed(let msg): "Cleanup fehlgeschlagen: \(msg)"
+        case .notFound: String(localized: "Homebrew not found")
+        case .installFailed(let msg): String(localized: "Installation failed: \(msg)")
+        case .updateFailed(let msg): String(localized: "Update failed: \(msg)")
+        case .upgradeFailed(let msg): String(localized: "Upgrade failed: \(msg)")
+        case .cleanupFailed(let msg): String(localized: "Cleanup failed: \(msg)")
         }
     }
 }

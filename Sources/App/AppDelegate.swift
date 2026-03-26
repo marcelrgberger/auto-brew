@@ -9,8 +9,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, Sendable {
 
         Task { @MainActor in
             await NotificationManager.shared.requestAuthorization()
-            SchedulerService.shared.start()
-            logger.info("AutoBrew started")
+
+            if BrewManager.shared.isHomebrewInstalled {
+                SchedulerService.shared.start()
+            }
+
+            logger.info("AutoBrew started (homebrew installed: \(BrewManager.shared.isHomebrewInstalled))")
         }
     }
 }
