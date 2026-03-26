@@ -4,17 +4,38 @@ on:
   push:
     branches: [test, beta, main]
 
+concurrency:
+  group: macos-build-${{ github.ref_name }}
+  cancel-in-progress: false
+
 env:
   APP_NAME: AutoBrew
   SCHEME: AutoBrew
-  BUNDLE_ID: za.co.digitalfreedom.AutoBrew
 
 jobs:
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.determine.outputs.environment }}
+    steps:
+      - name: Determine environment
+        id: determine
+        uses: marcelrgberger/org-ci-config/.github/actions/determine-build-environment@main
+        with:
+          branch: ${{ github.ref_name }}
+
   build:
+    name: Build, Sign & Notarize
     runs-on: macos-15
     timeout-minutes: 30
-
+    needs: determine-environment
     steps:
+      - name: Set up Xcode ^26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '^26'
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -26,18 +47,45 @@ jobs:
           xcodegen generate
           bash scripts/patch-localizations.sh || true
 
-      - name: Install certificates
-        env:
-          CERTIFICATE_P12: ${{ secrets.DEVELOPER_ID_CERTIFICATE_P12 }}
-          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+      - name: Get version
+        id: version
         run: |
+          VERSION=$(grep MARKETING_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
+          BUILD=$(grep CURRENT_PROJECT_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Install Developer ID Certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MACOS_GITHUB_KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          security create-keychain -p "" "$KEYCHAIN_PATH"
+
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "" "$KEYCHAIN_PATH"
-          echo "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
-          security import "$RUNNER_TEMP/certificate.p12" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v
+          echo "Developer ID certificate imported."
+
+      - name: Prepare App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.MACOS_APPSTORE_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          echo -n "$API_KEY_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
+          echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
 
       - name: Resolve packages
         run: |
@@ -82,54 +130,43 @@ jobs:
 
       - name: Notarize app
         env:
-          NOTARY_APPLE_ID: ${{ secrets.APPLE_ID }}
-          NOTARY_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          NOTARY_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
+          set -e
           APP_PATH="build/export/$APP_NAME.app"
           ditto -c -k --keepParent "$APP_PATH" "build/$APP_NAME.zip"
 
           xcrun notarytool submit "build/$APP_NAME.zip" \
-            --apple-id "$NOTARY_APPLE_ID" \
-            --password "$NOTARY_PASSWORD" \
-            --team-id "$NOTARY_TEAM_ID" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
             --wait
 
           xcrun stapler staple "$APP_PATH"
 
       - name: Create DMG
         env:
-          NOTARY_APPLE_ID: ${{ secrets.APPLE_ID }}
-          NOTARY_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
-          NOTARY_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
-          APP_PATH="build/export/$APP_NAME.app"
-          DMG_PATH="build/$APP_NAME.dmg"
-
+          set -e
           mkdir -p build/dmg
-          cp -R "$APP_PATH" build/dmg/
+          cp -R "build/export/$APP_NAME.app" build/dmg/
           ln -s /Applications build/dmg/Applications
 
           hdiutil create -volname "$APP_NAME" \
             -srcfolder build/dmg \
             -ov -format UDZO \
-            "$DMG_PATH"
+            "build/$APP_NAME.dmg"
 
-          xcrun notarytool submit "$DMG_PATH" \
-            --apple-id "$NOTARY_APPLE_ID" \
-            --password "$NOTARY_PASSWORD" \
-            --team-id "$NOTARY_TEAM_ID" \
+          xcrun notarytool submit "build/$APP_NAME.dmg" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
             --wait
 
-          xcrun stapler staple "$DMG_PATH"
-
-      - name: Get version
-        id: version
-        run: |
-          VERSION=$(grep MARKETING_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
-          BUILD=$(grep CURRENT_PROJECT_VERSION project.yml | head -1 | awk '{print $2}' | tr -d '"')
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+          xcrun stapler staple "build/$APP_NAME.dmg"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -149,7 +186,7 @@ jobs:
             --title "AutoBrew v$VERSION" \
             --notes "## AutoBrew v$VERSION
 
-          Download \`AutoBrew.dmg\`, open it, and drag AutoBrew to your Applications folder.
+          Download \`AutoBrew.dmg\`, open it, and drag AutoBrew to Applications.
 
           See [commits](https://github.com/marcelrgberger/auto-brew/commits/main) for details." \
             "build/$APP_NAME.dmg" \
@@ -169,3 +206,23 @@ jobs:
             --prerelease \
             "build/$APP_NAME.dmg" \
             "build/$APP_NAME.zip"
+
+      - name: Job Summary
+        if: always()
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## macOS Build Summary
+
+          | Field | Value |
+          |-------|-------|
+          | Environment | ${{ needs.determine-environment.outputs.environment }} |
+          | Branch | ${{ github.ref_name }} |
+          | Version | ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build }}) |
+          | Build | ${{ job.status }} |
+          SUMMARY
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -f "$RUNNER_TEMP/private_keys/"*.p8 || true
