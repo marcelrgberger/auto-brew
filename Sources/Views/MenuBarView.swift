@@ -12,7 +12,7 @@ struct MenuBarView: View {
     @State private var settings = SettingsStore.shared
     @State private var currentPage: MenuPage = .main
 
-    @State private var needsOnboarding: Bool = !BrewManager.shared.isHomebrewInstalled
+    @State private var needsOnboarding: Bool = !SettingsStore.shared.onboardingCompleted
 
     var body: some View {
         Group {
