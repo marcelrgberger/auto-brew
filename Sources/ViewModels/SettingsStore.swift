@@ -9,53 +9,35 @@ final class SettingsStore {
     private let defaults = UserDefaults.standard
 
     var triggerMode: TriggerMode {
-        get {
-            guard let raw = defaults.string(forKey: "triggerMode"),
-                  let mode = TriggerMode(rawValue: raw) else { return .idle }
-            return mode
-        }
-        set { defaults.set(newValue.rawValue, forKey: "triggerMode") }
+        didSet { defaults.set(triggerMode.rawValue, forKey: "triggerMode") }
     }
 
     var idleMinutes: Int {
-        get {
-            let val = defaults.integer(forKey: "idleMinutes")
-            return val > 0 ? val : 30
-        }
-        set { defaults.set(newValue, forKey: "idleMinutes") }
+        didSet { defaults.set(idleMinutes, forKey: "idleMinutes") }
     }
 
     var scheduledHour: Int {
-        get { defaults.integer(forKey: "scheduledHour") }
-        set { defaults.set(newValue, forKey: "scheduledHour") }
+        didSet { defaults.set(scheduledHour, forKey: "scheduledHour") }
     }
 
     var scheduledMinute: Int {
-        get { defaults.integer(forKey: "scheduledMinute") }
-        set { defaults.set(newValue, forKey: "scheduledMinute") }
+        didSet { defaults.set(scheduledMinute, forKey: "scheduledMinute") }
     }
 
     var lastRunDate: Date? {
-        get { defaults.object(forKey: "lastRunDate") as? Date }
-        set { defaults.set(newValue, forKey: "lastRunDate") }
+        didSet { defaults.set(lastRunDate, forKey: "lastRunDate") }
     }
 
     var loginItemEnabled: Bool {
-        get { defaults.bool(forKey: "loginItemEnabled") }
-        set { defaults.set(newValue, forKey: "loginItemEnabled") }
+        didSet { defaults.set(loginItemEnabled, forKey: "loginItemEnabled") }
     }
 
     var showNotifications: Bool {
-        get {
-            if defaults.object(forKey: "showNotifications") == nil { return true }
-            return defaults.bool(forKey: "showNotifications")
-        }
-        set { defaults.set(newValue, forKey: "showNotifications") }
+        didSet { defaults.set(showNotifications, forKey: "showNotifications") }
     }
 
     var onboardingCompleted: Bool {
-        get { defaults.bool(forKey: "onboardingCompleted") }
-        set { defaults.set(newValue, forKey: "onboardingCompleted") }
+        didSet { defaults.set(onboardingCompleted, forKey: "onboardingCompleted") }
     }
 
     var didRunToday: Bool {
@@ -64,11 +46,35 @@ final class SettingsStore {
     }
 
     private init() {
-        if defaults.object(forKey: "triggerMode") == nil {
-            defaults.set(TriggerMode.idle.rawValue, forKey: "triggerMode")
+        let d = UserDefaults.standard
+
+        if let raw = d.string(forKey: "triggerMode"),
+           let mode = TriggerMode(rawValue: raw) {
+            triggerMode = mode
+        } else {
+            triggerMode = .idle
         }
-        if defaults.object(forKey: "scheduledHour") == nil {
-            defaults.set(3, forKey: "scheduledHour")
+
+        let idle = d.integer(forKey: "idleMinutes")
+        idleMinutes = idle > 0 ? idle : 30
+
+        if d.object(forKey: "scheduledHour") != nil {
+            scheduledHour = d.integer(forKey: "scheduledHour")
+        } else {
+            scheduledHour = 3
         }
+
+        scheduledMinute = d.integer(forKey: "scheduledMinute")
+
+        lastRunDate = d.object(forKey: "lastRunDate") as? Date
+        loginItemEnabled = d.bool(forKey: "loginItemEnabled")
+
+        if d.object(forKey: "showNotifications") != nil {
+            showNotifications = d.bool(forKey: "showNotifications")
+        } else {
+            showNotifications = true
+        }
+
+        onboardingCompleted = d.bool(forKey: "onboardingCompleted")
     }
 }
