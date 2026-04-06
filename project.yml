@@ -88,5 +88,4 @@ targets:
       - target: AutoBrew
     settings:
       base:
-        BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/AutoBrew.app/Contents/MacOS/AutoBrew"
+        PRODUCT_MODULE_NAME: AutoBrewTests
