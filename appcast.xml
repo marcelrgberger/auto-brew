@@ -6,16 +6,16 @@
         <description>AutoBrew update feed</description>
         <language>en</language>
         <item>
-            <title>Version 1.1.0</title>
-            <pubDate>Fri, 17 Apr 2026 06:10:59 +0000</pubDate>
-            <sparkle:version>5</sparkle:version>
-            <sparkle:shortVersionString>1.1.0</sparkle:shortVersionString>
+            <title>Version 1.1.1</title>
+            <pubDate>Fri, 17 Apr 2026 06:15:02 +0000</pubDate>
+            <sparkle:version>6</sparkle:version>
+            <sparkle:shortVersionString>1.1.1</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>26.0</sparkle:minimumSystemVersion>
             <enclosure
-                url="https://github.com/marcelrgberger/auto-brew/releases/download/v1.1.0/AutoBrew.zip"
-                length="2894035"
+                url="https://github.com/marcelrgberger/auto-brew/releases/download/v1.1.1/AutoBrew.zip"
+                length="2894017"
                 type="application/octet-stream"
-                sparkle:edSignature="z/byKpYcqryJgnod0yNpFXC2kkkgaFvKBaTI4szWGKdI6C/Xj2rJMsgNICDx6uIGu4/ZQzSlSXnDVA/6hkj5Cg=="
+                sparkle:edSignature="+79v2i4FKyYll5ZQX6Z6Z3vQkqTG1JqivQo6+zhw+razpQeN042GBGkjYjurGbtDKVzEMpxC/JeErscEgMIEDg=="
             />
         </item>
     </channel>
