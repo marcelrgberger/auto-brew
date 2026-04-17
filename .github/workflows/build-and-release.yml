@@ -203,7 +203,7 @@ jobs:
 
           # Sign the ZIP
           echo "$SPARKLE_KEY" > /tmp/sparkle_key
-          SIGNATURE=$("$SPARKLE_BIN" "build/$APP_NAME.zip" --ed-key-file /tmp/sparkle_key 2>&1 | grep "sparkle:edSignature" | sed 's/.*"\(.*\)".*/\1/')
+          SIGNATURE=$("$SPARKLE_BIN" "build/$APP_NAME.zip" --ed-key-file /tmp/sparkle_key 2>&1 | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
           LENGTH=$(stat -f%z "build/$APP_NAME.zip")
           rm -f /tmp/sparkle_key
 
