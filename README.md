@@ -4,15 +4,16 @@ A native macOS menu bar app that automatically keeps Homebrew and all installed 
 
 ## Features
 
-- **Automatic Updates** — Runs `brew update && brew upgrade && brew cleanup` once daily
+- **Automatic Updates** — Runs `brew update → brew upgrade → brew upgrade --cask --greedy → brew cleanup` once daily
 - **Idle-Based Trigger** — Waits for configurable idle time before running (default: 30 min)
 - **Scheduled Trigger** — Alternatively, run at a fixed time of day
 - **Works While Locked** — Uses IOKit idle detection, independent of screen lock state
 - **Missed Run Recovery** — If the Mac was asleep during a scheduled run, prompts the user on wake
-- **Homebrew Auto-Install** — Installs Homebrew automatically if not present
+- **Outdated Package List** — Shows outdated formulae and casks with current and available versions
+- **Homebrew Auto-Install** — Installs Homebrew automatically if not present (guided onboarding)
 - **Login Item** — Starts automatically with the system via SMAppService
 - **Auto-Updates** — Keeps itself up to date via Sparkle
-- **8 Languages** — English, German, French, Italian, Dutch, Polish, Portuguese, Spanish
+- **8 Languages** — English, German, French, Italian, Dutch, Polish, Portuguese (Brazil), Spanish
 
 ## Install
 
@@ -80,10 +81,20 @@ classDiagram
     class BrewManager {
         -isRunning: Bool
         -currentStage: BrewStage
+        -lastOutput: String
+        -outdatedPackages: OutdatedPackage[]
         +brewPath: String?
         +isHomebrewInstalled: Bool
         +installHomebrew()
         +runFullUpdate()
+        +fetchOutdated()
+    }
+
+    class OutdatedPackage {
+        +name: String
+        +currentVersion: String
+        +newVersion: String
+        +isCask: Bool
     }
 
     class SettingsStore {
@@ -121,8 +132,13 @@ classDiagram
         +setEnabled(Bool)
     }
 
+    class UpdaterService {
+        +canCheckForUpdates: Bool
+        +checkForUpdates()
+    }
+
     class BrewProcess {
-        +run(command, brewPath): ProcessResult
+        +run(executable, arguments, brewPath): ProcessResult
     }
 
     AutoBrewApp --> AppDelegate
@@ -135,11 +151,16 @@ classDiagram
     SchedulerService --> NotificationManager
     SchedulerService --> IdleDetector
     BrewManager --> BrewProcess
+    BrewManager --> OutdatedPackage
     MenuBarView --> SchedulerService
     MenuBarView --> BrewManager
     MenuBarView --> SettingsStore
+    MenuBarView --> MenuBarIcon
+    MenuBarView --> LogView
+    MenuBarView --> OnboardingView
     SettingsView --> SettingsStore
     SettingsView --> LoginItemManager
+    SettingsView --> UpdaterService
 ```
 
 ### Application Flow
@@ -148,42 +169,49 @@ classDiagram
 flowchart TD
     A[App Launch] --> B[AppDelegate.didFinishLaunching]
     B --> C[Request Notification Permission]
-    B --> D[Start SchedulerService]
-    D --> E{Trigger Mode?}
+    B --> D{Homebrew Installed?}
 
-    E -->|Idle| F[Poll System Idle Time Every 60s]
-    E -->|Scheduled| G[Calculate Time Until Next Run]
+    D -->|No| E[Show Onboarding]
+    E --> F[Install Homebrew]
+    F --> G[Start SchedulerService]
+    D -->|Yes| G
 
-    F --> H{Idle >= Threshold?}
-    H -->|No| F
-    H -->|Yes| I{Already Ran Today?}
-    I -->|Yes| F
-    I -->|No| J[Run Brew Update]
+    G --> H{Trigger Mode?}
 
-    G --> K[Sleep Until Scheduled Time]
-    K --> L{Already Ran Today?}
-    L -->|Yes| M[Wait Until Tomorrow]
-    L -->|No| J
-    M --> G
+    H -->|Idle| I[Poll System Idle Time Every 60s]
+    H -->|Scheduled| J[Calculate Time Until Next Run]
 
-    J --> N[brew update]
-    N --> O[brew upgrade]
-    O --> P[brew cleanup]
-    P --> Q{Success?}
+    I --> K{Idle >= Threshold?}
+    K -->|No| I
+    K -->|Yes| L{Already Ran Today?}
+    L -->|Yes| I
+    L -->|No| M[Run Brew Update]
 
-    Q -->|Yes| R[Save Last Run Date]
-    R --> S[Show Success Notification]
+    J --> N[Sleep Until Scheduled Time]
+    N --> O{Already Ran Today?}
+    O -->|Yes| P[Wait Until Tomorrow]
+    O -->|No| M
+    P --> J
 
-    Q -->|No| T[Show Error Notification]
+    M --> Q[brew update]
+    Q --> R[brew upgrade]
+    R --> S[brew upgrade --cask --greedy]
+    S --> T[brew cleanup --prune=7]
+    T --> U{Success?}
+
+    U -->|Yes| V[Save Last Run Date]
+    V --> W[Show Success Notification]
+
+    U -->|No| X[Show Error Notification]
 
     subgraph Sleep/Wake Recovery
-        U[System Sleep] --> V[Record Sleep Time]
-        W[System Wake] --> X{Missed Run?}
-        X -->|Yes| Y[Show Missed Run Notification]
-        Y --> Z{User Action}
-        Z -->|Run Now| J
-        Z -->|Skip| F
-        X -->|No| F
+        Y[System Sleep] --> Z[Record Sleep Time]
+        AA[System Wake] --> AB{Missed Run?}
+        AB -->|Yes| AC[Show Missed Run Notification]
+        AC --> AD{User Action}
+        AD -->|Run Now| M
+        AD -->|Skip| I
+        AB -->|No| I
     end
 ```
 
@@ -217,11 +245,12 @@ stateDiagram-v2
 ```
 auto-brew/
 ├── project.yml                          # XcodeGen project definition
+├── appcast.xml                          # Sparkle update feed
 ├── AutoBrew/
 │   ├── Info.plist                       # App metadata (LSUIElement = true)
-│   ├── AutoBrew.entitlements            # Sandbox + network
+│   ├── AutoBrew.entitlements            # Empty (no sandbox)
 │   ├── Assets.xcassets                  # App icon
-│   └── Localizable.xcstrings            # Localization (de/en)
+│   └── Localizable.xcstrings            # Localization (8 languages)
 ├── Sources/
 │   ├── App/
 │   │   ├── AutoBrewApp.swift            # @main entry point with MenuBarExtra
@@ -231,20 +260,25 @@ auto-brew/
 │   │   ├── BrewStage.swift              # Update pipeline stages
 │   │   ├── BrewError.swift              # Typed errors
 │   │   ├── ProcessResult.swift          # Shell command result
-│   │   └── SchedulerState.swift         # State machine states
+│   │   ├── SchedulerState.swift         # State machine states
+│   │   └── OutdatedPackage.swift        # Outdated formula/cask model
 │   ├── Services/
 │   │   ├── BrewManager.swift            # Homebrew detection + execution
-│   │   ├── BrewProcess.swift            # Process wrapper (async/await)
+│   │   ├── BrewProcess.swift            # Process wrapper (async/await, 600s timeout)
 │   │   ├── SchedulerService.swift       # Central orchestrator
 │   │   ├── IdleDetector.swift           # IOKit idle time
 │   │   ├── SleepWakeObserver.swift      # NSWorkspace sleep/wake
 │   │   ├── LoginItemManager.swift       # SMAppService wrapper
-│   │   └── NotificationManager.swift    # UNUserNotificationCenter
+│   │   ├── NotificationManager.swift    # UNUserNotificationCenter
+│   │   └── UpdaterService.swift         # Sparkle SPUUpdater wrapper
 │   ├── ViewModels/
 │   │   └── SettingsStore.swift          # UserDefaults bridge
 │   ├── Views/
 │   │   ├── MenuBarView.swift            # Menu bar popover
-│   │   └── SettingsView.swift           # Settings panel
+│   │   ├── MenuBarIcon.swift            # Dynamic menu bar icon with state badge
+│   │   ├── SettingsView.swift           # Settings panel
+│   │   ├── OnboardingView.swift         # First-launch Homebrew setup wizard
+│   │   └── LogView.swift                # Brew command output viewer
 │   └── Utilities/
 │       └── AppLogger.swift              # Unified os.Logger
 └── Tests/
