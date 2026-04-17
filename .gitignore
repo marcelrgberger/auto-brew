@@ -47,5 +47,9 @@ CLAUDE.md
 # Plugin directory
 /.quarkus/cli/plugins/
 
-# TLS Certificates
-.certs/
+# Build
+build/
+
+# AI assistant config
+CLAUDE.md
+.mcp.json

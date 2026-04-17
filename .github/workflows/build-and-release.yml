@@ -1,8 +1,8 @@
-name: Build, Notarize & Release
+name: 02. Build, Notarize & Release
 
 on:
   push:
-    branches: [test, beta, main]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -30,8 +30,6 @@ jobs:
         run: |
           case "$BRANCH" in
             main)   echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
-            beta)   echo "environment=beta" >> "$GITHUB_OUTPUT" ;;
-            test)   echo "environment=test" >> "$GITHUB_OUTPUT" ;;
             *)      echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
           esac
 
@@ -262,21 +260,6 @@ jobs:
           Download \`AutoBrew.dmg\`, open it, and drag AutoBrew to Applications.
 
           See [commits](https://github.com/marcelrgberger/auto-brew/commits/main) for details." \
-            "build/$APP_NAME.dmg" \
-            "build/$APP_NAME.zip"
-
-      - name: Create GitHub Pre-Release
-        if: github.ref == 'refs/heads/test' || github.ref == 'refs/heads/beta'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.version.outputs.version }}
-          BRANCH: ${{ github.ref_name }}
-          RUN: ${{ github.run_number }}
-        run: |
-          gh release create "v$VERSION-$BRANCH.$RUN" \
-            --title "AutoBrew v$VERSION ($BRANCH)" \
-            --notes "Pre-release for testing. Download \`AutoBrew.dmg\` to test." \
-            --prerelease \
             "build/$APP_NAME.dmg" \
             "build/$APP_NAME.zip"
 
