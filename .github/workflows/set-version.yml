@@ -1,4 +1,4 @@
-name: 03. Set new Version for next Release
+name: 01. Set new Version for next Release
 
 on:
   workflow_dispatch:

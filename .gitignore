@@ -25,3 +25,7 @@ DerivedData/
 
 # Build
 build/
+
+# AI assistant config
+CLAUDE.md
+.mcp.json
