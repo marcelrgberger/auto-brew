@@ -1,27 +1,51 @@
-# Xcode
-*.xcodeproj
-xcuserdata/
-DerivedData/
-*.xcworkspace
-*.pbxuser
-*.mode1v3
-*.mode2v3
-*.perspectivev3
-*.xccheckout
-*.moved-aside
-*.hmap
-*.ipa
-*.dSYM.zip
-*.dSYM
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+release.properties
+.flattened-pom.xml
 
-# Swift Package Manager
-.build/
-.swiftpm/
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
 
-# macOS
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws
+
+# NetBeans
+nb-configuration.xml
+
+# Visual Studio Code
+.vscode
+.factorypath
+
+# OSX
 .DS_Store
+
+# Vim
 *.swp
-*~.nib
+*.swo
+
+# patch
+*.orig
+*.rej
+
+# Local environment
+.env
+
+# Claude Code
+.claude/
+claude.md
+CLAUDE.md
+
+# Plugin directory
+/.quarkus/cli/plugins/
 
 # Build
 build/
