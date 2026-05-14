@@ -103,7 +103,7 @@ jobs:
 
       - name: Archive
         env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
         run: |
           xcodebuild archive \
             -project "$APP_NAME.xcodeproj" \
@@ -117,7 +117,7 @@ jobs:
 
       - name: Export app
         env:
-          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
         run: |
           cat > build/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
