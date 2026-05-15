@@ -13,7 +13,7 @@ struct BrowseDetailView: View {
                     VStack(alignment: .leading) {
                         Text(entry.displayName).font(.title2).bold()
                         Text(entry.token).font(.caption).foregroundStyle(.secondary).monospaced()
-                        Text(String(localized: "Version: \(entry.version)")).font(.caption)
+                        Text("Version: \(entry.version)").font(.caption)
                     }
                     Spacer()
                     installButton
@@ -43,9 +43,7 @@ struct BrowseDetailView: View {
 
     @ViewBuilder
     private var installButton: some View {
-        // Install-Aktion wird in Phase 3.6 angebunden — Platzhalter:
         Button {
-            // Wird in Task 3.6 angebunden
         } label: {
             if isInstalling {
                 ProgressView().controlSize(.small)
@@ -54,6 +52,6 @@ struct BrowseDetailView: View {
             }
         }
         .buttonStyle(.borderedProminent)
-        .disabled(isInstalling)
+        .disabled(true)
     }
 }
