@@ -44,6 +44,7 @@ struct BrowseDetailView: View {
     @ViewBuilder
     private var installButton: some View {
         Button {
+            Task { await install() }
         } label: {
             if isInstalling {
                 ProgressView().controlSize(.small)
@@ -52,6 +53,18 @@ struct BrowseDetailView: View {
             }
         }
         .buttonStyle(.borderedProminent)
-        .disabled(true)
+        .disabled(isInstalling)
+    }
+
+    @MainActor
+    private func install() async {
+        isInstalling = true
+        defer { isInstalling = false }
+        do {
+            try await BrewInstaller().install(token: entry.token)
+            await InstalledAppsStore.shared.refresh()
+        } catch {
+            installError = error.localizedDescription
+        }
     }
 }
