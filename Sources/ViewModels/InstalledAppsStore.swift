@@ -22,6 +22,9 @@ final class InstalledAppsStore {
     func refresh() async {
         isLoading = true
         defer { isLoading = false }
+        if BrewCatalogService.shared.casks.isEmpty {
+            try? await BrewCatalogService.shared.loadCache()
+        }
         let resolver = CaskNameResolver(catalog: BrewCatalogService.shared.casks)
         apps = await AppDiscoveryService().scan(resolver: resolver)
     }
