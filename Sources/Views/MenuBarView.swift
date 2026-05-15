@@ -14,6 +14,8 @@ struct MenuBarView: View {
 
     @State private var needsOnboarding: Bool = !SettingsStore.shared.onboardingCompleted
 
+    @Environment(\.openWindow) private var openWindow
+
     var body: some View {
         Group {
             if needsOnboarding {
@@ -165,6 +167,13 @@ struct MenuBarView: View {
                     Label("Show Log", systemImage: "doc.text")
                 }
                 .transition(.push(from: .bottom).combined(with: .opacity))
+            }
+
+            Button {
+                openWindow(id: "brewstation")
+                NSApp.activate(ignoringOtherApps: true)
+            } label: {
+                Label("Open BrewStation Window", systemImage: "rectangle.on.rectangle")
             }
 
             Button {
