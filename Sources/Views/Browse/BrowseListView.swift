@@ -11,6 +11,15 @@ struct BrowseListView: View {
                 .textFieldStyle(.roundedBorder)
                 .padding(8)
 
+            if category == .recent {
+                Label(String(localized: "Sorted by catalog order (no \"added\" date in Homebrew API yet)."),
+                      systemImage: "info.circle")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 4)
+            }
+
             List(selection: $selection) {
                 ForEach(filteredForCategory) { entry in
                     HStack(spacing: 10) {
@@ -34,19 +43,33 @@ struct BrowseListView: View {
 
     private var filteredForCategory: [CaskCatalogEntry] {
         switch category {
-        case .all: store.filtered
+        case .all:
+            return store.filtered
         case .popular:
-            Array(store.filtered.sorted {
+            let q = store.searchQuery.trimmingCharacters(in: .whitespaces).lowercased()
+            let base = q.isEmpty
+                ? store.allCasks
+                : store.allCasks.filter { entry in
+                    entry.token.lowercased().contains(q) ||
+                    entry.displayName.lowercased().contains(q) ||
+                    (entry.description?.lowercased().contains(q) ?? false)
+                }
+            return Array(base.sorted {
                 (store.analytics?.installCount(for: $0.token) ?? 0) >
                 (store.analytics?.installCount(for: $1.token) ?? 0)
-            }.prefix(100))
-        case .recent: store.filtered
+            }.prefix(Self.maxPopularCount))
+        case .recent:
+            return store.filtered
         }
     }
 
     private func formatCount(_ n: Int) -> String {
-        if n > 1_000_000 { return "\(n / 1_000_000)M" }
-        if n > 1_000 { return "\(n / 1_000)k" }
+        if n > Self.millionThreshold { return "\(n / Self.millionThreshold)M" }
+        if n > Self.thousandThreshold { return "\(n / Self.thousandThreshold)k" }
         return "\(n)"
     }
+
+    private static let maxPopularCount = 100
+    private static let millionThreshold = 1_000_000
+    private static let thousandThreshold = 1_000
 }
