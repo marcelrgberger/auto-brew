@@ -46,42 +46,22 @@ final class SnapshotService {
         try fm.createDirectory(at: dataDir, withIntermediateDirectories: true)
 
         let resolver = SnapshotPathResolver(bundleID: bundleID, home: home)
-        var components: [SnapshotComponent] = []
-        var totalBytes: Int64 = 0
+        let homeURL = home
 
-        for src in resolver.existingPaths() {
-            let rel = src.path.replacingOccurrences(of: home.path + "/", with: "")
-            let dest = dataDir.appendingPathComponent(rel)
-            try fm.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
-
-            var isDir: ObjCBool = false
-            fm.fileExists(atPath: src.path, isDirectory: &isDir)
-            if isDir.boolValue {
-                try fm.copyItem(at: src, to: dest)
-                let size = try directorySize(at: dest)
-                totalBytes += size
-                components.append(SnapshotComponent(
-                    originalPath: src.path.replacingOccurrences(of: home.path, with: "~"),
-                    relativeArchivePath: rel,
-                    kind: .directory,
-                    sha256: nil,
-                    byteSize: size
-                ))
-            } else {
-                try fm.copyItem(at: src, to: dest)
-                let attrs = try fm.attributesOfItem(atPath: dest.path)
-                let size = (attrs[.size] as? Int64) ?? 0
-                let hash = try Sha256Hasher.hash(file: dest)
-                totalBytes += size
-                components.append(SnapshotComponent(
-                    originalPath: src.path.replacingOccurrences(of: home.path, with: "~"),
-                    relativeArchivePath: rel,
-                    kind: .file,
-                    sha256: hash,
-                    byteSize: size
-                ))
+        var succeeded = false
+        defer {
+            if !succeeded {
+                try? fm.removeItem(at: bundleDir)
+                let parent = bundleDir.deletingLastPathComponent()
+                if let remaining = try? fm.contentsOfDirectory(at: parent, includingPropertiesForKeys: nil), remaining.isEmpty {
+                    try? fm.removeItem(at: parent)
+                }
             }
         }
+
+        let copyResult = try await Task.detached(priority: .userInitiated) {
+            try Self.copyComponents(resolver: resolver, home: homeURL, dataDir: dataDir)
+        }.value
 
         let manifest = SnapshotManifest(
             id: id,
@@ -90,20 +70,21 @@ final class SnapshotService {
             caskToken: caskToken,
             sourceAppVersion: sourceAppVersion,
             createdAt: Date(),
-            originHost: Host.current().localizedName ?? "Unknown",
+            originHost: ProcessInfo.processInfo.hostName,
             originUser: NSUserName(),
             schemaVersion: Self.schemaVersion,
-            components: components
+            components: copyResult.components
         )
         let manifestData = try JSONEncoder.snapshotEncoder().encode(manifest)
         try manifestData.write(to: bundleDir.appendingPathComponent("manifest.json"))
 
-        logger.info("Created snapshot \(bundleID, privacy: .public) with \(components.count) components (\(totalBytes) bytes)")
+        succeeded = true
+        logger.info("Created snapshot \(bundleID, privacy: .public) with \(copyResult.components.count) components (\(copyResult.totalBytes) bytes)")
 
         return AppSnapshot(
             id: id, bundleID: bundleID, displayName: displayName,
             createdAt: manifest.createdAt, caskToken: caskToken,
-            sourceAppVersion: sourceAppVersion, totalBytes: totalBytes,
+            sourceAppVersion: sourceAppVersion, totalBytes: copyResult.totalBytes,
             bundleURL: bundleDir
         )
     }
@@ -149,21 +130,115 @@ final class SnapshotService {
         }
         let manifestData = try Data(contentsOf: snapshot.manifestURL)
         let manifest = try JSONDecoder.snapshotDecoder().decode(SnapshotManifest.self, from: manifestData)
-        for component in manifest.components {
-            let src = snapshot.dataDir.appendingPathComponent(component.relativeArchivePath)
+        let dataDir = snapshot.dataDir
+        let homeURL = home
+        let components = manifest.components
+
+        try await Task.detached(priority: .userInitiated) {
+            try Self.restoreComponents(components, dataDir: dataDir, home: homeURL)
+        }.value
+
+        logger.info("Restored snapshot \(snapshot.bundleID, privacy: .public)")
+    }
+
+    // MARK: - Nonisolated file operations
+
+    private nonisolated static func encodeOriginalPath(_ src: URL, home: URL) -> String {
+        let homePath = home.path.hasSuffix("/") ? home.path : home.path + "/"
+        if src.path.hasPrefix(homePath) {
+            return "~/" + src.path.dropFirst(homePath.count)
+        }
+        return src.path
+    }
+
+    private nonisolated static func copyComponents(
+        resolver: SnapshotPathResolver,
+        home: URL,
+        dataDir: URL
+    ) throws -> (components: [SnapshotComponent], totalBytes: Int64) {
+        let fm = FileManager.default
+        var components: [SnapshotComponent] = []
+        var totalBytes: Int64 = 0
+
+        let homePrefix = home.path.hasSuffix("/") ? home.path : home.path + "/"
+
+        for src in resolver.existingPaths() {
+            let rel: String
+            if src.path.hasPrefix(homePrefix) {
+                rel = String(src.path.dropFirst(homePrefix.count))
+            } else {
+                rel = src.lastPathComponent
+            }
+            let dest = dataDir.appendingPathComponent(rel)
+            try fm.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
+
+            var isDir: ObjCBool = false
+            fm.fileExists(atPath: src.path, isDirectory: &isDir)
+            if isDir.boolValue {
+                try fm.copyItem(at: src, to: dest)
+                let size = try directorySize(at: dest)
+                totalBytes += size
+                components.append(SnapshotComponent(
+                    originalPath: encodeOriginalPath(src, home: home),
+                    relativeArchivePath: rel,
+                    kind: .directory,
+                    sha256: nil,
+                    byteSize: size
+                ))
+            } else {
+                try fm.copyItem(at: src, to: dest)
+                let attrs = try fm.attributesOfItem(atPath: dest.path)
+                let size = (attrs[.size] as? Int64) ?? 0
+                let hash = try Sha256Hasher.hash(file: dest)
+                totalBytes += size
+                components.append(SnapshotComponent(
+                    originalPath: encodeOriginalPath(src, home: home),
+                    relativeArchivePath: rel,
+                    kind: .file,
+                    sha256: hash,
+                    byteSize: size
+                ))
+            }
+        }
+        return (components, totalBytes)
+    }
+
+    private nonisolated static func restoreComponents(
+        _ components: [SnapshotComponent],
+        dataDir: URL,
+        home: URL
+    ) throws {
+        let fm = FileManager.default
+        for component in components {
+            let src = dataDir.appendingPathComponent(component.relativeArchivePath)
             let destPath = component.originalPath.replacingOccurrences(of: "~", with: home.path)
             let dest = URL(fileURLWithPath: destPath)
 
             try fm.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
-            if fm.fileExists(atPath: dest.path) {
-                try fm.removeItem(at: dest)
+
+            let backup = dest.deletingLastPathComponent()
+                .appendingPathComponent(".\(dest.lastPathComponent).autobrewbackup-\(UUID().uuidString.prefix(8))")
+            let hadExisting = fm.fileExists(atPath: dest.path)
+            if hadExisting {
+                try fm.moveItem(at: dest, to: backup)
             }
-            try fm.copyItem(at: src, to: dest)
+            do {
+                try fm.copyItem(at: src, to: dest)
+                if hadExisting {
+                    try? fm.removeItem(at: backup)
+                }
+            } catch {
+                if hadExisting {
+                    try? fm.removeItem(at: dest)
+                    try? fm.moveItem(at: backup, to: dest)
+                }
+                throw error
+            }
         }
-        logger.info("Restored snapshot \(snapshot.bundleID, privacy: .public)")
     }
 
-    private func directorySize(at url: URL) throws -> Int64 {
+    private nonisolated static func directorySize(at url: URL) throws -> Int64 {
+        let fm = FileManager.default
         var total: Int64 = 0
         guard let enumerator = fm.enumerator(at: url, includingPropertiesForKeys: [.fileSizeKey]) else { return 0 }
         for case let item as URL in enumerator {

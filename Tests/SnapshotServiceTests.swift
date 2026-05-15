@@ -84,4 +84,31 @@ final class SnapshotServiceTests: XCTestCase {
         let restored = try String(contentsOf: prefs.appendingPathComponent("\(bundleID).plist"))
         XCTAssertEqual(restored, "original")
     }
+
+    @MainActor
+    func testRestoreLeavesOriginalIntactWhenSourceMissing() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let bundleID = "com.example.partial"
+        let prefs = home.appendingPathComponent("Library/Preferences")
+        try FileManager.default.createDirectory(at: prefs, withIntermediateDirectories: true)
+        try "live".write(to: prefs.appendingPathComponent("\(bundleID).plist"), atomically: true, encoding: .utf8)
+
+        let svc = SnapshotService(storageRoot: tmp.appendingPathComponent("snap"), home: home)
+        let snap = try await svc.createSnapshot(bundleID: bundleID, displayName: "X", caskToken: nil, sourceAppVersion: nil)
+
+        // Sabotage: remove the snapshot's data file so restore tries to copy from a missing source.
+        let sourceFile = snap.dataDir.appendingPathComponent("Library/Preferences/\(bundleID).plist")
+        try FileManager.default.removeItem(at: sourceFile)
+
+        do {
+            try await svc.restoreSnapshot(snap)
+            XCTFail("Restore should have thrown")
+        } catch {
+            // expected
+        }
+
+        // The live data must still be intact (not destroyed by removeItem).
+        let stillThere = try String(contentsOf: prefs.appendingPathComponent("\(bundleID).plist"))
+        XCTAssertEqual(stillThere, "live")
+    }
 }
