@@ -35,6 +35,7 @@ final class CatalogStore {
         case .name:
             return base.sorted { $0.displayName.localizedCaseInsensitiveCompare($1.displayName) == .orderedAscending }
         case .recent:
+            // No "added at" field in formulae.brew.sh catalog yet — falls back to catalog order.
             return base
         }
     }

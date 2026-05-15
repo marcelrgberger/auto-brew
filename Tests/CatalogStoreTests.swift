@@ -46,4 +46,32 @@ final class CatalogStoreTests: XCTestCase {
         store.searchQuery = ""
         XCTAssertEqual(store.filtered.count, 3)
     }
+
+    @MainActor
+    func testSortByPopularity() throws {
+        let analyticsJSON = """
+        {"category":"cask-install","total_items":3,"total_count":1000,
+         "items":[
+            {"number":1,"cask":"vlc","count":"500"},
+            {"number":2,"cask":"firefox","count":"300"},
+            {"number":3,"cask":"google-chrome","count":"100"}
+         ]}
+        """.data(using: .utf8)!
+        let analytics = try JSONDecoder().decode(CaskAnalytics.self, from: analyticsJSON)
+
+        let store = CatalogStore()
+        store.replaceAll(sampleCasks(), analytics: analytics)
+        store.sortMode = .popularity
+        let tokens = store.filtered.map(\.token)
+        XCTAssertEqual(tokens, ["vlc", "firefox", "google-chrome"])
+    }
+
+    @MainActor
+    func testSortByName() {
+        let store = CatalogStore()
+        store.replaceAll(sampleCasks(), analytics: nil)
+        store.sortMode = .name
+        let names = store.filtered.map(\.displayName)
+        XCTAssertEqual(names, ["Firefox", "Google Chrome", "VLC"])
+    }
 }
