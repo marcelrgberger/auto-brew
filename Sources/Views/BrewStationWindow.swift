@@ -40,6 +40,5 @@ struct BrewStationWindow: View {
     }
 }
 
-// Platzhalter — werden in 3.5/4.8 ersetzt:
-struct InstalledAppsView: View { var body: some View { Text("Installed") } }
+// Platzhalter — wird in 4.8 ersetzt:
 struct SnapshotsRootView: View { var body: some View { Text("Snapshots") } }
