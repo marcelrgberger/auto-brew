@@ -381,6 +381,14 @@ final class SnapshotService {
             guard fm.fileExists(atPath: src.path) else {
                 throw SnapshotError.invalidManifest("Missing component: \(component.relativeArchivePath)")
             }
+            // Detect on-disk tampering of snapshot payloads before we let them
+            // overwrite live user data.
+            if component.kind == .file, let expectedHash = component.sha256 {
+                let actualHash = try Sha256Hasher.hash(file: src)
+                guard actualHash == expectedHash else {
+                    throw SnapshotError.invalidManifest("Hash mismatch for \(component.relativeArchivePath)")
+                }
+            }
             let dest = try decodeOriginalPath(component.originalPath, home: home)
             let backup = dest.deletingLastPathComponent()
                 .appendingPathComponent(".\(dest.lastPathComponent).autobrewbackup-\(UUID().uuidString.prefix(8))")

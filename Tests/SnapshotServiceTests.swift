@@ -218,6 +218,32 @@ final class SnapshotServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testRestoreDetectsTamperedFileContents() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let bundleID = "com.test.tamper"
+        let prefs = home.appendingPathComponent("Library/Preferences")
+        try FileManager.default.createDirectory(at: prefs, withIntermediateDirectories: true)
+        try "original".write(to: prefs.appendingPathComponent("\(bundleID).plist"), atomically: true, encoding: .utf8)
+
+        let svc = SnapshotService(storageRoot: tmp.appendingPathComponent("snap"), home: home)
+        let snap = try await svc.createSnapshot(bundleID: bundleID, displayName: "Tamper", caskToken: nil, sourceAppVersion: nil)
+
+        // Tamper the file inside the snapshot
+        let archivedFile = snap.dataDir.appendingPathComponent("Library/Preferences/\(bundleID).plist")
+        try "TAMPERED".write(to: archivedFile, atomically: true, encoding: .utf8)
+
+        do {
+            try await svc.restoreSnapshot(snap)
+            XCTFail("Restore should have detected tampered file")
+        } catch {
+            XCTAssertTrue(String(describing: error).contains("Hash mismatch") || String(describing: error).contains("mismatch"))
+        }
+        // Original must be untouched
+        let stillThere = try String(contentsOf: prefs.appendingPathComponent("\(bundleID).plist"))
+        XCTAssertEqual(stillThere, "original")
+    }
+
+    @MainActor
     func testImportRejectsBundleIDPathTraversal() async throws {
         let home = tmp.appendingPathComponent("home")
         let prefs = home.appendingPathComponent("Library/Preferences")
