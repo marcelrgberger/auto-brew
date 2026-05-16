@@ -232,7 +232,7 @@ final class SnapshotService {
             if hadExisting { try? fm.removeItem(at: existingBackup) }
             moved = true
         } catch {
-            if hadExisting { try? fm.moveItem(at: existingBackup, to: target) }
+            if hadExisting { Self.rollbackBackup(existingBackup, to: target) }
             throw error
         }
 
