@@ -7,6 +7,7 @@ struct SnapshotDetailView: View {
     @State private var showRestoreConfirm = false
     @State private var showDeleteConfirm = false
     @State private var terminateApp = true
+    @State private var exportError: String?
 
     var body: some View {
         ScrollView {
@@ -59,6 +60,15 @@ struct SnapshotDetailView: View {
                 SnapshotsStore.shared.delete(snapshot)
             }
         }
+        .alert(
+            String(localized: "Export failed"),
+            isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } }),
+            presenting: exportError
+        ) { _ in
+            Button("OK") { exportError = nil }
+        } message: { msg in
+            Text(msg)
+        }
     }
 
     @MainActor
@@ -73,7 +83,9 @@ struct SnapshotDetailView: View {
         do {
             try await SnapshotService.shared.exportSnapshot(snapshot, to: url)
         } catch {
-            // Error surfaces via SnapshotsStore.lastError — no additional UI needed here.
+            // exportSnapshot bypasses SnapshotsStore, so surface the error directly
+            // — otherwise a failed export would silently appear successful.
+            exportError = error.localizedDescription
         }
     }
 }

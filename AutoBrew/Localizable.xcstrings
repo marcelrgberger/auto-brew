@@ -4648,6 +4648,52 @@
         }
       }
     },
+    "Install failed, skipping data restore" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation fehlgeschlagen, Datenwiederherstellung übersprungen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installation échouée, restauration des données ignorée"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installazione fallita, ripristino dati saltato"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installatie mislukt, dataherstel overgeslagen"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalacja nie powiodła się, pominięto przywracanie danych"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Falha na instalação, restauração de dados ignorada"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Instalación falló, restauración de datos omitida"
+          }
+        }
+      }
+    },
     "Restoring data…" : {
       "localizations" : {
         "de" : {
