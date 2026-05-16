@@ -139,6 +139,7 @@ final class SnapshotService {
     }
 
     func cleanup(olderThanDays days: Int) throws {
+        guard days > 0 else { return }
         let snapshots = try listSnapshots()
         let cutoff = Date().addingTimeInterval(-Double(days) * 86_400)
         for snap in snapshots where snap.createdAt < cutoff {
