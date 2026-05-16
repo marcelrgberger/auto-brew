@@ -10,6 +10,7 @@ struct AutoBrewApp: App {
             MenuBarView()
         } label: {
             MenuBarIcon(state: scheduler.state)
+                .modifier(OpenWindowOnNotification(windowID: "brewstation"))
         }
         .menuBarExtraStyle(.window)
 

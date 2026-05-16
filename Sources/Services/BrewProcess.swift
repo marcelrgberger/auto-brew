@@ -9,15 +9,14 @@ private final class ProcessHolder: @unchecked Sendable {
     private var process: Process?
     private var terminated = false
 
-    /// Attach a freshly-created Process. If the holder is already terminated
-    /// (e.g. timeout/cancel fired before attach), immediately terminate the
-    /// newly attached process so it never starts producing output.
-    func attach(_ p: Process) {
+    /// Attach a freshly-created Process. Returns `false` if the holder was
+    /// already terminated (timeout/cancel fired before attach); the caller
+    /// must abort and NOT start the process in that case.
+    func attach(_ p: Process) -> Bool {
         lock.withLock {
+            if terminated { return false }
             self.process = p
-            if terminated, p.isRunning {
-                p.terminate()
-            }
+            return true
         }
     }
 
@@ -84,7 +83,10 @@ enum BrewProcess: Sendable {
 
         return try await withCheckedThrowingContinuation { continuation in
             let process = Process()
-            holder.attach(process)
+            guard holder.attach(process) else {
+                continuation.resume(throwing: CancellationError())
+                return
+            }
             let stdoutPipe = Pipe()
             let stderrPipe = Pipe()
 
