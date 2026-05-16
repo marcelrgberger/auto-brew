@@ -13,7 +13,7 @@ struct BrowseDetailView: View {
                     VStack(alignment: .leading) {
                         Text(entry.displayName).font(.title2).bold()
                         Text(entry.token).font(.caption).foregroundStyle(.secondary).monospaced()
-                        Text("Version: \(entry.version)").font(.caption)
+                        Text(String(localized: "Version: \(entry.version)")).font(.caption)
                     }
                     Spacer()
                     installButton
