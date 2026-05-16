@@ -36,6 +36,14 @@ final class SettingsStore {
         didSet { defaults.set(showNotifications, forKey: "showNotifications") }
     }
 
+    var snapshotRetentionDays: Int {
+        didSet { defaults.set(snapshotRetentionDays, forKey: "snapshotRetentionDays") }
+    }
+
+    var autoCleanupSnapshots: Bool {
+        didSet { defaults.set(autoCleanupSnapshots, forKey: "autoCleanupSnapshots") }
+    }
+
     var onboardingCompleted: Bool {
         didSet { defaults.set(onboardingCompleted, forKey: "onboardingCompleted") }
     }
@@ -74,6 +82,10 @@ final class SettingsStore {
         } else {
             showNotifications = true
         }
+
+        let retention = d.integer(forKey: "snapshotRetentionDays")
+        snapshotRetentionDays = retention > 0 ? retention : 90
+        autoCleanupSnapshots = d.bool(forKey: "autoCleanupSnapshots")
 
         onboardingCompleted = d.bool(forKey: "onboardingCompleted")
     }
