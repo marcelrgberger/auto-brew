@@ -3,6 +3,7 @@ import SwiftUI
 struct SnapshotsRootView: View {
     @State private var store = SnapshotsStore.shared
     @State private var selected: AppSnapshot?
+    @State private var showWizard = false
 
     var body: some View {
         NavigationSplitView {
@@ -20,5 +21,20 @@ struct SnapshotsRootView: View {
             }
         }
         .task { store.refresh() }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showWizard = true
+                } label: {
+                    Label(String(localized: "Import Bundle"), systemImage: "tray.and.arrow.down")
+                }
+            }
+        }
+        .sheet(isPresented: $showWizard) {
+            RestoreWizardView(onClose: {
+                showWizard = false
+                store.refresh()
+            })
+        }
     }
 }
