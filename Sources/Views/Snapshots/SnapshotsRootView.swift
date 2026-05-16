@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 struct SnapshotsRootView: View {
     @State private var store = SnapshotsStore.shared
@@ -29,6 +30,14 @@ struct SnapshotsRootView: View {
                     Label(String(localized: "Import Bundle"), systemImage: "tray.and.arrow.down")
                 }
             }
+            ToolbarItem(placement: .secondaryAction) {
+                Button {
+                    Task { await exportAll() }
+                } label: {
+                    Label(String(localized: "Export All…"), systemImage: "square.and.arrow.up.on.square")
+                }
+                .disabled(store.snapshots.isEmpty)
+            }
         }
         .sheet(isPresented: $showWizard) {
             RestoreWizardView(onClose: {
@@ -36,5 +45,19 @@ struct SnapshotsRootView: View {
                 store.refresh()
             })
         }
+    }
+
+    @MainActor
+    private func exportAll() async {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = false
+        panel.allowsMultipleSelection = false
+        panel.title = String(localized: "Choose folder for export")
+        let resp = await withCheckedContinuation { cont in panel.begin { cont.resume(returning: $0) } }
+        guard resp == .OK, let dir = panel.url else { return }
+        let stamp = Date().formatted(.iso8601.year().month().day())
+        let target = dir.appendingPathComponent("AutoBrew-export-\(stamp).autobrewbundle", isDirectory: true)
+        try? await SnapshotService.shared.exportRestoreList(snapshots: store.snapshots, to: target)
     }
 }
