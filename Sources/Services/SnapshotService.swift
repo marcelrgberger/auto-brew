@@ -80,6 +80,13 @@ final class SnapshotService {
             try Self.copyComponents(resolver: resolver, home: homeURL, dataDir: dataDir)
         }.value
 
+        // Empty snapshots are never useful — they create entries in the UI that
+        // restore to nothing — so refuse to create one. The defer cleans up the
+        // partially created bundle directory.
+        guard !copyResult.components.isEmpty else {
+            throw SnapshotError.invalidManifest("No data found for bundleID \(bundleID) — nothing to snapshot")
+        }
+
         let manifest = SnapshotManifest(
             id: id,
             bundleID: bundleID,
@@ -205,9 +212,24 @@ final class SnapshotService {
         let timestamp = ISO8601DateFormatter().string(from: manifest.createdAt).replacingOccurrences(of: ":", with: "-")
         let target = storageRoot.appendingPathComponent("\(manifest.bundleID)/\(timestamp)_\(manifest.id.uuidString.prefix(8))", isDirectory: true)
         try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if fm.fileExists(atPath: target.path) { try fm.removeItem(at: target) }
-        try fm.moveItem(at: extractRoot, to: target)
-        moved = true
+
+        // Move an already-present target out of the way instead of deleting it
+        // outright. If the move-in of the new payload fails, the previous snapshot
+        // is restored so a broken import never destroys existing data.
+        let existingBackup = target.deletingLastPathComponent()
+            .appendingPathComponent(".\(target.lastPathComponent).autobrewbackup-\(UUID().uuidString.prefix(8))")
+        let hadExisting = fm.fileExists(atPath: target.path)
+        if hadExisting {
+            try fm.moveItem(at: target, to: existingBackup)
+        }
+        do {
+            try fm.moveItem(at: extractRoot, to: target)
+            if hadExisting { try? fm.removeItem(at: existingBackup) }
+            moved = true
+        } catch {
+            if hadExisting { try? fm.moveItem(at: existingBackup, to: target) }
+            throw error
+        }
 
         let total = manifest.components.reduce(Int64(0)) { $0 + $1.byteSize }
         return AppSnapshot(

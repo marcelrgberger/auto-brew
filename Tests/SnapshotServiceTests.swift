@@ -218,6 +218,18 @@ final class SnapshotServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testCreateSnapshotRejectsEmptyApp() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let svc = SnapshotService(storageRoot: tmp.appendingPathComponent("snap"), home: home)
+        do {
+            _ = try await svc.createSnapshot(bundleID: "com.example.nonexistent", displayName: "Empty", caskToken: nil, sourceAppVersion: nil)
+            XCTFail("Should have rejected empty snapshot")
+        } catch {
+            XCTAssertTrue(String(describing: error).contains("No data"))
+        }
+    }
+
+    @MainActor
     func testRestoreDetectsTamperedFileContents() async throws {
         let home = tmp.appendingPathComponent("home")
         let bundleID = "com.test.tamper"
