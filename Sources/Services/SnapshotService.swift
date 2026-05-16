@@ -210,6 +210,10 @@ final class SnapshotService {
             throw SnapshotError.invalidManifest("Invalid bundleID in manifest: \(manifest.bundleID)")
         }
 
+        guard !manifest.components.isEmpty else {
+            throw SnapshotError.invalidManifest("Imported snapshot has no components")
+        }
+
         let timestamp = ISO8601DateFormatter().string(from: manifest.createdAt).replacingOccurrences(of: ":", with: "-")
         let target = storageRoot.appendingPathComponent("\(manifest.bundleID)/\(timestamp)_\(manifest.id.uuidString.prefix(8))", isDirectory: true)
         try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)

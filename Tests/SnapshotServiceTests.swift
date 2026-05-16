@@ -283,6 +283,45 @@ final class SnapshotServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testImportRejectsEmptyManifest() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let prefs = home.appendingPathComponent("Library/Preferences")
+        try FileManager.default.createDirectory(at: prefs, withIntermediateDirectories: true)
+        try Data().write(to: prefs.appendingPathComponent("com.test.empty.plist"))
+
+        let svcA = SnapshotService(storageRoot: tmp.appendingPathComponent("snap-a"), home: home)
+        let snap = try await svcA.createSnapshot(bundleID: "com.test.empty", displayName: "E", caskToken: nil, sourceAppVersion: nil)
+
+        // Export then tamper to clear components
+        let exportURL = tmp.appendingPathComponent("e.autobrewsnapshot")
+        try await svcA.exportSnapshot(snap, to: exportURL)
+
+        let extractDir = tmp.appendingPathComponent("extract-e")
+        try FileManager.default.createDirectory(at: extractDir, withIntermediateDirectories: true)
+        try await SnapshotArchiver.unzip(exportURL, to: extractDir)
+        let manifestURL = extractDir.appendingPathComponent("manifest.json")
+        let manifest = try JSONDecoder.snapshotDecoder().decode(SnapshotManifest.self, from: Data(contentsOf: manifestURL))
+        let tampered = SnapshotManifest(
+            id: manifest.id, bundleID: manifest.bundleID, displayName: manifest.displayName,
+            caskToken: manifest.caskToken, sourceAppVersion: manifest.sourceAppVersion,
+            createdAt: manifest.createdAt, originHost: manifest.originHost, originUser: manifest.originUser,
+            schemaVersion: manifest.schemaVersion, components: []
+        )
+        try JSONEncoder.snapshotEncoder().encode(tampered).write(to: manifestURL)
+
+        let tamperedZip = tmp.appendingPathComponent("e-tampered.autobrewsnapshot")
+        try await SnapshotArchiver.zip(directory: extractDir, to: tamperedZip)
+
+        let svcB = SnapshotService(storageRoot: tmp.appendingPathComponent("snap-b"), home: home)
+        do {
+            _ = try await svcB.importSnapshot(from: tamperedZip)
+            XCTFail("Should reject empty manifest on import")
+        } catch {
+            XCTAssertTrue(String(describing: error).contains("no components"))
+        }
+    }
+
+    @MainActor
     func testImportRejectsBundleIDPathTraversal() async throws {
         let home = tmp.appendingPathComponent("home")
         let prefs = home.appendingPathComponent("Library/Preferences")
