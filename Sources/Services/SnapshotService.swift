@@ -17,6 +17,20 @@ extension JSONEncoder {
     }
 }
 
+enum SnapshotError: LocalizedError {
+    case pathTraversal(String)
+    case invalidManifest(String)
+    case unsupportedSchemaVersion(Int)
+
+    var errorDescription: String? {
+        switch self {
+        case .pathTraversal(let p): String(localized: "Path traversal blocked: \(p)")
+        case .invalidManifest(let r): String(localized: "Invalid snapshot manifest: \(r)")
+        case .unsupportedSchemaVersion(let v): String(localized: "Unsupported snapshot schema version: \(v)")
+        }
+    }
+}
+
 @MainActor
 final class SnapshotService {
     static let shared = SnapshotService()
@@ -153,22 +167,31 @@ final class SnapshotService {
     func importSnapshot(from archiveURL: URL) async throws -> AppSnapshot {
         let extractRoot = storageRoot.appendingPathComponent("_import_\(UUID().uuidString)", isDirectory: true)
         try fm.createDirectory(at: extractRoot, withIntermediateDirectories: true)
+
+        var moved = false
+        defer {
+            if !moved { try? fm.removeItem(at: extractRoot) }
+        }
+
         try await SnapshotArchiver.unzip(archiveURL, to: extractRoot)
 
         let manifestURL = extractRoot.appendingPathComponent("manifest.json")
         guard fm.fileExists(atPath: manifestURL.path) else {
-            try? fm.removeItem(at: extractRoot)
-            throw NSError(domain: "Snapshot", code: 1,
-                          userInfo: [NSLocalizedDescriptionKey: "Invalid snapshot bundle"])
+            throw SnapshotError.invalidManifest("Missing manifest.json")
         }
         let manifestData = try Data(contentsOf: manifestURL)
         let manifest = try JSONDecoder.snapshotDecoder().decode(SnapshotManifest.self, from: manifestData)
+
+        guard manifest.schemaVersion <= Self.schemaVersion else {
+            throw SnapshotError.unsupportedSchemaVersion(manifest.schemaVersion)
+        }
 
         let timestamp = ISO8601DateFormatter().string(from: manifest.createdAt).replacingOccurrences(of: ":", with: "-")
         let target = storageRoot.appendingPathComponent("\(manifest.bundleID)/\(timestamp)_\(manifest.id.uuidString.prefix(8))", isDirectory: true)
         try fm.createDirectory(at: target.deletingLastPathComponent(), withIntermediateDirectories: true)
         if fm.fileExists(atPath: target.path) { try fm.removeItem(at: target) }
         try fm.moveItem(at: extractRoot, to: target)
+        moved = true
 
         let total = manifest.components.reduce(Int64(0)) { $0 + $1.byteSize }
         return AppSnapshot(
@@ -179,7 +202,9 @@ final class SnapshotService {
     }
 
     func exportRestoreList(snapshots: [AppSnapshot], to directory: URL) async throws {
-        if fm.fileExists(atPath: directory.path) { try fm.removeItem(at: directory) }
+        if fm.fileExists(atPath: directory.path) {
+            throw SnapshotError.invalidManifest("Export target already exists: \(directory.path)")
+        }
         try fm.createDirectory(at: directory, withIntermediateDirectories: true)
 
         var entries: [RestoreList.Entry] = []
@@ -193,7 +218,7 @@ final class SnapshotService {
         let list = RestoreList(
             schemaVersion: Self.schemaVersion,
             createdAt: Date(),
-            originHost: Host.current().localizedName ?? "Unknown",
+            originHost: ProcessInfo.processInfo.hostName,
             entries: entries
         )
         let data = try JSONEncoder.snapshotEncoder().encode(list)
@@ -203,9 +228,23 @@ final class SnapshotService {
     func importRestoreList(from directory: URL) async throws -> (list: RestoreList, imported: [AppSnapshot]) {
         let manifestData = try Data(contentsOf: directory.appendingPathComponent("restore_list.json"))
         let list = try JSONDecoder.snapshotDecoder().decode(RestoreList.self, from: manifestData)
+
+        guard list.schemaVersion <= Self.schemaVersion else {
+            throw SnapshotError.unsupportedSchemaVersion(list.schemaVersion)
+        }
+
         var imported: [AppSnapshot] = []
         for entry in list.entries {
-            let url = directory.appendingPathComponent(entry.archiveFilename)
+            let filename = entry.archiveFilename
+            guard !filename.isEmpty,
+                  !filename.contains("/"),
+                  !filename.contains("\\"),
+                  !filename.contains(".."),
+                  filename.hasSuffix(".autobrewsnapshot")
+            else {
+                throw SnapshotError.invalidManifest("Invalid archiveFilename: \(filename)")
+            }
+            let url = directory.appendingPathComponent(filename)
             let snap = try await importSnapshot(from: url)
             imported.append(snap)
         }
@@ -220,6 +259,25 @@ final class SnapshotService {
             return "~/" + src.path.dropFirst(homePath.count)
         }
         return src.path
+    }
+
+    private nonisolated static func decodeOriginalPath(_ encoded: String, home: URL) throws -> URL {
+        let resolvedPath: String
+        if encoded.hasPrefix("~/") {
+            resolvedPath = home.path + "/" + encoded.dropFirst(2)
+        } else if encoded == "~" {
+            resolvedPath = home.path
+        } else {
+            resolvedPath = encoded
+        }
+        // Normalize and verify containment within home to defeat path-traversal payloads.
+        let standardized = (resolvedPath as NSString).standardizingPath
+        let homeStandardized = (home.path as NSString).standardizingPath
+        let homeWithSlash = homeStandardized.hasSuffix("/") ? homeStandardized : homeStandardized + "/"
+        guard standardized == homeStandardized || standardized.hasPrefix(homeWithSlash) else {
+            throw SnapshotError.pathTraversal(encoded)
+        }
+        return URL(fileURLWithPath: standardized)
     }
 
     private nonisolated static func copyComponents(
@@ -280,10 +338,16 @@ final class SnapshotService {
         home: URL
     ) throws {
         let fm = FileManager.default
+        let dataDirStandardized = (dataDir.path as NSString).standardizingPath
+        let dataDirWithSlash = dataDirStandardized.hasSuffix("/") ? dataDirStandardized : dataDirStandardized + "/"
+
         for component in components {
             let src = dataDir.appendingPathComponent(component.relativeArchivePath)
-            let destPath = component.originalPath.replacingOccurrences(of: "~", with: home.path)
-            let dest = URL(fileURLWithPath: destPath)
+            let srcStandardized = (src.path as NSString).standardizingPath
+            guard srcStandardized.hasPrefix(dataDirWithSlash) else {
+                throw SnapshotError.pathTraversal(component.relativeArchivePath)
+            }
+            let dest = try decodeOriginalPath(component.originalPath, home: home)
 
             try fm.createDirectory(at: dest.deletingLastPathComponent(), withIntermediateDirectories: true)
 

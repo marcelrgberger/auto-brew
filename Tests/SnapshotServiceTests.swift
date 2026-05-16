@@ -135,6 +135,42 @@ final class SnapshotServiceTests: XCTestCase {
     }
 
     @MainActor
+    func testRestoreRejectsPathTraversalManifest() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let prefs = home.appendingPathComponent("Library/Preferences")
+        try FileManager.default.createDirectory(at: prefs, withIntermediateDirectories: true)
+        try Data().write(to: prefs.appendingPathComponent("com.test.attack.plist"))
+
+        let svc = SnapshotService(storageRoot: tmp.appendingPathComponent("snap"), home: home)
+        let snap = try await svc.createSnapshot(bundleID: "com.test.attack", displayName: "X", caskToken: nil, sourceAppVersion: nil)
+
+        // Tamper the manifest to add a malicious component.
+        let manifestData = try Data(contentsOf: snap.manifestURL)
+        let manifest = try JSONDecoder.snapshotDecoder().decode(SnapshotManifest.self, from: manifestData)
+        let evil = SnapshotComponent(
+            originalPath: "~/../../etc/evil",
+            relativeArchivePath: "Library/Preferences/com.test.attack.plist",
+            kind: .file,
+            sha256: nil,
+            byteSize: 0
+        )
+        let tampered = SnapshotManifest(
+            id: manifest.id, bundleID: manifest.bundleID, displayName: manifest.displayName,
+            caskToken: manifest.caskToken, sourceAppVersion: manifest.sourceAppVersion,
+            createdAt: manifest.createdAt, originHost: manifest.originHost, originUser: manifest.originUser,
+            schemaVersion: manifest.schemaVersion, components: manifest.components + [evil]
+        )
+        try JSONEncoder.snapshotEncoder().encode(tampered).write(to: snap.manifestURL)
+
+        do {
+            try await svc.restoreSnapshot(snap)
+            XCTFail("Restore should have thrown for path-traversal manifest")
+        } catch {
+            XCTAssertTrue(String(describing: error).contains("traversal") || String(describing: error).contains("Traversal"))
+        }
+    }
+
+    @MainActor
     func testExportMultiRestoreList() async throws {
         let home = tmp.appendingPathComponent("home")
         let prefs = home.appendingPathComponent("Library/Preferences")

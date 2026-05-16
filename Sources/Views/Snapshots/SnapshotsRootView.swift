@@ -54,9 +54,9 @@ struct SnapshotsRootView: View {
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = false
         panel.title = String(localized: "Choose folder for export")
-        let resp = await withCheckedContinuation { cont in panel.begin { cont.resume(returning: $0) } }
+        let resp = await panel.runModalAsync()
         guard resp == .OK, let dir = panel.url else { return }
-        let stamp = Date().formatted(.iso8601.year().month().day())
+        let stamp = Date().formatted(.iso8601.year().month().day().time(includingFractionalSeconds: false).timeSeparator(.omitted))
         let target = dir.appendingPathComponent("AutoBrew-export-\(stamp).autobrewbundle", isDirectory: true)
         try? await SnapshotService.shared.exportRestoreList(snapshots: store.snapshots, to: target)
     }

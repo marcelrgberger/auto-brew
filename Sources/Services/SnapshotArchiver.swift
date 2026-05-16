@@ -7,8 +7,8 @@ enum SnapshotArchiver {
 
         var errorDescription: String? {
             switch self {
-            case .zipFailed(let m): "Zip failed: \(m)"
-            case .unzipFailed(let m): "Unzip failed: \(m)"
+            case .zipFailed(let m): String(localized: "Zip failed: \(m)")
+            case .unzipFailed(let m): String(localized: "Unzip failed: \(m)")
             }
         }
     }
@@ -36,19 +36,21 @@ enum SnapshotArchiver {
         }
     }
 
-    private static func run(executable: String, arguments: [String], errorMap: (String) -> ArchiveError) async throws {
-        let process = Process()
-        let stderr = Pipe()
-        process.executableURL = URL(fileURLWithPath: executable)
-        process.arguments = arguments
-        process.standardError = stderr
-        process.standardOutput = Pipe()
-        try process.run()
-        process.waitUntilExit()
-        if process.terminationStatus != 0 {
-            let data = stderr.fileHandleForReading.readDataToEndOfFile()
-            let msg = String(data: data, encoding: .utf8) ?? "exit \(process.terminationStatus)"
-            throw errorMap(msg)
-        }
+    private static func run(executable: String, arguments: [String], errorMap: @escaping @Sendable (String) -> ArchiveError) async throws {
+        try await Task.detached(priority: .userInitiated) {
+            let process = Process()
+            let stderr = Pipe()
+            process.executableURL = URL(fileURLWithPath: executable)
+            process.arguments = arguments
+            process.standardError = stderr
+            process.standardOutput = Pipe()
+            try process.run()
+            process.waitUntilExit()
+            if process.terminationStatus != 0 {
+                let data = stderr.fileHandleForReading.readDataToEndOfFile()
+                let msg = String(data: data, encoding: .utf8) ?? "exit \(process.terminationStatus)"
+                throw errorMap(msg)
+            }
+        }.value
     }
 }
