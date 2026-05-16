@@ -15,6 +15,31 @@ A native macOS menu bar app that automatically keeps Homebrew and all installed 
 - **Auto-Updates** — Keeps itself up to date via Sparkle
 - **8 Languages** — English, German, French, Italian, Dutch, Polish, Portuguese (Brazil), Spanish
 
+## BrewStation Integration
+
+Starting with version 2.0.0, AutoBrew ships a full Homebrew GUI and an AppSnapshot engine.
+
+### Browse
+Full Homebrew cask catalog (`formulae.brew.sh`) with search, Top-100 list based on install statistics, and a direct-install button.
+
+### Installed
+List of all third-party apps in the `/Applications` folder with cask-token mapping. Per app: create snapshot, upgrade via Brew, or uninstall.
+
+### Snapshots
+Capture complete app state: `Library/Preferences`, `Library/Application Support`, `Library/Containers`, `Library/Saved Application State`, `Library/Group Containers`, `Library/Caches`. Stored under `~/Library/Application Support/AutoBrew/Snapshots/`. Restore with optional app quit.
+
+### Cross-Mac Migration
+- **Export a single snapshot** as an `.autobrewsnapshot` file (ZIP bundle with signed manifest).
+- **Bulk export** all snapshots as an `.autobrewbundle` directory with `restore_list.json`.
+- **Restore wizard**: open a file or bundle, pick the apps to restore, automatically install missing casks via Homebrew (with search fallback for renamed casks), and replay the data.
+
+### URL Scheme
+- `autobrew://open` — open the main window.
+- `autobrew://install/<cask-token>` — install a cask in the background (token validated against `[a-zA-Z0-9][a-zA-Z0-9._-]*`).
+
+### Auto-Cleanup
+In Settings: automatically remove old snapshots after N days (default 90). Cleanup runs after each successful Brew update.
+
 ## Install
 
 ### Via Homebrew (recommended)
