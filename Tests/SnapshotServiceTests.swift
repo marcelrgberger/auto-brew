@@ -133,4 +133,25 @@ final class SnapshotServiceTests: XCTestCase {
         XCTAssertEqual(imported.displayName, "Exp")
         XCTAssertTrue(FileManager.default.fileExists(atPath: imported.manifestURL.path))
     }
+
+    @MainActor
+    func testExportMultiRestoreList() async throws {
+        let home = tmp.appendingPathComponent("home")
+        let prefs = home.appendingPathComponent("Library/Preferences")
+        try FileManager.default.createDirectory(at: prefs, withIntermediateDirectories: true)
+        try Data().write(to: prefs.appendingPathComponent("com.x.a.plist"))
+        try Data().write(to: prefs.appendingPathComponent("com.x.b.plist"))
+
+        let svc = SnapshotService(storageRoot: tmp.appendingPathComponent("snap"), home: home)
+        let s1 = try await svc.createSnapshot(bundleID: "com.x.a", displayName: "A", caskToken: "a", sourceAppVersion: nil)
+        let s2 = try await svc.createSnapshot(bundleID: "com.x.b", displayName: "B", caskToken: "b", sourceAppVersion: nil)
+
+        let exportDir = tmp.appendingPathComponent("multi.autobrewbundle")
+        try await svc.exportRestoreList(snapshots: [s1, s2], to: exportDir)
+
+        let manifestData = try Data(contentsOf: exportDir.appendingPathComponent("restore_list.json"))
+        let manifest = try JSONDecoder.snapshotDecoder().decode(RestoreList.self, from: manifestData)
+        XCTAssertEqual(manifest.entries.count, 2)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: exportDir.appendingPathComponent(manifest.entries[0].archiveFilename).path))
+    }
 }

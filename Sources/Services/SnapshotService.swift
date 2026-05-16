@@ -178,6 +178,40 @@ final class SnapshotService {
         )
     }
 
+    func exportRestoreList(snapshots: [AppSnapshot], to directory: URL) async throws {
+        if fm.fileExists(atPath: directory.path) { try fm.removeItem(at: directory) }
+        try fm.createDirectory(at: directory, withIntermediateDirectories: true)
+
+        var entries: [RestoreList.Entry] = []
+        for snap in snapshots {
+            let filename = "\(snap.bundleID)_\(snap.id.uuidString.prefix(8)).autobrewsnapshot"
+            let outURL = directory.appendingPathComponent(filename)
+            try await exportSnapshot(snap, to: outURL)
+            entries.append(.init(bundleID: snap.bundleID, caskToken: snap.caskToken, archiveFilename: filename))
+        }
+
+        let list = RestoreList(
+            schemaVersion: Self.schemaVersion,
+            createdAt: Date(),
+            originHost: Host.current().localizedName ?? "Unknown",
+            entries: entries
+        )
+        let data = try JSONEncoder.snapshotEncoder().encode(list)
+        try data.write(to: directory.appendingPathComponent("restore_list.json"))
+    }
+
+    func importRestoreList(from directory: URL) async throws -> (list: RestoreList, imported: [AppSnapshot]) {
+        let manifestData = try Data(contentsOf: directory.appendingPathComponent("restore_list.json"))
+        let list = try JSONDecoder.snapshotDecoder().decode(RestoreList.self, from: manifestData)
+        var imported: [AppSnapshot] = []
+        for entry in list.entries {
+            let url = directory.appendingPathComponent(entry.archiveFilename)
+            let snap = try await importSnapshot(from: url)
+            imported.append(snap)
+        }
+        return (list, imported)
+    }
+
     // MARK: - Nonisolated file operations
 
     private nonisolated static func encodeOriginalPath(_ src: URL, home: URL) -> String {
