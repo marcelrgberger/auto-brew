@@ -438,7 +438,7 @@ final class SnapshotService {
             }
         } catch {
             for entry in madeBackups.reversed() {
-                try? fm.moveItem(at: entry.backup, to: entry.dest)
+                Self.rollbackBackup(entry.backup, to: entry.dest)
             }
             throw error
         }
@@ -456,7 +456,7 @@ final class SnapshotService {
                 try? fm.removeItem(at: dest)
             }
             for entry in madeBackups.reversed() {
-                try? fm.moveItem(at: entry.backup, to: entry.dest)
+                Self.rollbackBackup(entry.backup, to: entry.dest)
             }
             throw error
         }
@@ -476,6 +476,27 @@ final class SnapshotService {
             total += Int64(attrs.fileSize ?? 0)
         }
         return total
+    }
+
+    /// Restore a backup to its original destination, detecting collisions that may
+    /// have been caused by a racing writer recreating the destination during restore.
+    /// The rollback path must never throw — otherwise it would shadow the original
+    /// error that triggered the rollback. If the backup can't be restored, we log
+    /// to stderr so the user has a path to recover manually.
+    private nonisolated static func rollbackBackup(_ backup: URL, to dest: URL) {
+        let fm = FileManager.default
+        if fm.fileExists(atPath: dest.path) {
+            // Collision: a racing writer recreated dest while we were restoring.
+            // Remove the raced-in dest first so the move-back can succeed.
+            try? fm.removeItem(at: dest)
+        }
+        do {
+            try fm.moveItem(at: backup, to: dest)
+        } catch {
+            // Last resort: backup is stranded. Log so the user can recover manually.
+            let msg = "BACKUP STRANDED at \(backup.path) — could not restore to \(dest.path): \(error.localizedDescription)\n"
+            FileHandle.standardError.write(Data(msg.utf8))
+        }
     }
 
     /// Deterministic hash over every regular file inside `url`. Used so tampering
