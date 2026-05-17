@@ -1,9 +1,13 @@
+import AppKit
 import SwiftUI
 
 struct SettingsView: View {
     @State private var settings = SettingsStore.shared
     @State private var scheduler = SchedulerService.shared
     @State private var brewManager = BrewManager.shared
+    @State private var iconCacheSize: Int64 = 0
+    @State private var cacheLastUpdated: String = "—"
+    @State private var cacheError: String?
     var onBack: () -> Void
 
     var body: some View {
@@ -80,6 +84,65 @@ struct SettingsView: View {
                     ))
                 }
 
+                Section(String(localized: "Snapshots")) {
+                    Toggle(String(localized: "Auto-clean up old snapshots"),
+                           isOn: Binding(
+                               get: { settings.autoCleanupSnapshots },
+                               set: { settings.autoCleanupSnapshots = $0 }
+                           ))
+                    if settings.autoCleanupSnapshots {
+                        Stepper(String(localized: "Keep snapshots for \(settings.snapshotRetentionDays) days"),
+                                value: Binding(
+                                    get: { settings.snapshotRetentionDays },
+                                    set: { settings.snapshotRetentionDays = $0 }
+                                ),
+                                in: 7...365, step: 7)
+                    }
+                    HStack {
+                        Text(String(localized: "Snapshot storage"))
+                        Spacer()
+                        Button(String(localized: "Open in Finder")) {
+                            let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+                                .appendingPathComponent("AutoBrew/Snapshots")
+                            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                }
+
+                Section(String(localized: "Icon Cache")) {
+                    HStack {
+                        Text(String(localized: "Cache size"))
+                        Spacer()
+                        Text(ByteFormatter.string(iconCacheSize))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    HStack {
+                        Text(String(localized: "Last updated"))
+                        Spacer()
+                        Text(cacheLastUpdated)
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                    }
+                    Button(String(localized: "Clear Icon Cache"), role: .destructive) {
+                        do {
+                            try RemoteIconLoader.shared.clearCache()
+                        } catch {
+                            cacheError = error.localizedDescription
+                        }
+                        refreshCacheStats()
+                    }
+                }
+                .task { refreshCacheStats() }
+                .alert(String(localized: "Couldn't clear cache"),
+                       isPresented: Binding(get: { cacheError != nil }, set: { if !$0 { cacheError = nil } }),
+                       presenting: cacheError) { _ in
+                    Button("OK") { cacheError = nil }
+                } message: { msg in
+                    Text(msg)
+                }
+
                 Section("Homebrew") {
                     HStack {
                         Text("Status")
@@ -149,6 +212,19 @@ struct SettingsView: View {
             .formStyle(.grouped)
         }
         .frame(maxWidth: 320, maxHeight: 460)
+    }
+
+    @MainActor
+    private func refreshCacheStats() {
+        iconCacheSize = RemoteIconLoader.shared.diskCacheSize()
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("AutoBrew/IconCache")
+        if let contents = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey]),
+           let newest = contents.compactMap({ try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }).max() {
+            cacheLastUpdated = newest.formatted(.relative(presentation: .named))
+        } else {
+            cacheLastUpdated = String(localized: "Never")
+        }
     }
 
     private var scheduledTimeBinding: Binding<Date> {

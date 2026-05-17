@@ -2,12 +2,10 @@ import XCTest
 @testable import AutoBrew
 
 final class IdleDetectorTests: XCTestCase {
-    func testSystemIdleTimeReturnsValue() {
-        let idleTime = IdleDetector.systemIdleTime()
-        // Should return a non-negative value on macOS
-        if let idle = idleTime {
-            XCTAssertGreaterThanOrEqual(idle, 0)
+    func testSystemIdleTimeReturnsValue() throws {
+        guard let idle = IdleDetector.systemIdleTime() else {
+            throw XCTSkip("IOKit idle time unavailable in this environment")
         }
-        // nil is acceptable in CI where IOKit may not be available
+        XCTAssertGreaterThanOrEqual(idle, 0)
     }
 }

@@ -3,14 +3,14 @@ import XCTest
 
 final class BrewManagerTests: XCTestCase {
     @MainActor
-    func testBrewDetection() {
+    func testBrewDetection() throws {
         let manager = BrewManager.shared
-        // On a dev machine with Homebrew, this should find it
-        if manager.isHomebrewInstalled {
-            XCTAssertNotNil(manager.brewPath)
-            XCTAssertNotNil(manager.brewExecutable)
-            XCTAssertTrue(manager.brewExecutable!.hasSuffix("/brew"))
+        guard manager.isHomebrewInstalled else {
+            throw XCTSkip("Homebrew not installed in this environment")
         }
+        XCTAssertNotNil(manager.brewPath)
+        XCTAssertNotNil(manager.brewExecutable)
+        XCTAssertTrue(manager.brewExecutable!.hasSuffix("/brew"))
     }
 
     @MainActor

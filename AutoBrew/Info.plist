@@ -30,5 +30,18 @@
     <string>https://raw.githubusercontent.com/marcelrgberger/auto-brew/main/appcast.xml</string>
     <key>SUPublicEDKey</key>
     <string>0uCjo7tBh9Lvyd/8bbh906Kp81qnjUX9iBA2bNMQzHI=</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>None</string>
+            <key>CFBundleURLName</key>
+            <string>za.co.digitalfreedom.AutoBrew.url</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>autobrew</string>
+            </array>
+        </dict>
+    </array>
 </dict>
 </plist>

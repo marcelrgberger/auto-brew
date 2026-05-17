@@ -1,39 +1,81 @@
 import Foundation
 
+/// Lock-protected wrapper around `Process` so concurrent tasks (execution +
+/// timeout watcher) can coordinate without racing on `isRunning`/`terminate()`.
+/// `Process` is not `Sendable`, so we encapsulate every access behind an
+/// `NSLock` and mark the holder `@unchecked Sendable`.
+private final class ProcessHolder: @unchecked Sendable {
+    private let lock = NSLock()
+    private var process: Process?
+    private var terminated = false
+
+    /// Attach a freshly-created Process. Returns `false` if the holder was
+    /// already terminated (timeout/cancel fired before attach); the caller
+    /// must abort and NOT start the process in that case.
+    func attach(_ p: Process) -> Bool {
+        lock.withLock {
+            if terminated { return false }
+            self.process = p
+            return true
+        }
+    }
+
+    /// True if the holder has been marked terminated (caller should not start
+    /// or should immediately terminate the process).
+    var isTerminated: Bool {
+        lock.withLock { terminated }
+    }
+
+    func terminateIfRunning() {
+        lock.withLock {
+            guard !terminated else { return }
+            if let p = process, p.isRunning {
+                p.terminate()
+            }
+            terminated = true
+        }
+    }
+}
+
 enum BrewProcess: Sendable {
     private static let timeout: TimeInterval = 600
 
     /// Execute brew binary directly with argument array — no shell interpolation.
     static func run(executable: String, arguments: [String], brewPath: String) async throws -> ProcessResult {
-        let process = Process()
+        let holder = ProcessHolder()
 
-        return try await withThrowingTaskGroup(of: ProcessResult?.self) { group in
-            group.addTask {
-                try await execute(process: process, executable: executable, arguments: arguments, brewPath: brewPath)
-            }
-            group.addTask {
-                do {
-                    try await Task.sleep(for: .seconds(timeout))
-                } catch is CancellationError {
-                    return nil // Normal: process finished before timeout
+        return try await withTaskCancellationHandler {
+            try await withThrowingTaskGroup(of: ProcessResult?.self) { group in
+                group.addTask {
+                    try await execute(holder: holder, executable: executable, arguments: arguments, brewPath: brewPath)
                 }
-                if process.isRunning { process.terminate() }
+                group.addTask {
+                    do {
+                        try await Task.sleep(for: .seconds(timeout))
+                    } catch is CancellationError {
+                        return nil // Normal: process finished before timeout
+                    }
+                    holder.terminateIfRunning()
+                    throw BrewProcessError.timeout
+                }
+
+                while let next = try await group.next() {
+                    if let result = next {
+                        group.cancelAll()
+                        holder.terminateIfRunning()
+                        return result
+                    }
+                }
                 throw BrewProcessError.timeout
             }
-
-            while let next = try await group.next() {
-                if let result = next {
-                    group.cancelAll()
-                    if process.isRunning { process.terminate() }
-                    return result
-                }
-            }
-            throw BrewProcessError.timeout
+        } onCancel: {
+            // Parent task cancelled — kill the child process so it doesn't leak.
+            holder.terminateIfRunning()
         }
     }
 
     private static func execute(
-        process: Process,
+        holder: ProcessHolder,
         executable: String,
         arguments: [String],
         brewPath: String
@@ -46,6 +88,11 @@ enum BrewProcess: Sendable {
         }
 
         return try await withCheckedThrowingContinuation { continuation in
+            let process = Process()
+            guard holder.attach(process) else {
+                continuation.resume(throwing: CancellationError())
+                return
+            }
             let stdoutPipe = Pipe()
             let stderrPipe = Pipe()
 
@@ -86,6 +133,11 @@ enum BrewProcess: Sendable {
 
             do {
                 try process.run()
+                // Cancellation/timeout could have fired between attach and run —
+                // terminate immediately if so.
+                if holder.isTerminated, process.isRunning {
+                    process.terminate()
+                }
             } catch {
                 continuation.resume(throwing: error)
             }

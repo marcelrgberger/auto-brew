@@ -142,6 +142,13 @@ final class SchedulerService {
             state = .running(.updating)
             try await brewManager.runFullUpdate()
             settings.lastRunDate = Date()
+            if settings.autoCleanupSnapshots {
+                do {
+                    try SnapshotService.shared.cleanup(olderThanDays: settings.snapshotRetentionDays)
+                } catch {
+                    logger.error("Snapshot cleanup failed: \(error.localizedDescription)")
+                }
+            }
             // Mirror the final stage from BrewManager
             if let stage = brewManager.currentStage {
                 state = .running(stage)
