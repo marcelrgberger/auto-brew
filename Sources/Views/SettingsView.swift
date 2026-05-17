@@ -5,6 +5,8 @@ struct SettingsView: View {
     @State private var settings = SettingsStore.shared
     @State private var scheduler = SchedulerService.shared
     @State private var brewManager = BrewManager.shared
+    @State private var iconCacheSize: Int64 = 0
+    @State private var cacheLastUpdated: String = "—"
     var onBack: () -> Void
 
     var body: some View {
@@ -107,6 +109,28 @@ struct SettingsView: View {
                     }
                 }
 
+                Section(String(localized: "Icon Cache")) {
+                    HStack {
+                        Text(String(localized: "Cache size"))
+                        Spacer()
+                        Text(ByteFormatter.string(iconCacheSize))
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    }
+                    HStack {
+                        Text(String(localized: "Last updated"))
+                        Spacer()
+                        Text(cacheLastUpdated)
+                            .foregroundStyle(.secondary)
+                            .font(.caption)
+                    }
+                    Button(String(localized: "Clear Icon Cache"), role: .destructive) {
+                        try? RemoteIconLoader.shared.clearCache()
+                        refreshCacheStats()
+                    }
+                }
+                .task { refreshCacheStats() }
+
                 Section("Homebrew") {
                     HStack {
                         Text("Status")
@@ -176,6 +200,19 @@ struct SettingsView: View {
             .formStyle(.grouped)
         }
         .frame(maxWidth: 320, maxHeight: 460)
+    }
+
+    @MainActor
+    private func refreshCacheStats() {
+        iconCacheSize = RemoteIconLoader.shared.diskCacheSize()
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            .appendingPathComponent("AutoBrew/IconCache")
+        if let contents = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey]),
+           let newest = contents.compactMap({ try? $0.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate }).max() {
+            cacheLastUpdated = newest.formatted(.relative(presentation: .named))
+        } else {
+            cacheLastUpdated = String(localized: "Never")
+        }
     }
 
     private var scheduledTimeBinding: Binding<Date> {

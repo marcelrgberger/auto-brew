@@ -23,21 +23,66 @@ final class RemoteIconLoader {
         self.session = URLSession(configuration: cfg)
     }
 
+    /// Total bytes on disk used by the icon cache (PNG + miss sentinels).
+    func diskCacheSize() -> Int64 {
+        var total: Int64 = 0
+        guard let enumerator = FileManager.default.enumerator(at: diskCacheDir, includingPropertiesForKeys: [.fileSizeKey]) else {
+            return 0
+        }
+        for case let item as URL in enumerator {
+            if let size = (try? item.resourceValues(forKeys: [.fileSizeKey]))?.fileSize {
+                total += Int64(size)
+            }
+        }
+        return total
+    }
+
+    /// Wipe both in-memory and on-disk caches. Next render will re-fetch.
+    func clearCache() throws {
+        memoryCache.removeAll()
+        inFlight.removeAll()
+        let contents = (try? FileManager.default.contentsOfDirectory(at: diskCacheDir, includingPropertiesForKeys: nil)) ?? []
+        for url in contents {
+            try? FileManager.default.removeItem(at: url)
+        }
+        logger.info("Icon cache cleared")
+    }
+
+    /// Maximum age before a cached icon is considered stale and re-fetched.
+    private static let maxAge: TimeInterval = 30 * 24 * 60 * 60  // 30 days
+
     /// Synchronous lookup of an already-cached icon. Returns nil if no cached icon
     /// yet — caller should kick off `fetch(...)` to populate it.
     func cached(token: String) -> NSImage? {
         if let img = memoryCache[token] { return img }
         let hit = diskCacheDir.appendingPathComponent("\(token).png")
-        if FileManager.default.fileExists(atPath: hit.path), let img = NSImage(contentsOf: hit) {
-            memoryCache[token] = img
-            return img
+        if FileManager.default.fileExists(atPath: hit.path) {
+            // Honor max age
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: hit.path),
+               let modDate = attrs[.modificationDate] as? Date,
+               Date().timeIntervalSince(modDate) > Self.maxAge {
+                try? FileManager.default.removeItem(at: hit)
+                return nil
+            }
+            if let img = NSImage(contentsOf: hit) {
+                memoryCache[token] = img
+                return img
+            }
         }
         return nil
     }
 
     /// True if we've already tried and failed for this token (don't retry).
     func isCachedMiss(token: String) -> Bool {
-        FileManager.default.fileExists(atPath: diskCacheDir.appendingPathComponent("\(token).miss").path)
+        let miss = diskCacheDir.appendingPathComponent("\(token).miss")
+        guard FileManager.default.fileExists(atPath: miss.path) else { return false }
+        if let attrs = try? FileManager.default.attributesOfItem(atPath: miss.path),
+           let modDate = attrs[.modificationDate] as? Date,
+           Date().timeIntervalSince(modDate) > Self.maxAge {
+            try? FileManager.default.removeItem(at: miss)
+            return false
+        }
+        return true
     }
 
     /// Asynchronously fetch the icon. Calls `onLoad` on the main actor when an image becomes available.
