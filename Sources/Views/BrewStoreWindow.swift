@@ -25,7 +25,10 @@ struct BrewStoreWindow: View {
                 .toolbarTitleDisplayMode(.inline)
         }
         .frame(minWidth: 980, minHeight: 640)
-        .task { await loadCatalog() }
+        .task {
+            await loadCatalog()
+            await InstalledAppsStore.shared.refresh()
+        }
         .sheet(item: $detailEntry) { entry in
             NavigationStack {
                 BrowseDetailView(entry: entry)

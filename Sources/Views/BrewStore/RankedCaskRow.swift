@@ -79,14 +79,23 @@ struct RankedCaskRow: View {
     }
 
     /// Resolves to the first appName from `entry.appNames` that exists on disk,
-    /// or nil if none are installed. Uses the in-memory `InstalledAppsStore`
-    /// to avoid per-row `FileManager.fileExists` syscalls during render.
+    /// or nil if none are installed. Uses the in-memory `InstalledAppsStore` to
+    /// avoid syscalls when warm; falls back to a direct disk check on cold launch
+    /// so users don't see Install on already-installed apps before the store loads.
     private var installedAppPath: String? {
         let installed = installedApps.apps
-        for name in entry.appNames {
-            if let app = installed.first(where: { $0.appPath.lastPathComponent == name }) {
-                return app.appPath.path
+        if !installed.isEmpty {
+            for name in entry.appNames {
+                if let app = installed.first(where: { $0.appPath.lastPathComponent == name }) {
+                    return app.appPath.path
+                }
             }
+            return nil
+        }
+        // Cold-launch fallback: store hasn't refreshed yet — check disk directly.
+        for name in entry.appNames {
+            let path = "/Applications/\(name)"
+            if FileManager.default.fileExists(atPath: path) { return path }
         }
         return nil
     }
