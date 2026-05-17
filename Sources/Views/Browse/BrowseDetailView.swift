@@ -9,7 +9,11 @@ struct BrowseDetailView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 14) {
-                    CaskIconView(token: entry.token, appNames: entry.appNames, size: 64)
+                    CaskIconView(token: entry.token,
+                                 appNames: entry.appNames,
+                                 displayName: entry.displayName,
+                                 homepage: entry.homepage,
+                                 size: 64)
                     VStack(alignment: .leading) {
                         Text(entry.displayName).font(.title2).bold()
                         Text(entry.token).font(.caption).foregroundStyle(.secondary).monospaced()

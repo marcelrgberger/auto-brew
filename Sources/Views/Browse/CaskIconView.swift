@@ -5,19 +5,19 @@ import SwiftUI
 @MainActor
 final class CaskIconCache {
     static let shared = CaskIconCache()
-    private var cache: [String: NSImage] = [:]
-    private var checkedTokens: Set<String> = []
+    private var localCache: [String: NSImage] = [:]
+    private var localChecked: Set<String> = []
 
-    func icon(for token: String, appNames: [String]) -> NSImage? {
-        if let cached = cache[token] { return cached }
-        if checkedTokens.contains(token) { return nil }
-        checkedTokens.insert(token)
+    func localIcon(for token: String, appNames: [String]) -> NSImage? {
+        if let cached = localCache[token] { return cached }
+        if localChecked.contains(token) { return nil }
+        localChecked.insert(token)
 
         for appName in appNames {
             let path = "/Applications/\(appName)"
             if FileManager.default.fileExists(atPath: path) {
                 let image = NSWorkspace.shared.icon(forFile: path)
-                cache[token] = image
+                localCache[token] = image
                 return image
             }
         }
@@ -28,18 +28,40 @@ final class CaskIconCache {
 struct CaskIconView: View {
     let token: String
     let appNames: [String]
+    let displayName: String
+    let homepage: String
     let size: CGFloat
-    @State private var cache = CaskIconCache.shared
+
+    @State private var localCache = CaskIconCache.shared
+    @State private var remoteLoader = RemoteIconLoader.shared
+    @State private var remoteImage: NSImage?
 
     var body: some View {
-        if let icon = cache.icon(for: token, appNames: appNames) {
-            Image(nsImage: icon)
-                .resizable()
-                .interpolation(.high)
-                .scaledToFit()
-                .frame(width: size, height: size)
-        } else {
-            fallback
+        Group {
+            if let icon = localCache.localIcon(for: token, appNames: appNames) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+            } else if let icon = remoteImage ?? remoteLoader.cached(token: token) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+            } else {
+                fallback
+            }
+        }
+        .frame(width: size, height: size)
+        .task(id: token) {
+            // Only fetch remote if local lookup failed
+            if localCache.localIcon(for: token, appNames: appNames) != nil { return }
+            if remoteImage != nil { return }
+            if remoteLoader.cached(token: token) != nil { return }
+            if remoteLoader.isCachedMiss(token: token) { return }
+            remoteLoader.fetch(token: token, displayName: displayName, homepage: homepage) { img in
+                remoteImage = img
+            }
         }
     }
 

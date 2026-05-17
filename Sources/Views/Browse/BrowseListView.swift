@@ -23,7 +23,11 @@ struct BrowseListView: View {
             List(selection: $selection) {
                 ForEach(filteredForCategory) { entry in
                     HStack(spacing: 10) {
-                        CaskIconView(token: entry.token, appNames: entry.appNames, size: 32)
+                        CaskIconView(token: entry.token,
+                                     appNames: entry.appNames,
+                                     displayName: entry.displayName,
+                                     homepage: entry.homepage,
+                                     size: 32)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(entry.displayName).font(.system(.body, weight: .medium))
                             if let desc = entry.description {
