@@ -13,6 +13,8 @@ struct MenuBarView: View {
     @State private var currentPage: MenuPage = .main
 
     @State private var needsOnboarding: Bool = !SettingsStore.shared.onboardingCompleted
+    @State private var supportPrompt = SupportPromptStore.shared
+    @State private var supportSheetStage: SupportStage?
 
     @Environment(\.openWindow) private var openWindow
 
@@ -208,6 +210,34 @@ struct MenuBarView: View {
         .frame(width: 280)
         .task {
             await brewManager.fetchOutdated()
+        }
+        .task {
+            if let stage = supportPrompt.pendingStage {
+                supportSheetStage = stage
+            }
+        }
+        .sheet(item: $supportSheetStage) { stage in
+            SupportPromptView(
+                stage: stage,
+                onStar: {
+                    NSWorkspace.shared.open(SupportLinks.starURL)
+                    supportPrompt.dismiss(stage)
+                    supportSheetStage = nil
+                },
+                onSponsor: {
+                    NSWorkspace.shared.open(SupportLinks.sponsorURL)
+                    supportPrompt.dismiss(stage)
+                    supportSheetStage = nil
+                },
+                onLater: {
+                    supportPrompt.dismiss(stage)
+                    supportSheetStage = nil
+                },
+                onAlreadyDone: {
+                    supportPrompt.markAsSupporter()
+                    supportSheetStage = nil
+                }
+            )
         }
     }
 
