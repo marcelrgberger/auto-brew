@@ -1,9 +1,11 @@
 // Sources/Models/SupportStage.swift
 import Foundation
 
-enum SupportStage: String, CaseIterable, Sendable {
+enum SupportStage: String, CaseIterable, Sendable, Identifiable {
     case week
     case quarter
+
+    var id: String { rawValue }
 
     /// Tage seit Installation, nach denen diese Stage fällig wird.
     var thresholdDays: Int {
