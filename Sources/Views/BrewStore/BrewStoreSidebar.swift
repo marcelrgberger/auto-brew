@@ -27,23 +27,25 @@ struct BrewStoreSidebar: View {
                 set: { if let new = $0 { selection = new } }
             )) {
                 Section {
-                    Label(String(localized: "Discover"), systemImage: "star.fill")
-                        .tag(BrewStoreSection.discover)
-                    Label(String(localized: "Installed"), systemImage: "shippingbox.fill")
-                        .tag(BrewStoreSection.installed)
-                    Label(String(localized: "Snapshots"), systemImage: "camera.on.rectangle.fill")
-                        .tag(BrewStoreSection.snapshots)
-                    Label(String(localized: "Updates"), systemImage: "arrow.triangle.2.circlepath")
-                        .tag(BrewStoreSection.updates)
+                    sidebarRow(BrewStoreSection.discover, label: String(localized: "Discover"), systemImage: "star.fill")
+                    sidebarRow(BrewStoreSection.installed, label: String(localized: "Installed"), systemImage: "shippingbox.fill")
+                    sidebarRow(BrewStoreSection.snapshots, label: String(localized: "Snapshots"), systemImage: "camera.on.rectangle.fill")
+                    sidebarRow(BrewStoreSection.updates, label: String(localized: "Updates"), systemImage: "arrow.triangle.2.circlepath")
                 }
                 Section(String(localized: "Categories")) {
                     ForEach(contentCategories) { cat in
-                        Label(cat.displayName, systemImage: cat.systemImage)
-                            .tag(BrewStoreSection.category(cat))
+                        sidebarRow(BrewStoreSection.category(cat), label: cat.displayName, systemImage: cat.systemImage)
                     }
                 }
             }
             .listStyle(.sidebar)
         }
+    }
+
+    @ViewBuilder
+    private func sidebarRow(_ section: BrewStoreSection, label: String, systemImage: String) -> some View {
+        Label(label, systemImage: systemImage)
+            .padding(.vertical, 4)
+            .tag(section)
     }
 }
