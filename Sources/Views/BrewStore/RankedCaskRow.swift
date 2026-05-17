@@ -41,9 +41,6 @@ struct RankedCaskRow: View {
             installButton
         }
         .padding(.vertical, 8)
-        .overlay(alignment: .bottom) {
-            Divider()
-        }
         .alert(String(localized: "Install failed"),
                isPresented: Binding(get: { installerError != nil },
                                     set: { if !$0 { installerError = nil } }),
