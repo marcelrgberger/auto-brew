@@ -16,6 +16,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             andEventID: AEEventID(kAEGetURL)
         )
 
+        SupportPromptStore.shared.ensureInstallDate()
+
         Task { @MainActor in
             await NotificationManager.shared.requestAuthorization()
             if BrewManager.shared.isHomebrewInstalled {
