@@ -122,7 +122,6 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
         SKIP_INSTALL: true
         PRODUCT_MODULE_NAME: AutoBrewHelperCLI
-        PROVISIONING_PROFILE_SPECIFIER: "AutoBrew CLI Developer ID"
 
   AutoBrewTests:
     type: bundle.unit-test
