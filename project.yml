@@ -80,6 +80,7 @@ targets:
     settings:
       base:
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        PROVISIONING_PROFILE_SPECIFIER: "AutoBrew Developer ID"
     scheme:
       testTargets:
         - AutoBrewTests
@@ -102,6 +103,7 @@ targets:
         INFOPLIST_FILE: WidgetExtension/Info.plist
         CODE_SIGN_ENTITLEMENTS: WidgetExtension/AutoBrewWidget.entitlements
         ENABLE_HARDENED_RUNTIME: true
+        PROVISIONING_PROFILE_SPECIFIER: "AutoBrew Widget Developer ID"
         # Extensions are always sandboxed on macOS even when the host app
         # is not — the App Group is what bridges the two.
         CODE_SIGN_INJECT_BASE_ENTITLEMENTS: false
@@ -120,6 +122,7 @@ targets:
         ENABLE_HARDENED_RUNTIME: true
         SKIP_INSTALL: true
         PRODUCT_MODULE_NAME: AutoBrewHelperCLI
+        PROVISIONING_PROFILE_SPECIFIER: "AutoBrew CLI Developer ID"
 
   AutoBrewTests:
     type: bundle.unit-test
