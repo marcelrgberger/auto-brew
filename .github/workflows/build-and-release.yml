@@ -87,31 +87,10 @@ jobs:
           security find-identity -v
           echo "Developer ID certificate imported."
 
-      - name: Install Developer ID provisioning profiles
-        env:
-          PROFILE_MAIN_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_MAIN }}
-          PROFILE_WIDGET_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_WIDGET }}
-          PROFILE_CLI_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_CLI }}
-        run: |
-          set -e
-          # Widget extensions are sandboxed and need a real provisioning
-          # profile. The embedded CLI helper has its own bundle id and
-          # therefore its own MAC_APP_DIRECT profile too. All three
-          # blobs are generated via the ASC API and stored as base64
-          # secrets — install them into the user-level profile store
-          # so xcodebuild picks them up during the archive step.
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-          echo -n "$PROFILE_MAIN_BASE64"   | base64 --decode -o "$PROFILES_DIR/AutoBrew_Main.mobileprovision"
-          echo -n "$PROFILE_WIDGET_BASE64" | base64 --decode -o "$PROFILES_DIR/AutoBrew_Widget.mobileprovision"
-          echo -n "$PROFILE_CLI_BASE64"    | base64 --decode -o "$PROFILES_DIR/AutoBrew_CLI.mobileprovision"
-          ls -la "$PROFILES_DIR"
-
       - name: Prepare App Store Connect API Key
         env:
           API_KEY_BASE64: ${{ secrets.MACOS_APPSTORE_API_KEY_BASE64 }}
           API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
-          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
           set -e
           mkdir -p "$RUNNER_TEMP/private_keys"
@@ -128,26 +107,33 @@ jobs:
       - name: Archive
         env:
           TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
-          # Manual signing with explicit Developer-ID profiles per
-          # target. Automatic signing on a Developer-ID distribution
-          # archive picks "Mac Development" certs (wrong path); the
-          # MAC_APP_DIRECT profiles installed in the prior step let
-          # Manual pick the right identity for both the main app and
-          # the sandboxed widget extension.
+          # Automatic signing — xcodebuild authenticates against ASC
+          # with the API key and provisions/refreshes the MAC_APP_DIRECT
+          # profiles for every target (main app, widget extension, CLI
+          # helper) on demand. The local Developer ID Application cert
+          # is already in the runner keychain from the previous step.
           xcodebuild archive \
             -project "$APP_NAME.xcodeproj" \
             -scheme "$SCHEME" \
             -configuration Release \
             -destination 'platform=macOS' \
             -archivePath "build/$APP_NAME.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM="$TEAM_ID"
 
       - name: Export app
         env:
           TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
           cat > build/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -159,18 +145,9 @@ jobs:
               <key>teamID</key>
               <string>$TEAM_ID</string>
               <key>signingStyle</key>
-              <string>manual</string>
+              <string>automatic</string>
               <key>signingCertificate</key>
               <string>Developer ID Application</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>za.co.digitalfreedom.AutoBrew</key>
-                  <string>AutoBrew Developer ID</string>
-                  <key>za.co.digitalfreedom.AutoBrew.WidgetExtension</key>
-                  <string>AutoBrew Widget Developer ID</string>
-                  <key>za.co.digitalfreedom.AutoBrew.cli</key>
-                  <string>AutoBrew CLI Developer ID</string>
-              </dict>
           </dict>
           </plist>
           EOF
@@ -178,7 +155,11 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "build/$APP_NAME.xcarchive" \
             -exportPath build/export \
-            -exportOptionsPlist build/ExportOptions.plist
+            -exportOptionsPlist build/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
 
       - name: Notarize app
         env:
