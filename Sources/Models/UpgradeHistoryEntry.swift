@@ -16,6 +16,11 @@ import Foundation
 /// `BrewManager.runUpgrade`'s aggregate exit status; the custom decoder
 /// below still reads those rows from disk so an in-place upgrade of
 /// AutoBrew never silently drops the user's existing history.
+///
+/// `retryCount` + `nextRetryAt` carry the backoff state for failed
+/// upgrades. Reset to 0/nil on success; failed entries get an
+/// `1h → 4h → 12h` ramp and then become "sticky-failed" once the
+/// retry budget is exhausted.
 struct UpgradeHistoryEntry: Codable, Sendable, Equatable, Identifiable {
     let id: UUID
     let timestamp: Date
@@ -26,10 +31,13 @@ struct UpgradeHistoryEntry: Codable, Sendable, Equatable, Identifiable {
     let bundleID: String?
     let snapshotID: UUID?
     let outcome: CaskUpgradeOutcome
+    let retryCount: Int
+    let nextRetryAt: Date?
 
     init(id: UUID, timestamp: Date, token: String, displayName: String,
          fromVersion: String, toVersion: String, bundleID: String?,
-         snapshotID: UUID?, outcome: CaskUpgradeOutcome) {
+         snapshotID: UUID?, outcome: CaskUpgradeOutcome,
+         retryCount: Int = 0, nextRetryAt: Date? = nil) {
         self.id = id
         self.timestamp = timestamp
         self.token = token
@@ -39,11 +47,14 @@ struct UpgradeHistoryEntry: Codable, Sendable, Equatable, Identifiable {
         self.bundleID = bundleID
         self.snapshotID = snapshotID
         self.outcome = outcome
+        self.retryCount = retryCount
+        self.nextRetryAt = nextRetryAt
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, timestamp, token, displayName, fromVersion, toVersion
         case bundleID, snapshotID, outcome
+        case retryCount, nextRetryAt
         case succeeded // legacy — read-only; never written
     }
 
@@ -68,6 +79,9 @@ struct UpgradeHistoryEntry: Codable, Sendable, Equatable, Identifiable {
         } else {
             outcome = .attempted
         }
+
+        retryCount = try c.decodeIfPresent(Int.self, forKey: .retryCount) ?? 0
+        nextRetryAt = try c.decodeIfPresent(Date.self, forKey: .nextRetryAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -81,7 +95,33 @@ struct UpgradeHistoryEntry: Codable, Sendable, Equatable, Identifiable {
         try c.encodeIfPresent(bundleID, forKey: .bundleID)
         try c.encodeIfPresent(snapshotID, forKey: .snapshotID)
         try c.encode(outcome, forKey: .outcome)
+        try c.encode(retryCount, forKey: .retryCount)
+        try c.encodeIfPresent(nextRetryAt, forKey: .nextRetryAt)
         // `succeeded` is intentionally omitted: it is a legacy read-only key
         // and should not appear in newly written entries.
+    }
+}
+
+extension UpgradeHistoryEntry {
+    /// Max times AutoBrew will retry a failed upgrade before the row
+    /// becomes sticky-failed and only a manual run can pick it up
+    /// again.
+    static let maxRetries = 3
+
+    /// Backoff schedule: 1 h → 4 h → 12 h, then the row gives up.
+    /// Indexed by the **previous** retry count.
+    static let backoffSchedule: [TimeInterval] = [
+        60 * 60,        // 1 h
+        4  * 60 * 60,   // 4 h
+        12 * 60 * 60,   // 12 h
+    ]
+
+    /// Next-retry timestamp for a freshly-failed entry that has been
+    /// retried `previousRetryCount` times already. Returns nil when
+    /// the retry budget is exhausted.
+    static func nextRetryDate(previousRetryCount: Int, now: Date = Date()) -> Date? {
+        guard previousRetryCount < maxRetries,
+              previousRetryCount < backoffSchedule.count else { return nil }
+        return now.addingTimeInterval(backoffSchedule[previousRetryCount])
     }
 }

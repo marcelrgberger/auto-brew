@@ -127,7 +127,9 @@ enum PreUpgradeSnapshot {
         fromVersion: String,
         toVersion: String,
         snapshotID: UUID?,
-        outcome: CaskUpgradeOutcome
+        outcome: CaskUpgradeOutcome,
+        retryCount: Int = 0,
+        nextRetryAt: Date? = nil
     ) {
         UpgradeHistoryStore.shared.append(UpgradeHistoryEntry(
             id: UUID(),
@@ -138,7 +140,9 @@ enum PreUpgradeSnapshot {
             toVersion: toVersion,
             bundleID: bundleID,
             snapshotID: snapshotID,
-            outcome: outcome
+            outcome: outcome,
+            retryCount: retryCount,
+            nextRetryAt: nextRetryAt
         ))
     }
 }

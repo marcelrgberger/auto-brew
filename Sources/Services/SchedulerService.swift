@@ -22,6 +22,13 @@ final class SchedulerService {
 
     private var pollingTask: Task<Void, Never>?
     private var scheduledTask: Task<Void, Never>?
+    private var retryTask: Task<Void, Never>?
+
+    /// How often the retry-pass wakes up to check the history for
+    /// retry-due failed entries. 30 minutes is the granularity we
+    /// promise — finer than that costs idle CPU; coarser than that
+    /// makes the 1 h initial backoff feel sluggish.
+    static let retryCheckInterval: TimeInterval = 30 * 60
 
     /// Scheduler-level reentrancy guard. `BrewManager.isRunning` toggles per
     /// stage so it can't tell us "a whole pipeline is in flight" — between
@@ -59,6 +66,7 @@ final class SchedulerService {
     func restartScheduling() {
         pollingTask?.cancel()
         scheduledTask?.cancel()
+        retryTask?.cancel()
 
         switch settings.triggerMode {
         case .idle:
@@ -68,6 +76,7 @@ final class SchedulerService {
             state = .waitingForSchedule
             startScheduledTimer()
         }
+        startRetryPolling()
     }
 
     func triggerManualRun() async {
@@ -351,6 +360,96 @@ final class SchedulerService {
 
     // MARK: - Missed Run
 
+    // MARK: - Retry pass
+
+    /// Poll the history every `retryCheckInterval` for failed
+    /// upgrades whose backoff window has elapsed. Runs independently
+    /// of idle/scheduled triggers so a single user's daily-run skip
+    /// doesn't block 1 h-after-failure retries.
+    private func startRetryPolling() {
+        retryTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(Self.retryCheckInterval))
+                guard !Task.isCancelled else { break }
+                await self?.runRetryDuePass()
+            }
+        }
+    }
+
+    /// Picks every history row whose outcome is `.failed`,
+    /// `nextRetryAt <= now`, and whose retry budget is not yet
+    /// exhausted, and re-runs only those casks through
+    /// `brewManager.runUpgrade`. The daily-run flag is intentionally
+    /// not touched — a retry is not a fresh user-facing run.
+    private func runRetryDuePass() async {
+        guard !pipelineInProgress, brewManager.isHomebrewInstalled else { return }
+        let now = Date()
+        let candidates = historyStore.entries.filter { entry in
+            guard entry.outcome == .failed,
+                  let nextRetryAt = entry.nextRetryAt,
+                  nextRetryAt <= now,
+                  entry.retryCount < UpgradeHistoryEntry.maxRetries else { return false }
+            return true
+        }
+        guard !candidates.isEmpty else { return }
+
+        // Deduplicate by token — only the newest entry per token is
+        // the source of truth for this retry pass.
+        var seen = Set<String>()
+        let uniqueCandidates = candidates.filter { entry in
+            seen.insert(entry.token).inserted
+        }
+        let tokens = uniqueCandidates.map(\.token)
+
+        logger.info("Retry pass: \(tokens.count) failed cask(s) due — \(tokens.joined(separator: ", "), privacy: .public)")
+
+        pipelineInProgress = true
+        defer { pipelineInProgress = false }
+
+        let snapshotMap = await capturePreUpgradeSnapshots(forCasks: uniqueCandidates.map { entry in
+            OutdatedPackage(
+                name: entry.token,
+                currentVersion: entry.fromVersion,
+                newVersion: entry.toVersion,
+                isCask: true
+            )
+        })
+
+        do {
+            let outcomes = try await brewManager.runUpgrade(formulae: [], casks: tokens)
+            recordRetryHistory(for: uniqueCandidates, preSnapshots: snapshotMap, outcomes: outcomes, runThrew: false)
+        } catch {
+            recordRetryHistory(for: uniqueCandidates, preSnapshots: snapshotMap, outcomes: [:], runThrew: true)
+            logger.warning("Retry pass failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Specialised history writer for retry runs — reuses the
+    /// from/to versions from the originating failed entry rather than
+    /// the live `brew outdated` snapshot.
+    private func recordRetryHistory(for entries: [UpgradeHistoryEntry],
+                                    preSnapshots: [String: PreUpgradeContext],
+                                    outcomes: [String: CaskUpgradeOutcome],
+                                    runThrew: Bool) {
+        let now = Date()
+        for entry in entries {
+            let ctx = preSnapshots[entry.token]
+            let outcome: CaskUpgradeOutcome = runThrew ? .failed : (outcomes[entry.token] ?? .attempted)
+            let (retryCount, nextRetryAt) = computeRetryState(for: entry.token, outcome: outcome, now: now)
+            PreUpgradeSnapshot.record(
+                token: entry.token,
+                displayName: ctx?.displayName ?? entry.displayName,
+                bundleID: ctx?.bundleID ?? entry.bundleID,
+                fromVersion: entry.fromVersion,
+                toVersion: entry.toVersion,
+                snapshotID: ctx?.snapshotID,
+                outcome: outcome,
+                retryCount: retryCount,
+                nextRetryAt: nextRetryAt
+            )
+        }
+    }
+
     private func handleMissedRun() {
         guard settings.showNotifications else {
             Task { await triggerManualRun() }
@@ -412,10 +511,17 @@ final class SchedulerService {
     /// and default to `.attempted`. When `runUpgrade` itself threw, the
     /// outcomes map is empty and every cask falls to `.failed` because we
     /// only got there from the catch branch.
+    ///
+    /// For failed casks we carry the retry counter forward from the
+    /// last entry for the same token, so a third consecutive failure
+    /// lands on `retryCount=2` and a fourth (sticky-failed) would land
+    /// on `retryCount=3` with `nextRetryAt=nil` — the retry pass
+    /// ignores those.
     private func recordUpgradeHistory(for casks: [OutdatedPackage],
                                       preSnapshots: [String: PreUpgradeContext],
                                       outcomes: [String: CaskUpgradeOutcome],
                                       runThrew: Bool) {
+        let now = Date()
         for cask in casks {
             let ctx = preSnapshots[cask.name]
             let outcome: CaskUpgradeOutcome
@@ -424,6 +530,9 @@ final class SchedulerService {
             } else {
                 outcome = outcomes[cask.name] ?? .attempted
             }
+
+            let (retryCount, nextRetryAt) = computeRetryState(for: cask.name, outcome: outcome, now: now)
+
             PreUpgradeSnapshot.record(
                 token: cask.name,
                 displayName: ctx?.displayName ?? cask.name,
@@ -431,8 +540,34 @@ final class SchedulerService {
                 fromVersion: cask.currentVersion,
                 toVersion: cask.newVersion,
                 snapshotID: ctx?.snapshotID,
-                outcome: outcome
+                outcome: outcome,
+                retryCount: retryCount,
+                nextRetryAt: nextRetryAt
             )
+        }
+    }
+
+    /// Looks at the most-recent prior history entry for `token` and
+    /// computes the new retry state. Success and unclear outcomes
+    /// reset the counter; failures increment and produce the next
+    /// backoff window — until the budget is exhausted, at which point
+    /// the row becomes sticky-failed (`nextRetryAt == nil`).
+    private func computeRetryState(for token: String,
+                                   outcome: CaskUpgradeOutcome,
+                                   now: Date) -> (retryCount: Int, nextRetryAt: Date?) {
+        switch outcome {
+        case .succeeded, .attempted:
+            return (0, nil)
+        case .failed:
+            let previousFailure = historyStore.entries
+                .first(where: { $0.token == token && $0.outcome == .failed })
+            let previousRetryCount = previousFailure?.retryCount ?? 0
+            let nextRetryAt = UpgradeHistoryEntry.nextRetryDate(previousRetryCount: previousRetryCount, now: now)
+            // When the budget is exhausted the new entry still
+            // carries the saturated retryCount so the UI can render
+            // "Retries exhausted" instead of "Attempt 4".
+            let newRetryCount = min(previousRetryCount + 1, UpgradeHistoryEntry.maxRetries)
+            return (newRetryCount, nextRetryAt)
         }
     }
 

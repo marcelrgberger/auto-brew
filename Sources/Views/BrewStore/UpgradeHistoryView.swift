@@ -84,6 +84,7 @@ struct UpgradeHistoryView: View {
                         .foregroundStyle(.secondary)
                 }
                 .font(.callout)
+                retryBadge(for: entry)
             }
 
             Spacer()
@@ -92,6 +93,31 @@ struct UpgradeHistoryView: View {
         }
         .padding(12)
         .adaptiveGlassCard(cornerRadius: 10)
+    }
+
+    @ViewBuilder
+    private func retryBadge(for entry: UpgradeHistoryEntry) -> some View {
+        if entry.outcome == .failed {
+            if let nextRetry = entry.nextRetryAt, nextRetry > Date() {
+                Label {
+                    Text(String(localized: "Auto-retry \(nextRetry, format: .relative(presentation: .named))"))
+                } icon: {
+                    Image(systemName: "arrow.clockwise")
+                }
+                .font(.caption2)
+                .foregroundStyle(.orange)
+                .help(String(localized: "AutoBrew will retry this upgrade automatically. Backoff: 1 h, then 4 h, then 12 h — up to three attempts."))
+            } else if entry.retryCount >= UpgradeHistoryEntry.maxRetries {
+                Label {
+                    Text(String(localized: "Retries exhausted"))
+                } icon: {
+                    Image(systemName: "exclamationmark.octagon")
+                }
+                .font(.caption2)
+                .foregroundStyle(.red)
+                .help(String(localized: "AutoBrew gave up after three automatic retries. Trigger a manual upgrade from the Outdated list to try again."))
+            }
+        }
     }
 
     @ViewBuilder
