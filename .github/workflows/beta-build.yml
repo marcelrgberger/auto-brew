@@ -71,20 +71,6 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
           security find-identity -v
 
-      - name: Install Developer ID provisioning profiles
-        env:
-          PROFILE_MAIN_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_MAIN }}
-          PROFILE_WIDGET_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_WIDGET }}
-          PROFILE_CLI_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_CLI }}
-        run: |
-          set -e
-          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
-          mkdir -p "$PROFILES_DIR"
-          echo -n "$PROFILE_MAIN_BASE64"   | base64 --decode -o "$PROFILES_DIR/AutoBrew_Main.mobileprovision"
-          echo -n "$PROFILE_WIDGET_BASE64" | base64 --decode -o "$PROFILES_DIR/AutoBrew_Widget.mobileprovision"
-          echo -n "$PROFILE_CLI_BASE64"    | base64 --decode -o "$PROFILES_DIR/AutoBrew_CLI.mobileprovision"
-          ls -la "$PROFILES_DIR"
-
       - name: Prepare App Store Connect API Key
         env:
           API_KEY_BASE64: ${{ secrets.MACOS_APPSTORE_API_KEY_BASE64 }}
@@ -105,24 +91,33 @@ jobs:
       - name: Archive
         env:
           TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
-          # Manual signing — per-target Developer-ID profile specifiers
-          # live in project.yml so the widget gets its own profile and
-          # the main app gets its own. xcodebuild picks them up from
-          # the user-level profile store the previous step populated.
+          # Automatic signing via ASC API key — xcodebuild
+          # provisions/refreshes MAC_APP_DIRECT profiles for the main
+          # app, the sandboxed widget extension and the CLI helper on
+          # demand. The Developer ID Application identity is already
+          # in the runner keychain.
           xcodebuild archive \
             -project "$APP_NAME.xcodeproj" \
             -scheme "$SCHEME" \
             -configuration Release \
             -destination 'platform=macOS' \
             -archivePath "build/$APP_NAME.xcarchive" \
-            CODE_SIGN_STYLE=Manual \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM="$TEAM_ID"
 
       - name: Export app
         env:
           TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
         run: |
           cat > build/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -134,18 +129,9 @@ jobs:
               <key>teamID</key>
               <string>$TEAM_ID</string>
               <key>signingStyle</key>
-              <string>manual</string>
+              <string>automatic</string>
               <key>signingCertificate</key>
               <string>Developer ID Application</string>
-              <key>provisioningProfiles</key>
-              <dict>
-                  <key>za.co.digitalfreedom.AutoBrew</key>
-                  <string>AutoBrew Developer ID</string>
-                  <key>za.co.digitalfreedom.AutoBrew.WidgetExtension</key>
-                  <string>AutoBrew Widget Developer ID</string>
-                  <key>za.co.digitalfreedom.AutoBrew.cli</key>
-                  <string>AutoBrew CLI Developer ID</string>
-              </dict>
           </dict>
           </plist>
           EOF
@@ -153,7 +139,11 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "build/$APP_NAME.xcarchive" \
             -exportPath build/export \
-            -exportOptionsPlist build/ExportOptions.plist
+            -exportOptionsPlist build/ExportOptions.plist \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$API_KEY_ID" \
+            -authenticationKeyIssuerID "$API_ISSUER_ID"
 
       - name: Notarize app
         env:
