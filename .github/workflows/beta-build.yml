@@ -19,37 +19,29 @@ permissions:
 
 env:
   APP_NAME: AutoBrew
+  SCHEME: AutoBrew
 
 jobs:
   build:
     name: Build, Sign, Notarize
-    uses: marcelrgberger/ci-open-source/.github/workflows/release-macos-app.yml@v1
-    with:
-      project: AutoBrew.xcodeproj
-      scheme: AutoBrew
-      app-identifiers: "za.co.digitalfreedom.AutoBrew,za.co.digitalfreedom.AutoBrew.WidgetExtension,za.co.digitalfreedom.AutoBrew.cli"
-      team-id: "7TSZJCJY88"
-      match-git-url: "git@github.com:marcelrgberger/apple-certificates.git"
-      provisioning-profiles: |
-        za.co.digitalfreedom.AutoBrew=AutoBrew Developer ID
-        za.co.digitalfreedom.AutoBrew.WidgetExtension=AutoBrew Widget Developer ID
-        za.co.digitalfreedom.AutoBrew.cli=AutoBrew CLI Developer ID
-      artifact-name: autobrew-app
-    secrets:
-      asc-api-key:       ${{ secrets.ASC_API_KEY }}
-      asc-api-key-id:    ${{ secrets.ASC_API_KEY_ID }}
-      asc-issuer-id:     ${{ secrets.ASC_ISSUER_ID }}
-      match-ssh-key:     ${{ secrets.MATCH_SSH_KEY }}
-      match-password:    ${{ secrets.MATCH_PASSWORD }}
-
-  package:
-    name: Package + Pre-Release
-    needs: build
     runs-on: macos-26
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
+      - name: Set up Xcode ^26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '^26'
+
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate
+          bash scripts/patch-localizations.sh || true
 
       - name: Get version
         id: version
@@ -60,25 +52,130 @@ jobs:
           echo "build=$BUILD" >> "$GITHUB_OUTPUT"
           echo "channel=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Download notarized .app
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact-name }}
-          path: build/export
-
-      - name: Materialize ASC API key (for DMG notarization)
-        id: asc
-        uses: marcelrgberger/ci-open-source/actions/apple-asc-key@v1
-        with:
-          key-base64: ${{ secrets.ASC_API_KEY }}
-          key-id: ${{ secrets.ASC_API_KEY_ID }}
-          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
-
-      - name: Build DMG
+      - name: Install Developer ID Certificate
         env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MACOS_GITHUB_KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v
+
+      - name: Install Developer ID provisioning profiles
+        env:
+          PROFILE_MAIN_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_MAIN }}
+          PROFILE_WIDGET_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_WIDGET }}
+        run: |
+          set -e
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          echo -n "$PROFILE_MAIN_BASE64"   | base64 --decode -o "$PROFILES_DIR/AutoBrew_Main.mobileprovision"
+          echo -n "$PROFILE_WIDGET_BASE64" | base64 --decode -o "$PROFILES_DIR/AutoBrew_Widget.mobileprovision"
+          ls -la "$PROFILES_DIR"
+
+      - name: Prepare App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.MACOS_APPSTORE_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          echo -n "$API_KEY_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
+          echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Resolve packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME"
+
+      - name: Archive
+        env:
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          # Manual signing — per-target Developer-ID profile specifiers
+          # live in project.yml so the widget gets its own profile and
+          # the main app gets its own. xcodebuild picks them up from
+          # the user-level profile store the previous step populated.
+          xcodebuild archive \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TEAM_ID"
+
+      - name: Export app
+        env:
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          cat > build/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>developer-id</string>
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string>Developer ID Application</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>za.co.digitalfreedom.AutoBrew</key>
+                  <string>AutoBrew Developer ID</string>
+                  <key>za.co.digitalfreedom.AutoBrew.WidgetExtension</key>
+                  <string>AutoBrew Widget Developer ID</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Notarize app
+        env:
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+        run: |
+          set -e
+          APP_PATH="build/export/$APP_NAME.app"
+          ditto -c -k --keepParent "$APP_PATH" "build/$APP_NAME.zip"
+
+          xcrun notarytool submit "build/$APP_NAME.zip" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
+            --wait
+
+          xcrun stapler staple "$APP_PATH"
+
+      - name: Create suffixed DMG
+        env:
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
           CHANNEL: ${{ steps.version.outputs.channel }}
         run: |
-          set -euo pipefail
+          set -e
           mkdir -p build/dmg
           cp -R "build/export/$APP_NAME.app" build/dmg/
           ln -s /Applications build/dmg/Applications
@@ -88,25 +185,24 @@ jobs:
             -srcfolder build/dmg \
             -ov -format UDZO \
             "build/$DMG_NAME"
+
+          # Same Developer-ID codesign on the .dmg container as in
+          # build-and-release.yml — Gatekeeper rejects the
+          # primary-signature otherwise and beta testers see a
+          # warning on first double-click.
+          codesign --sign "Developer ID Application: Berger & Rosenstock GbR ($TEAM_ID)" \
+                   --options runtime \
+                   --timestamp \
+                   "build/$DMG_NAME"
+
+          xcrun notarytool submit "build/$DMG_NAME" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
+            --wait
+
+          xcrun stapler staple "build/$DMG_NAME"
           echo "DMG_NAME=$DMG_NAME" >> "$GITHUB_ENV"
-          echo "DMG_PATH=build/$DMG_NAME" >> "$GITHUB_ENV"
-
-      - name: Code-sign DMG
-        uses: marcelrgberger/ci-open-source/actions/macos-codesign-dmg@v1
-        with:
-          dmg-path: ${{ env.DMG_PATH }}
-
-      - name: Notarize DMG
-        uses: marcelrgberger/ci-open-source/actions/macos-notarize@v1
-        with:
-          bundle-path: ${{ env.DMG_PATH }}
-          api-key-path: ${{ steps.asc.outputs.key-path }}
-          api-key-id: ${{ steps.asc.outputs.key-id }}
-          api-issuer-id: ${{ steps.asc.outputs.issuer-id }}
-
-      - name: Bundle the .app as a ZIP too
-        run: |
-          ditto -c -k --keepParent "build/export/$APP_NAME.app" "build/$APP_NAME.zip"
 
       - name: Create or update Pre-Release
         env:
@@ -115,10 +211,12 @@ jobs:
           BUILD: ${{ steps.version.outputs.build }}
           CHANNEL: ${{ steps.version.outputs.channel }}
         run: |
-          set -euo pipefail
+          set -e
           TAG="v${VERSION}-${CHANNEL}"
           TITLE="AutoBrew ${VERSION} (${CHANNEL})"
 
+          # Replace any existing pre-release for this version+channel so the
+          # latest artefact is always the canonical download for testers.
           if gh release view "$TAG" >/dev/null 2>&1; then
             gh release delete "$TAG" --yes
           fi
@@ -135,7 +233,7 @@ jobs:
             --title "$TITLE" \
             --prerelease \
             --notes-file build/release-notes.md \
-            "$DMG_PATH" \
+            "build/$DMG_NAME" \
             "build/$APP_NAME.zip"
 
       - name: Job Summary
@@ -148,5 +246,11 @@ jobs:
             echo "|---|---|"
             echo "| Channel | $GITHUB_REF_NAME |"
             echo "| Version | ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build }}) |"
-            echo "| Status | ${{ job.status }} |"
+            echo "| Build | ${{ job.status }} |"
           } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/private_keys/"*.p8 || true

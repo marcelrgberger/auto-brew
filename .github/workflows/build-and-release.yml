@@ -1,7 +1,7 @@
 name: 04. Release Build (Main)
 
 on:
-  # Manual only — running on every push to main produced a release per
+  # Manual only - running on every push to main produced a release per
   # commit (including doc-only pushes). Trigger from the Actions tab
   # via Run workflow when an actual release is ready.
   workflow_dispatch:
@@ -15,39 +15,47 @@ permissions:
 
 env:
   APP_NAME: AutoBrew
+  SCHEME: AutoBrew
 
 jobs:
+  determine-environment:
+    name: Determine Environment
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.determine.outputs.environment }}
+    steps:
+      - name: Determine environment
+        id: determine
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          case "$BRANCH" in
+            main)   echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+            *)      echo "environment=dev" >> "$GITHUB_OUTPUT" ;;
+          esac
+
   build:
     name: Build, Sign & Notarize
     if: github.ref == 'refs/heads/main'
-    uses: marcelrgberger/ci-open-source/.github/workflows/release-macos-app.yml@v1
-    with:
-      project: AutoBrew.xcodeproj
-      scheme: AutoBrew
-      app-identifiers: "za.co.digitalfreedom.AutoBrew,za.co.digitalfreedom.AutoBrew.WidgetExtension,za.co.digitalfreedom.AutoBrew.cli"
-      team-id: "7TSZJCJY88"
-      match-git-url: "git@github.com:marcelrgberger/apple-certificates.git"
-      provisioning-profiles: |
-        za.co.digitalfreedom.AutoBrew=AutoBrew Developer ID
-        za.co.digitalfreedom.AutoBrew.WidgetExtension=AutoBrew Widget Developer ID
-        za.co.digitalfreedom.AutoBrew.cli=AutoBrew CLI Developer ID
-      artifact-name: autobrew-app
-    secrets:
-      asc-api-key:       ${{ secrets.ASC_API_KEY }}
-      asc-api-key-id:    ${{ secrets.ASC_API_KEY_ID }}
-      asc-issuer-id:     ${{ secrets.ASC_ISSUER_ID }}
-      match-ssh-key:     ${{ secrets.MATCH_SSH_KEY }}
-      match-password:    ${{ secrets.MATCH_PASSWORD }}
-
-  release:
-    name: Package, Sparkle, Release, Tap
-    if: github.ref == 'refs/heads/main'
-    needs: build
     runs-on: macos-26
     timeout-minutes: 30
+    needs: determine-environment
     steps:
+      - name: Set up Xcode ^26
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '^26'
+
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: |
+          xcodegen generate
+          bash scripts/patch-localizations.sh || true
 
       - name: Get version
         id: version
@@ -59,23 +67,138 @@ jobs:
           echo "build=$BUILD" >> "$GITHUB_OUTPUT"
           echo "min_os=$MIN_OS" >> "$GITHUB_OUTPUT"
 
-      - name: Download notarized .app
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ needs.build.outputs.artifact-name }}
-          path: build/export
-
-      - name: Materialize ASC API key (for DMG notarization)
-        id: asc
-        uses: marcelrgberger/ci-open-source/actions/apple-asc-key@v1
-        with:
-          key-base64: ${{ secrets.ASC_API_KEY }}
-          key-id: ${{ secrets.ASC_API_KEY_ID }}
-          issuer-id: ${{ secrets.ASC_ISSUER_ID }}
-
-      - name: Build DMG
+      - name: Install Developer ID Certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.MACOS_DEVELOPER_ID_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MACOS_GITHUB_KEYCHAIN_PASSWORD }}
         run: |
-          set -euo pipefail
+          set -e
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v
+          echo "Developer ID certificate imported."
+
+      - name: Install Developer ID provisioning profiles
+        env:
+          PROFILE_MAIN_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_MAIN }}
+          PROFILE_WIDGET_BASE64: ${{ secrets.MACOS_DEVID_PROFILE_WIDGET }}
+        run: |
+          set -e
+          # Widget extensions are sandboxed and need a real provisioning
+          # profile. Both bundles have a MAC_APP_DIRECT profile generated
+          # via the ASC API and stored as base64 secrets — install them
+          # into the user-level profile store so xcodebuild picks them
+          # up during the archive step.
+          PROFILES_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILES_DIR"
+          echo -n "$PROFILE_MAIN_BASE64"   | base64 --decode -o "$PROFILES_DIR/AutoBrew_Main.mobileprovision"
+          echo -n "$PROFILE_WIDGET_BASE64" | base64 --decode -o "$PROFILES_DIR/AutoBrew_Widget.mobileprovision"
+          ls -la "$PROFILES_DIR"
+
+      - name: Prepare App Store Connect API Key
+        env:
+          API_KEY_BASE64: ${{ secrets.MACOS_APPSTORE_API_KEY_BASE64 }}
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+        run: |
+          set -e
+          mkdir -p "$RUNNER_TEMP/private_keys"
+          echo -n "$API_KEY_BASE64" | base64 --decode \
+            > "$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8"
+          echo "API_KEY_PATH=$RUNNER_TEMP/private_keys/AuthKey_${API_KEY_ID}.p8" >> "$GITHUB_ENV"
+
+      - name: Resolve packages
+        run: |
+          xcodebuild -resolvePackageDependencies \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME"
+
+      - name: Archive
+        env:
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          # Manual signing with explicit Developer-ID profiles per
+          # target. Automatic signing on a Developer-ID distribution
+          # archive picks "Mac Development" certs (wrong path); the
+          # MAC_APP_DIRECT profiles installed in the prior step let
+          # Manual pick the right identity for both the main app and
+          # the sandboxed widget extension.
+          xcodebuild archive \
+            -project "$APP_NAME.xcodeproj" \
+            -scheme "$SCHEME" \
+            -configuration Release \
+            -destination 'platform=macOS' \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Developer ID Application" \
+            DEVELOPMENT_TEAM="$TEAM_ID"
+
+      - name: Export app
+        env:
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          cat > build/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>developer-id</string>
+              <key>teamID</key>
+              <string>$TEAM_ID</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>signingCertificate</key>
+              <string>Developer ID Application</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>za.co.digitalfreedom.AutoBrew</key>
+                  <string>AutoBrew Developer ID</string>
+                  <key>za.co.digitalfreedom.AutoBrew.WidgetExtension</key>
+                  <string>AutoBrew Widget Developer ID</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "build/$APP_NAME.xcarchive" \
+            -exportPath build/export \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Notarize app
+        env:
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+        run: |
+          set -e
+          APP_PATH="build/export/$APP_NAME.app"
+          ditto -c -k --keepParent "$APP_PATH" "build/$APP_NAME.zip"
+
+          xcrun notarytool submit "build/$APP_NAME.zip" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
+            --wait
+
+          xcrun stapler staple "$APP_PATH"
+
+      - name: Create DMG
+        env:
+          API_KEY_ID: ${{ secrets.MACOS_APPSTORE_API_KEY_ID }}
+          API_ISSUER_ID: ${{ secrets.MACOS_APPSTORE_API_ISSUER_ID }}
+          TEAM_ID: ${{ vars.APPLE_TEAM_ID }}
+        run: |
+          set -e
           mkdir -p build/dmg
           cp -R "build/export/$APP_NAME.app" build/dmg/
           ln -s /Applications build/dmg/Applications
@@ -85,58 +208,75 @@ jobs:
             -ov -format UDZO \
             "build/$APP_NAME.dmg"
 
-      - name: Code-sign DMG
-        uses: marcelrgberger/ci-open-source/actions/macos-codesign-dmg@v1
-        with:
-          dmg-path: build/AutoBrew.dmg
+          # Sign the DMG container with the same Developer ID identity.
+          # Without this step, Gatekeeper accepts the notarised .app
+          # inside but rejects the .dmg double-click with "source=no
+          # usable signature" — and brew audit refuses to ship the cask
+          # to homebrew/cask. notarytool happily accepts an unsigned
+          # DMG, so missing this step is silently downstream-breaking.
+          codesign --sign "Developer ID Application: Berger & Rosenstock GbR ($TEAM_ID)" \
+                   --options runtime \
+                   --timestamp \
+                   "build/$APP_NAME.dmg"
 
-      - name: Notarize DMG
-        uses: marcelrgberger/ci-open-source/actions/macos-notarize@v1
-        with:
-          bundle-path: build/AutoBrew.dmg
-          api-key-path: ${{ steps.asc.outputs.key-path }}
-          api-key-id: ${{ steps.asc.outputs.key-id }}
-          api-issuer-id: ${{ steps.asc.outputs.issuer-id }}
+          xcrun notarytool submit "build/$APP_NAME.dmg" \
+            --key "$API_KEY_PATH" \
+            --key-id "$API_KEY_ID" \
+            --issuer "$API_ISSUER_ID" \
+            --wait
 
-      - name: Bundle .app as ZIP for Sparkle
+          xcrun stapler staple "build/$APP_NAME.dmg"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: AutoBrew-${{ steps.version.outputs.version }}
+          path: |
+            build/AutoBrew.dmg
+            build/AutoBrew.zip
+
+      - name: Sign update for Sparkle
+        if: github.ref == 'refs/heads/main'
+        env:
+          SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
         run: |
-          ditto -c -k --keepParent "build/export/$APP_NAME.app" "build/$APP_NAME.zip"
+          set -e
+          # Get Sparkle tools from SPM cache
+          SPARKLE_BIN=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "sign_update" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
+          if [ -z "$SPARKLE_BIN" ]; then
+            echo "sign_update not found, downloading Sparkle tools..."
+            curl -sL "https://github.com/sparkle-project/Sparkle/releases/latest/download/Sparkle-2.9.0.tar.xz" | tar xJ -C /tmp
+            SPARKLE_BIN="/tmp/bin/sign_update"
+          fi
 
-      - name: Download Sparkle tools
-        id: sparkle-tools
-        run: |
-          set -euo pipefail
-          # Sparkle ships sign_update + BinaryDelta in the release tarball.
-          # Use a known-good version rather than depending on DerivedData
-          # being populated.
-          SPARKLE_VERSION="2.9.0"
-          curl -sL "https://github.com/sparkle-project/Sparkle/releases/download/${SPARKLE_VERSION}/Sparkle-${SPARKLE_VERSION}.tar.xz" \
-            | tar xJ -C "$RUNNER_TEMP"
-          echo "bin=$RUNNER_TEMP/bin" >> "$GITHUB_OUTPUT"
+          # Sign the ZIP
+          echo "$SPARKLE_KEY" > /tmp/sparkle_key
+          SIGNATURE=$("$SPARKLE_BIN" "build/$APP_NAME.zip" --ed-key-file /tmp/sparkle_key 2>&1 | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+          LENGTH=$(stat -f%z "build/$APP_NAME.zip")
+          rm -f /tmp/sparkle_key
 
-      - name: Sign update ZIP for Sparkle
-        id: sparkle-zip
-        uses: marcelrgberger/ci-open-source/actions/sparkle-sign-appcast@v1
-        with:
-          private-key-base64: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          artifact-path: build/AutoBrew.zip
-          sign-update-tool-path: ${{ steps.sparkle-tools.outputs.bin }}/sign_update
+          echo "SPARKLE_SIGNATURE=$SIGNATURE" >> "$GITHUB_ENV"
+          echo "ZIP_LENGTH=$LENGTH" >> "$GITHUB_ENV"
 
       - name: Generate Sparkle binary delta
+        if: github.ref == 'refs/heads/main'
         id: delta
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPARKLE_KEY: ${{ secrets.SPARKLE_PRIVATE_KEY }}
           VERSION: ${{ steps.version.outputs.version }}
           BUILD: ${{ steps.version.outputs.build }}
-          SPARKLE_BIN: ${{ steps.sparkle-tools.outputs.bin }}
         run: |
-          set -euo pipefail
+          set -e
+          # Find the most recent stable release (skipping the one we are
+          # about to create — gh release create runs further below — and
+          # any prereleases like v2.3.0-test / -beta).
           PREVIOUS_TAG=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 20 \
             --json tagName,isPrerelease \
             --jq "[.[] | select(.isPrerelease == false) | .tagName] | map(select(. != \"v$VERSION\")) | first" \
             2>/dev/null || true)
           if [ -z "${PREVIOUS_TAG:-}" ] || [ "$PREVIOUS_TAG" = "null" ]; then
-            echo "No prior stable release — skipping delta."
+            echo "No prior stable release found — skipping Sparkle delta."
             echo "have_delta=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -145,7 +285,7 @@ jobs:
           mkdir -p build/prev
           if ! gh release download "$PREVIOUS_TAG" --repo "$GITHUB_REPOSITORY" \
               --pattern "AutoBrew.zip" --dir build/prev 2>/dev/null; then
-            echo "Previous release has no AutoBrew.zip — skipping delta."
+            echo "Previous release has no AutoBrew.zip asset — skipping delta."
             echo "have_delta=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -153,52 +293,65 @@ jobs:
           ditto -xk "build/prev/AutoBrew.zip" "build/prev/extract"
           PREV_APP="build/prev/extract/AutoBrew.app"
           if [ ! -d "$PREV_APP" ]; then
-            echo "Previous ZIP missing AutoBrew.app — skipping delta."
+            echo "Previous ZIP did not contain AutoBrew.app — skipping delta."
             echo "have_delta=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           PREV_BUILD=$(defaults read "$PWD/$PREV_APP/Contents/Info" CFBundleVersion)
           if [ "$PREV_BUILD" = "$BUILD" ]; then
-            echo "Previous build matches current — skipping delta."
+            echo "Previous build $PREV_BUILD matches current — skipping delta."
+            echo "have_delta=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BINARY_DELTA=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "BinaryDelta" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
+          if [ -z "$BINARY_DELTA" ]; then
+            BINARY_DELTA="/tmp/bin/BinaryDelta"
+          fi
+          if [ ! -x "$BINARY_DELTA" ]; then
+            echo "BinaryDelta tool not found — skipping delta generation."
             echo "have_delta=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           DELTA_FILE="AutoBrew-${PREV_BUILD}-${BUILD}.delta"
           DELTA_PATH="build/$DELTA_FILE"
-          "$SPARKLE_BIN/BinaryDelta" create "$PREV_APP" "build/export/AutoBrew.app" "$DELTA_PATH"
+          "$BINARY_DELTA" create "$PREV_APP" "build/export/AutoBrew.app" "$DELTA_PATH"
 
+          SPARKLE_BIN=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "sign_update" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
+          SPARKLE_BIN="${SPARKLE_BIN:-/tmp/bin/sign_update}"
+          echo "$SPARKLE_KEY" > /tmp/sparkle_key
+          DELTA_SIG=$("$SPARKLE_BIN" "$DELTA_PATH" --ed-key-file /tmp/sparkle_key 2>&1 | grep "sparkle:edSignature" | sed 's/.*sparkle:edSignature="\([^"]*\)".*/\1/')
+          rm -f /tmp/sparkle_key
           DELTA_LEN=$(stat -f%z "$DELTA_PATH")
-          echo "have_delta=true"          >> "$GITHUB_OUTPUT"
-          echo "delta_file=$DELTA_FILE"   >> "$GITHUB_OUTPUT"
-          echo "delta_path=$DELTA_PATH"   >> "$GITHUB_OUTPUT"
-          echo "delta_from=$PREV_BUILD"   >> "$GITHUB_OUTPUT"
-          echo "delta_length=$DELTA_LEN"  >> "$GITHUB_OUTPUT"
 
-      - name: Sign Sparkle delta
-        if: steps.delta.outputs.have_delta == 'true'
-        id: sparkle-delta
-        uses: marcelrgberger/ci-open-source/actions/sparkle-sign-appcast@v1
-        with:
-          private-key-base64: ${{ secrets.SPARKLE_PRIVATE_KEY }}
-          artifact-path: ${{ steps.delta.outputs.delta_path }}
-          sign-update-tool-path: ${{ steps.sparkle-tools.outputs.bin }}/sign_update
+          echo "have_delta=true"      >> "$GITHUB_OUTPUT"
+          echo "delta_file=$DELTA_FILE" >> "$GITHUB_OUTPUT"
+          echo "delta_path=$DELTA_PATH" >> "$GITHUB_OUTPUT"
+          echo "delta_from=$PREV_BUILD" >> "$GITHUB_OUTPUT"
+          echo "delta_length=$DELTA_LEN" >> "$GITHUB_OUTPUT"
+          echo "DELTA_SIGNATURE=$DELTA_SIG" >> "$GITHUB_ENV"
+          echo "Delta from build $PREV_BUILD to $BUILD: $DELTA_LEN bytes"
 
       - name: Update appcast.xml
+        if: github.ref == 'refs/heads/main'
         env:
-          VERSION:        ${{ steps.version.outputs.version }}
-          BUILD:          ${{ steps.version.outputs.build }}
-          MIN_OS:         ${{ steps.version.outputs.min_os }}
-          ZIP_SIG:        ${{ steps.sparkle-zip.outputs.signature }}
-          ZIP_LEN:        ${{ steps.sparkle-zip.outputs.length }}
-          HAVE_DELTA:     ${{ steps.delta.outputs.have_delta }}
-          DELTA_FILE:     ${{ steps.delta.outputs.delta_file }}
-          DELTA_FROM:     ${{ steps.delta.outputs.delta_from }}
-          DELTA_LEN:      ${{ steps.delta.outputs.delta_length }}
-          DELTA_SIG:      ${{ steps.sparkle-delta.outputs.signature }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          BUILD: ${{ steps.version.outputs.build }}
+          MIN_OS: ${{ steps.version.outputs.min_os }}
+          HAVE_DELTA: ${{ steps.delta.outputs.have_delta }}
+          DELTA_FILE: ${{ steps.delta.outputs.delta_file }}
+          DELTA_FROM: ${{ steps.delta.outputs.delta_from }}
+          DELTA_LENGTH: ${{ steps.delta.outputs.delta_length }}
         run: |
-          set -euo pipefail
+          set -e
 
+          # Pull the release-notes section out of CHANGELOG.md and CDATA-
+          # escape it so a stray `]]>` inside the body cannot close the
+          # block early. We embed it via $(cat ...) substitution so any
+          # `$`/backtick inside the markdown is not re-interpreted by
+          # the surrounding heredoc.
           RELEASE_NOTES=$(bash scripts/extract-changelog-section.sh CHANGELOG.md "$VERSION")
           if [ -z "$RELEASE_NOTES" ]; then
             RELEASE_NOTES="No release notes recorded for v$VERSION."
@@ -210,9 +363,9 @@ jobs:
             DELTAS_XML="<sparkle:deltas>
                           <enclosure
                               url=\"https://github.com/marcelrgberger/auto-brew/releases/download/v$VERSION/$DELTA_FILE\"
-                              length=\"$DELTA_LEN\"
+                              length=\"$DELTA_LENGTH\"
                               type=\"application/octet-stream\"
-                              sparkle:edSignature=\"$DELTA_SIG\"
+                              sparkle:edSignature=\"$DELTA_SIGNATURE\"
                               sparkle:deltaFrom=\"$DELTA_FROM\"
                           />
                       </sparkle:deltas>"
@@ -237,9 +390,9 @@ jobs:
           ]]></description>
                       <enclosure
                           url="https://github.com/marcelrgberger/auto-brew/releases/download/v$VERSION/AutoBrew.zip"
-                          length="$ZIP_LEN"
+                          length="$ZIP_LENGTH"
                           type="application/octet-stream"
-                          sparkle:edSignature="$ZIP_SIG"
+                          sparkle:edSignature="$SPARKLE_SIGNATURE"
                       />
                       $DELTAS_XML
                   </item>
@@ -255,13 +408,18 @@ jobs:
           git push origin HEAD:main || true
 
       - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
         env:
-          GH_TOKEN:    ${{ secrets.GITHUB_TOKEN }}
-          VERSION:     ${{ steps.version.outputs.version }}
-          HAVE_DELTA:  ${{ steps.delta.outputs.have_delta }}
-          DELTA_PATH:  ${{ steps.delta.outputs.delta_path }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+          HAVE_DELTA: ${{ steps.delta.outputs.have_delta }}
+          DELTA_PATH: ${{ steps.delta.outputs.delta_path }}
         run: |
-          set -euo pipefail
+          set -e
+          # Compose the release body from the CHANGELOG section so the
+          # GitHub Release page mirrors what Sparkle shows in-app. Falls
+          # back to the old "see commits" line when the version is not in
+          # CHANGELOG.md (an unreleased build, a hand-tagged hotfix, etc.).
           RELEASE_NOTES=$(bash scripts/extract-changelog-section.sh CHANGELOG.md "$VERSION")
           {
             echo "## AutoBrew v$VERSION"
@@ -286,14 +444,16 @@ jobs:
             "${RELEASE_ARGS[@]}"
 
       - name: Bump Homebrew tap
+        if: github.ref == 'refs/heads/main'
         env:
           DEPLOY_GITHUB_TOKEN: ${{ secrets.DEPLOY_GITHUB_TOKEN }}
-          VERSION:             ${{ steps.version.outputs.version }}
-          MIN_OS:              ${{ steps.version.outputs.min_os }}
+          VERSION: ${{ steps.version.outputs.version }}
+          MIN_OS: ${{ steps.version.outputs.min_os }}
         run: |
           set -euo pipefail
           if [ -z "${DEPLOY_GITHUB_TOKEN:-}" ]; then
             echo "::warning::DEPLOY_GITHUB_TOKEN not set - skipping Homebrew tap bump."
+            echo "Add a fine-grained PAT with contents:write on marcelrgberger/homebrew-tap to enable."
             exit 0
           fi
 
@@ -320,7 +480,7 @@ jobs:
 
           cd "$TAP_DIR"
           if git diff --quiet -- Casks/autobrew.rb; then
-            echo "Cask already at v${VERSION} with current sha256."
+            echo "Cask already at v${VERSION} with current sha256 - nothing to push."
             exit 0
           fi
 
@@ -333,12 +493,19 @@ jobs:
       - name: Job Summary
         if: always()
         run: |
-          cat >> "$GITHUB_STEP_SUMMARY" <<SUMMARY
-          ## macOS Release Build Summary
+          cat >> "$GITHUB_STEP_SUMMARY" << SUMMARY
+          ## macOS Build Summary
 
           | Field | Value |
           |-------|-------|
+          | Environment | ${{ needs.determine-environment.outputs.environment }} |
           | Branch | ${{ github.ref_name }} |
           | Version | ${{ steps.version.outputs.version }} (${{ steps.version.outputs.build }}) |
-          | Status | ${{ job.status }} |
+          | Build | ${{ job.status }} |
           SUMMARY
+
+      - name: Clean up keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db || true
+          rm -f "$RUNNER_TEMP/private_keys/"*.p8 || true
