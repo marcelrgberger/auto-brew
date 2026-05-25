@@ -36,7 +36,6 @@ jobs:
         za.co.digitalfreedom.AutoBrew.cli=AutoBrew CLI Developer ID
       artifact-name: autobrew-app
     secrets:
-      keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
       asc-api-key:       ${{ secrets.ASC_API_KEY }}
       asc-api-key-id:    ${{ secrets.ASC_API_KEY_ID }}
       asc-issuer-id:     ${{ secrets.ASC_ISSUER_ID }}
