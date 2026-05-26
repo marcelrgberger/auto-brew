@@ -13,6 +13,9 @@ user-facing, and free of internal jargon.
 
 ## [Unreleased]
 
+### Fixed
+- Homebrew tap cask now declares `uninstall delete: "#{HOMEBREW_PREFIX}/bin/autobrew"` so upgrades and reinstalls clean up the `autobrew` CLI symlink even when the source `.app` has already been moved to the Caskroom backup. Before this fix, brew aborted mid-upgrade with `It seems the symlink source '/Applications/AutoBrew.app/Contents/Helpers/autobrew' is not there`. The change is in the [tap repo](https://github.com/marcelrgberger/homebrew-tap) and reaches users on the next `brew update` — no AutoBrew version bump required.
+
 ## [2.5.0] — 2026-05-26
 
 ### Added
