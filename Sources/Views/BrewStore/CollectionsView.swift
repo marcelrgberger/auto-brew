@@ -22,11 +22,19 @@ struct CollectionsView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        // CollectionsView is rendered as the detail pane of the outer
+        // BrewStore NavigationSplitView. A nested NavigationSplitView
+        // here produced a second sidebar inside the detail column,
+        // which on narrow widths squashed the inner list and clipped
+        // the "No collection selected" placeholder. Use a flat
+        // HStack split instead — same master/detail UX, no nested
+        // navigation chrome.
+        HStack(spacing: 0) {
             sidebar
-                .navigationSplitViewColumnWidth(min: 220, ideal: 260)
-        } detail: {
+                .frame(minWidth: 220, idealWidth: 260, maxWidth: 320)
+            Divider()
             detail
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .alert(String(localized: "Collection error"),
                isPresented: Binding(get: { operationError != nil },
