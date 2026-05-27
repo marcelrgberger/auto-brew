@@ -8,7 +8,6 @@ struct DoctorReport: Sendable, Equatable, Codable {
     enum Severity: String, Sendable, Codable, Equatable {
         case warning
         case error
-        case other
     }
 
     struct Finding: Sendable, Identifiable, Codable, Equatable {

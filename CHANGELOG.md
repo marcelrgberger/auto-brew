@@ -13,6 +13,11 @@ user-facing, and free of internal jargon.
 
 ## [Unreleased]
 
+## [2.5.2] — 2026-05-27
+
+### Removed
+- **Dead code cleanup.** Three internal symbols had accumulated without callers and were removed: `AppLogger` utility (every consumer instantiates `Logger(subsystem:category:)` directly), `DoctorReport.Severity.other` enum case (never assigned, never matched), and `RestoreWizardStore.sourceURL` + `RestoreWizardStore.restoreList` stored properties (write-only — assigned during bundle load, never read). No behaviour change — pure code-hygiene patch.
+
 ## [2.5.1] — 2026-05-26
 
 ### Fixed
