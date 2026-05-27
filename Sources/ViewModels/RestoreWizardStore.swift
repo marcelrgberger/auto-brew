@@ -10,8 +10,6 @@ final class RestoreWizardStore {
     enum Step: Equatable { case selectFile, review, running, done }
 
     var step: Step = .selectFile
-    var sourceURL: URL?
-    var restoreList: RestoreList?
     var snapshots: [AppSnapshot] = []
     var selected: Set<String> = []
     var installMissingCasks: Bool = true
@@ -27,7 +25,6 @@ final class RestoreWizardStore {
     /// so the review step has a uniform structure to render.
     func loadBundle(at url: URL) async {
         loadError = nil
-        sourceURL = url
         do {
             let result: (list: RestoreList, imported: [AppSnapshot])
             if url.hasDirectoryPath {
@@ -41,7 +38,6 @@ final class RestoreWizardStore {
                 )
                 result = (synth, [snap])
             }
-            restoreList = result.list
             snapshots = result.imported
             selected = Set(result.imported.map(\.bundleID))
             step = .review
