@@ -13,6 +13,26 @@ user-facing, and free of internal jargon.
 
 ## [Unreleased]
 
+### Added
+- **Expanded legal hub.** Five new documents sit next to the existing ones: Legal Framework Overview, Support and Update Policy, Security Information, Vulnerability Disclosure and the California Notice at Collection — eleven in total. The Legal window now lists them in a sidebar instead of a segmented picker, so every title stays readable in all languages.
+- **Legal documents in every app language.** All eleven legal documents are now available in English, German, French, Italian, Dutch, Polish, Portuguese (Brazil) and Spanish.
+
+### Changed
+- **New operator.** AutoBrew is now operated by DigitalFreedom Global LLC. The legal documents, the copyright notice and Settings → About show the new company, and Help & Support links point to https://support.apps.digitalfreedom.co.za.
+
+### Fixed
+- **Pre-snapshot hook timeout enforced.** A hook that hung blocked the snapshot and upgrade until it finished; it is now stopped after 30 seconds, together with any processes it started.
+- **Auto-retry follows its schedule.** Auto-retry could re-run a cask upgrade every 30 minutes after a later success, or ignore the 4 h / 12 h backoff, because older failed History rows stayed eligible. Only the newest attempt per cask now decides whether a retry is due, so retries stop after a success and stay bounded at 1 h, 4 h and 12 h.
+- **Approvals survive a failed run.** An approved update dropped out of Pending Approvals as soon as a run started, so a failed upgrade had to be approved again. Approvals now stay until the upgrade succeeds, including through automatic retries, and withdrawing an approval while a run is preparing keeps that package out of the run.
+- **Busy Homebrew no longer counts as a run.** When another brew operation (for example Orphans → Autoremove) was still running, the scheduled run silently did nothing but reported success and recorded "attempted" History rows that cancelled pending retries. It now reports the run as failed, writes no History rows and tries again on the next check.
+- **Manual upgrades and retries.** A failed upgrade from the Installed tab now continues the automatic retry schedule instead of cancelling it, and a successful manual upgrade clears its pending approval.
+- **Snapshot settings translated.** The "Snapshot apps before auto-upgrade" and "Auto-clean up old snapshots" toggles were shown in English in every language; they are now localized.
+- **Settings popover on macOS 26.** The Settings page in the menu-bar popover could collapse to a single row on macOS 26. It now keeps a stable size.
+- **Open in Finder with external storage.** Settings → Snapshots → **Open in Finder** always opened the default Application Support folder. It now opens the folder snapshots are actually written to, including an external storage location.
+- **Disk check for external storage.** The free-space guard before pre-upgrade snapshots measured the startup disk even when snapshots go to an external drive. It now checks the volume that holds the snapshot storage.
+- **Low-disk notification respects the toggle.** The "snapshot skipped — low disk space" notification ignored Settings → **Show Notifications**. It is now switched off together with the other notifications.
+- **Legal documents render cleanly.** Quoted passages and code blocks inside quotes display as normal text instead of showing literal `>` markers, and internal maintenance comments no longer appear in the documents.
+
 ## [2.5.2] — 2026-05-27
 
 ### Removed
