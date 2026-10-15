@@ -135,8 +135,9 @@ struct SettingsView: View {
                         Text(String(localized: "Snapshot storage"))
                         Spacer()
                         Button(String(localized: "Open in Finder")) {
-                            let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                                .appendingPathComponent("AutoBrew/Snapshots")
+                            // Open the root snapshots are actually written to, so an
+                            // external storage location is honoured here too.
+                            let url = SnapshotService.shared.storageRoot
                             try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
                             NSWorkspace.shared.open(url)
                         }

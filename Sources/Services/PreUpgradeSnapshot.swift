@@ -48,7 +48,9 @@ enum PreUpgradeSnapshot {
         if !DiskSpaceMonitor.hasAtLeast(minGB) {
             let availableGB = (DiskSpaceMonitor.availableBytes() ?? 0) / 1_073_741_824
             preUpgradeLogger.warning("Pre-upgrade snapshot skipped for \(token, privacy: .public) — only \(availableGB) GiB free, threshold is \(minGB) GiB")
-            NotificationManager.shared.showLowDiskSpace(forToken: token, availableGB: availableGB, thresholdGB: minGB)
+            if SettingsStore.shared.showNotifications {
+                NotificationManager.shared.showLowDiskSpace(forToken: token, availableGB: availableGB, thresholdGB: minGB)
+            }
             return nil
         }
 
