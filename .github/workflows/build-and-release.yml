@@ -245,7 +245,7 @@ jobs:
           SPARKLE_BIN=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "sign_update" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
           if [ -z "$SPARKLE_BIN" ]; then
             echo "sign_update not found, downloading Sparkle tools..."
-            curl -sL "https://github.com/sparkle-project/Sparkle/releases/latest/download/Sparkle-2.9.0.tar.xz" | tar xJ -C /tmp
+            curl -fsSL "https://github.com/sparkle-project/Sparkle/releases/download/2.9.0/Sparkle-2.9.0.tar.xz" | tar xJ -C /tmp
             SPARKLE_BIN="/tmp/bin/sign_update"
           fi
 

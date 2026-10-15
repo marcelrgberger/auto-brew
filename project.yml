@@ -22,12 +22,14 @@ options:
 packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    from: "2.0.0"
+    # Exact pin: Package.resolved is not committed, so a range would let CI
+    # pick up a newer Sparkle than local builds and the licence inventory.
+    exactVersion: "2.9.0"
 
 settings:
   base:
-    MARKETING_VERSION: "2.5.3"
-    CURRENT_PROJECT_VERSION: "18"
+    MARKETING_VERSION: "2.5.4"
+    CURRENT_PROJECT_VERSION: "19"
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "14.0"
