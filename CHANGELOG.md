@@ -13,6 +13,11 @@ user-facing, and free of internal jargon.
 
 ## [Unreleased]
 
+## [2.5.4] — 2026-10-15
+
+### Changed
+- **Built with Xcode 27.** AutoBrew is now built with Xcode 27.0 for every channel, the same toolchain used in development. No functional changes; the Security Information document now names 2.5.4 as the current version.
+
 ## [2.5.3] — 2026-10-15
 
 ### Added
@@ -119,7 +124,8 @@ user-facing, and free of internal jargon.
 ### Added
 - First public release. Menu-bar app that orchestrates `brew update → outdated → policy gate → upgrade → cleanup` with idle or scheduled triggers, sleep/wake recovery, and a selective per-bump-type update policy.
 
-[Unreleased]: https://github.com/marcelrgberger/auto-brew/compare/v2.5.3...HEAD
+[Unreleased]: https://github.com/marcelrgberger/auto-brew/compare/v2.5.4...HEAD
+[2.5.4]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.4
 [2.5.3]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.3
 [2.5.2]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.2
 [2.5.1]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.1

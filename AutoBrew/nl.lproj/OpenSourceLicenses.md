@@ -69,7 +69,7 @@ Voor elke open-sourcecomponent wordt de volgende informatie verstrekt: naam van 
 
 ```
 Component: AutoBrew
-Version: 2.5.3
+Version: 2.5.4
 License: MIT
 Copyright: Copyright (c) 2026 DigitalFreedom Global LLC
 Repository: https://github.com/marcelrgberger/auto-brew

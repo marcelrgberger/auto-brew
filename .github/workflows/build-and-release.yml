@@ -37,17 +37,17 @@ jobs:
   build:
     name: Build, Sign & Notarize
     if: github.ref == 'refs/heads/main'
-    runs-on: macos-26
+    runs-on: xcode-27
     timeout-minutes: 30
     needs: determine-environment
     steps:
-      - name: Set up Xcode ^26
-        uses: maxim-lobanov/setup-xcode@v1
+      - name: Set up Xcode 27.0
+        uses: maxim-lobanov/setup-xcode@ed7a3b1fda3918c0306d1b724322adc0b8cc0a90 # v1
         with:
-          xcode-version: '^26'
+          xcode-version: '27.0'
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Install XcodeGen
         run: brew install xcodegen
@@ -228,7 +228,7 @@ jobs:
           xcrun stapler staple "build/$APP_NAME.dmg"
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: AutoBrew-${{ steps.version.outputs.version }}
           path: |
@@ -245,7 +245,12 @@ jobs:
           SPARKLE_BIN=$(find "$HOME/Library/Developer/Xcode/DerivedData" -name "sign_update" -path "*/Sparkle/bin/*" 2>/dev/null | head -1)
           if [ -z "$SPARKLE_BIN" ]; then
             echo "sign_update not found, downloading Sparkle tools..."
-            curl -sL "https://github.com/sparkle-project/Sparkle/releases/latest/download/Sparkle-2.9.0.tar.xz" | tar xJ -C /tmp
+            # Verify the archive before running anything from it: sign_update
+            # gets the Sparkle private key. The checksum is the one GitHub
+            # reports for the official 2.9.0 release asset.
+            curl -fsSL -o /tmp/Sparkle-2.9.0.tar.xz "https://github.com/sparkle-project/Sparkle/releases/download/2.9.0/Sparkle-2.9.0.tar.xz"
+            echo "01e0f0ebf6614061ea816d414de50f937d64ffa6822ad572243031ca3676fe19  /tmp/Sparkle-2.9.0.tar.xz" | shasum -a 256 -c -
+            tar xJf /tmp/Sparkle-2.9.0.tar.xz -C /tmp
             SPARKLE_BIN="/tmp/bin/sign_update"
           fi
 
