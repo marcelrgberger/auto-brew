@@ -143,9 +143,13 @@ enum PreUpgradeSnapshot {
         posix_spawn_file_actions_addopen(&fileActions, 1, "/dev/null", O_WRONLY, 0)
         posix_spawn_file_actions_addopen(&fileActions, 2, "/dev/null", O_WRONLY, 0)
 
-        let arguments = ["/bin/bash", "-c", command].map { strdup($0) }
+        // Explicit types: older Swift compilers otherwise resolve the
+        // literal as C string pointers and reject the String elements.
+        let argumentStrings: [String] = ["/bin/bash", "-c", command]
+        let arguments: [UnsafeMutablePointer<CChar>?] = argumentStrings.map { strdup($0) }
         defer { arguments.forEach { free($0) } }
-        let spawnError = posix_spawn(&pid, "/bin/bash", &fileActions, &attributes, arguments + [nil], environ)
+        let argv: [UnsafeMutablePointer<CChar>?] = arguments + [nil]
+        let spawnError = posix_spawn(&pid, "/bin/bash", &fileActions, &attributes, argv, environ)
         guard spawnError == 0 else {
             return .failedToLaunch(String(cString: strerror(spawnError)))
         }
