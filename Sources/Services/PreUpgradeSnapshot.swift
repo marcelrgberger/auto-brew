@@ -44,9 +44,12 @@ enum PreUpgradeSnapshot {
         // — we would only be filling the home-directory volume and
         // breaking unrelated apps. The upgrade still runs; the user
         // just loses the rollback affordance for this one cask.
+        // Measure the volume the snapshot is written to, which is an
+        // external drive when the user moved snapshot storage there.
         let minGB = SettingsStore.shared.minFreeGBForSnapshot
-        if !DiskSpaceMonitor.hasAtLeast(minGB) {
-            let availableGB = (DiskSpaceMonitor.availableBytes() ?? 0) / 1_073_741_824
+        let storageRoot = SnapshotService.shared.storageRoot
+        if !DiskSpaceMonitor.hasAtLeast(minGB, volume: storageRoot) {
+            let availableGB = (DiskSpaceMonitor.availableBytes(volume: storageRoot) ?? 0) / 1_073_741_824
             preUpgradeLogger.warning("Pre-upgrade snapshot skipped for \(token, privacy: .public) — only \(availableGB) GiB free, threshold is \(minGB) GiB")
             if SettingsStore.shared.showNotifications {
                 NotificationManager.shared.showLowDiskSpace(forToken: token, availableGB: availableGB, thresholdGB: minGB)
