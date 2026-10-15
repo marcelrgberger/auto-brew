@@ -1,164 +1,87 @@
-# LICENCES OPEN SOURCE
+<!-- doc-id: OPEN_SOURCE_NOTICES | lang: en | area: shared | version: 1.0.0 | valid-from: 2026-08-31 | supersedes: none | owner: Marcel R. G. Berger | next-review: 2027-08-31 -->
+<!-- generated-for: AutoBrew | generated: 2026-10-15 | source: legal/shared/OPEN_SOURCE_NOTICES.en.md | adaptations: direct distribution (§ 1.1), copyleft statement (§ 2.2), example entry replaced by the actual inventory (§ 3), licence list reduced to the licences in use (§ 4), EULA link replaced by in-app document name | translated-from: en -->
+# MENTIONS RELATIVES AUX LOGICIELS OPEN SOURCE
 
-## Logiciels tiers utilisés dans AutoBrew
+## Attribution des logiciels open source de tiers
 
-**Dernière mise à jour :** mai 2026
+**Application :** AutoBrew
 
-AutoBrew est lui-même open source sous licence MIT (voir [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew)). Le présent document liste chaque composant tiers livré dans le bundle de l'application AutoBrew, ainsi que les dépendances à l'exécution sur lesquelles AutoBrew s'appuie pour fonctionner.
+**Dernière mise à jour :** 15 octobre 2026
 
-Chaque composant est régi par sa propre licence, reproduite ou référencée ci-dessous. Lorsqu'un composant intègre lui-même d'autres codes tiers (par exemple Sparkle), les attributions imbriquées sont également listées.
-
----
-
-## 1. AutoBrew
-
-```
-Composant :  AutoBrew
-Version :    2.2.0
-Licence :    MIT
-Copyright :  Copyright (c) 2026 Marcel R. G. Berger
-Dépôt :      https://github.com/marcelrgberger/auto-brew
-```
-
-Le texte intégral de la licence MIT est reproduit à la section 5 — il s'applique à AutoBrew ainsi qu'aux composants tiers étiquetés « MIT ».
+**Éditeur :**
+DigitalFreedom
+Une marque de DigitalFreedom Global LLC
+30 N Gould St, Ste N
+Sheridan, WY 82801
+United States
+Contact : hello@digitalfreedom.co.za
+Site web : https://digitalfreedom.co.za
 
 ---
 
-## 2. Dépendances intégrées
+## 1. INTRODUCTION
 
-Ces composants sont liés au bundle de l'application AutoBrew et livrés avec elle.
+Le présent document énumère les composants logiciels open source utilisés dans AutoBrew (« le Logiciel »). Chaque composant est soumis à ses propres conditions de licence, qui sont reproduites ou référencées ci-dessous.
 
-### 2.1 Sparkle
+Le présent avis est fourni conformément aux exigences d'attribution et de mention des licences open source applicables et conformément à notre CLUF (dans AutoBrew sous Réglages → Mentions légales → CLUF).
 
-```
-Composant :  Sparkle
-Version :    2.9.0
-Licence :    MIT
-Copyright :  Copyright (c) 2006-2013 Andy Matuschak
-             Copyright (c) 2009-2013 Elgato Systems GmbH
-             Copyright (c) 2011-2014 Kornel Lesiński
-             Copyright (c) 2015-2017 Mayur Pawashe
-             Copyright (c) 2014 C.W. Betts
-             Copyright (c) 2014 Petroules Corporation
-             Copyright (c) 2014 Big Nerd Ranch
-Dépôt :      https://github.com/sparkle-project/Sparkle
-Utilisation : Mises à jour automatiques intégrées pour la build de
-              distribution directe (appcast signé EdDSA servi depuis
-              le dépôt GitHub).
-```
+### 1.1 Portée mondiale
 
-Sparkle inclut lui-même les composants tiers suivants :
-
-#### 2.1.1 bsdiff / bspatch
-
-```
-Composant :  bsdiff 4.3
-Licence :    BSD-2-Clause
-Copyright :  Copyright 2003-2005 Colin Percival
-Source :     http://www.daemonology.net/bsdiff/
-Utilisation dans Sparkle : mises à jour delta binaires.
-```
-
-#### 2.1.2 sais-lite
-
-```
-Composant :  sais-lite (2010-08-07)
-Licence :    MIT
-Copyright :  Copyright (c) 2008-2010 Yuta Mori
-Source :     https://sites.google.com/site/yuta256/sais
-Utilisation dans Sparkle : construction de tableaux de suffixes pendant bsdiff.
-```
-
-#### 2.1.3 pdqsort
-
-```
-Composant :  pdqsort
-Licence :    zlib
-Copyright :  Copyright (c) 2015 Orson Peters
-Source :     https://github.com/orlp/pdqsort
-Utilisation dans Sparkle : utilitaires de tri dans le pipeline delta.
-```
-
-#### 2.1.4 SUDistributedUpdaterArguments (auxiliaire Sparkle)
-
-```
-Composant :  SUDistributedUpdaterArguments
-Licence :    MIT
-Copyright :  Copyright (c) 2011 Mark Hamlin
-Utilisation dans Sparkle : transmission d'arguments auxiliaires.
-```
-
-Le texte intégral de la licence Sparkle et de ses licences externes intégrées est livré dans le framework à l'emplacement `AutoBrew.app/Contents/Frameworks/Sparkle.framework/Resources/LICENSE`.
+AutoBrew est distribué directement par l'Éditeur — sous forme de téléchargement notarié depuis GitHub Releases et via le tap Homebrew `marcelrgberger/homebrew-tap` — et peut être téléchargé dans tout pays depuis lequel ces canaux sont accessibles. Les présentes mentions open source s'appliquent dans le monde entier — les mentions de droit d'auteur, les textes de licence et les exigences d'attribution sont présentés conformément à la licence de chaque composant et tels qu'ils sont opposables en vertu du droit d'auteur de l'UE (retenu comme base de référence) et du droit d'auteur de toute autre juridiction dans laquelle le Logiciel est distribué.
 
 ---
 
-## 3. Dépendances à l'exécution (externes)
+## 2. CONDITIONS GÉNÉRALES
 
-Ces composants **ne sont pas** livrés dans le bundle d'AutoBrew. AutoBrew les invoque à l'exécution par création de processus ; ils doivent donc être installés séparément par l'utilisateur. AutoBrew guide l'installation de Homebrew au premier démarrage.
+### 2.1 Hiérarchie des licences
 
-### 3.1 Homebrew
+Lorsque le Logiciel inclut des composants open source :
 
-```
-Composant :  Homebrew
-Licence :    BSD-2-Clause
-Copyright :  Copyright (c) 2009-présent Homebrew contributors
-Dépôt :      https://github.com/Homebrew/brew
-Utilisation par AutoBrew :
-             - `brew update` pour rafraîchir l'index des paquets
-             - `brew upgrade` et `brew upgrade --cask` pour les installations
-             - `brew outdated --json=v2` pour détecter les mises à jour disponibles
-             - `brew install --cask <token>` pour les demandes d'installation directe
-             - `brew search` pour retrouver les casks renommés lors d'une restauration
-             - `brew cleanup --prune=7` pour la maintenance périodique
-```
+- Les conditions de la licence open source régissent ces composants
+- Notre CLUF ne prévaut pas sur les droits conférés par les licences open source et ne les restreint pas
+- En cas de conflit entre le CLUF et une licence open source, la licence open source prévaut pour le composant concerné
 
-Le catalogue de paquets affiché par AutoBrew dans le BrewStore est servi par `formulae.brew.sh`, exploité par le projet Homebrew.
+### 2.2 Disponibilité du code source
 
-### 3.2 API iTunes Search (Apple)
+AutoBrew est lui-même open source ; son code source complet est publié à l'adresse https://github.com/marcelrgberger/auto-brew. Le code source des composants intégrés est disponible aux adresses des dépôts indiquées à la section 3.
 
-```
-Service :    API iTunes Search
-Exploitant : Apple Inc.
-Utilisation par AutoBrew :
-             Recherche au mieux des icônes d'applications macOS par
-             nom d'affichage, servies sous forme de PNG mis en cache
-             dans le BrewStore. Anonyme — aucun identifiant utilisateur
-             n'est transmis.
-```
+AutoBrew ne contient actuellement aucun composant placé sous une licence copyleft (par exemple GPL, LGPL, MPL). Si un tel composant venait à être ajouté, les règles suivantes s'y appliqueraient :
 
-### 3.3 icon.horse
+- Le code source est disponible sur demande à l'adresse : hello@digitalfreedom.co.za
+- Les demandes sont traitées dans un délai de 30 jours
+- Les offres de code source restent valables 3 ans à compter de la date de la dernière distribution, ou pendant toute autre durée exigée par la licence applicable
 
-```
-Service :    icon.horse
-Utilisation par AutoBrew :
-             Résolution de favicon en repli pour les casks dont l'URL
-             `homepage` est définie, après une recherche iTunes Search
-             infructueuse. Anonyme.
-Point de terminaison : https://icon.horse
-```
+### 2.3 Vos obligations
+
+Si vous redistribuez le Logiciel ou certains de ses composants, il vous incombe de respecter les conditions des licences open source applicables, notamment :
+
+- Conserver les mentions de droit d'auteur et les textes de licence
+- Fournir le code source lorsque cela est exigé
+- Maintenir les mentions d'attribution
 
 ---
 
-## 4. Frameworks système Apple
+## 3. COMPOSANTS OPEN SOURCE
 
-AutoBrew est lié aux frameworks Apple suivants. Ils font partie de macOS et ne sont pas soumis à une attribution distincte au titre de l'Apple SDK Agreement ; ils sont listés ici par souci d'exhaustivité :
+Pour chaque composant open source, les informations suivantes sont fournies : nom du composant, version, licence, titulaire(s) du droit d'auteur et dépôt.
 
-- **SwiftUI** — framework d'interface
-- **Foundation** — types de base, E/S fichiers, JSON
-- **AppKit** — intégration à la barre de menus, `NSApp`, `NSWorkspace`
-- **UserNotifications** — bannières d'achèvement et d'approbation en attente
-- **ServiceManagement** (`SMAppService`) — câblage du lancement à l'ouverture de session
-- **IOKit** — détection du temps d'inactivité via `IOHIDSystem`
-- **os.Logger** — journalisation unifiée
-- **CryptoKit** — hachage SHA-256 pour l'intégrité des snapshots
-
----
-
-## 5. Licence MIT (verbatim)
-
-La licence MIT ci-dessous s'applique à AutoBrew lui-même et à chacun des composants ci-dessus étiquetés « MIT ». Les détenteurs de copyright diffèrent selon le composant (voir sections 1 et 2 pour les mentions concernées).
+### 3.1 AutoBrew
 
 ```
+Component: AutoBrew
+Version: 2.5.3
+License: MIT
+Copyright: Copyright (c) 2026 DigitalFreedom Global LLC
+Repository: https://github.com/marcelrgberger/auto-brew
+```
+
+**Licence MIT** (telle que publiée dans le dépôt d'AutoBrew, reproduite en anglais dans sa version originale) :
+
+```
+MIT License
+
+Copyright (c) 2026 DigitalFreedom Global LLC
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -174,17 +97,139 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
----
-
-## 6. Licence BSD-2-Clause (verbatim)
-
-La licence BSD-2-Clause ci-dessous s'applique à `bsdiff` (intégré à Sparkle) et à Homebrew.
+### 3.2 Sparkle (intégré)
 
 ```
+Component: Sparkle
+Version: 2.9.0
+License: MIT; bundled external code under BSD-2-Clause, MIT and zlib (see below)
+Copyright: Andy Matuschak, Elgato Systems GmbH, Kornel Lesiński, Mayur Pawashe,
+           C.W. Betts, Petroules Corporation, Big Nerd Ranch (full notice below)
+Repository: https://github.com/sparkle-project/Sparkle
+Used for: AutoBrew's own software updates (EdDSA-signed appcast on GitHub)
+```
+
+Sparkle intègre du code provenant de bsdiff 4.3 (BSD-2-Clause), de sais-lite (MIT), de l'implémentation portable d'Ed25519 d'Orson Peters (zlib) et de `SUSignatureVerifier.m` de Mark Hamlin (BSD-2-Clause). Le fichier de licence complet de Sparkle, y compris ces licences externes, est reproduit ci-dessous dans sa version originale anglaise :
+
+```
+Copyright (c) 2006-2013 Andy Matuschak.
+Copyright (c) 2009-2013 Elgato Systems GmbH.
+Copyright (c) 2011-2014 Kornel Lesiński.
+Copyright (c) 2015-2017 Mayur Pawashe.
+Copyright (c) 2014 C.W. Betts.
+Copyright (c) 2014 Petroules Corporation.
+Copyright (c) 2014 Big Nerd Ranch.
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+=================
+EXTERNAL LICENSES
+=================
+
+bspatch.c and bsdiff.c, from bsdiff 4.3 <http://www.daemonology.net/bsdiff/>:
+
+Copyright 2003-2005 Colin Percival
+All rights reserved
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted providing that the following conditions 
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGE.
+
+--
+
+sais.c and sais.h, from sais-lite (2010/08/07) <https://sites.google.com/site/yuta256/sais>:
+
+The sais-lite copyright is as follows:
+
+Copyright (c) 2008-2010 Yuta Mori All Rights Reserved.
+
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+--
+
+Portable C implementation of Ed25519, from https://github.com/orlp/ed25519
+
+Copyright (c) 2015 Orson Peters <orsonpeters@gmail.com>
+
+This software is provided 'as-is', without any express or implied warranty. In no event will the
+authors be held liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose, including commercial
+applications, and to alter it and redistribute it freely, subject to the following restrictions:
+
+1. The origin of this software must not be misrepresented; you must not claim that you wrote the
+   original software. If you use this software in a product, an acknowledgment in the product
+   documentation would be appreciated but is not required.
+
+2. Altered source versions must be plainly marked as such, and must not be misrepresented as
+   being the original software.
+
+3. This notice may not be removed or altered from any source distribution.
+
+--
+
+SUSignatureVerifier.m:
+
+Copyright (c) 2011 Mark Hamlin.
+
+All rights reserved.
+
 Redistribution and use in source and binary forms, with or without
 modification, are permitted providing that the following conditions
 are met:
@@ -194,10 +239,10 @@ are met:
    notice, this list of conditions and the following disclaimer in the
    documentation and/or other materials provided with the distribution.
 
-THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
 DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
 DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
 OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
@@ -207,68 +252,102 @@ IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 ```
 
----
+Le même fichier de licence est fourni dans l'application à l'emplacement `AutoBrew.app/Contents/Frameworks/Sparkle.framework/Resources/LICENSE`.
 
-## 7. Licence zlib (verbatim)
-
-La licence zlib ci-dessous s'applique à `pdqsort` (intégré à Sparkle).
+### 3.3 Homebrew (dépendance d'exécution, non intégrée)
 
 ```
-This software is provided 'as-is', without any express or implied
-warranty. In no event will the authors be held liable for any damages
-arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
-
-1. The origin of this software must not be misrepresented; you must not
-   claim that you wrote the original software. If you use this software
-   in a product, an acknowledgment in the product documentation would be
-   appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not
-   be misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
+Component: Homebrew
+License: BSD-2-Clause
+Copyright: Copyright (c) 2009-present, Homebrew contributors
+Repository: https://github.com/Homebrew/brew
 ```
 
----
+Homebrew ne fait pas partie du paquet de l'application AutoBrew. AutoBrew exécute la commande `brew` de l'installation Homebrew présente sur votre Mac et, si Homebrew est absent et que vous le demandez, exécute le script d'installation officiel de Homebrew. Homebrew est installé séparément et placé sous sa propre licence BSD-2-Clause.
 
-## 8. Disponibilité du code source
+### 3.4 Frameworks système d'Apple
 
-AutoBrew est open source — le code source complet réside sur [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew). Le code source des dépendances intégrées est disponible aux URL des dépôts listés ci-dessus.
-
-Pour les composants copyleft — aucun ne s'applique actuellement à AutoBrew, mais en principe — les demandes de code source peuvent être adressées à hello@digitalfreedom.co.za et seront satisfaites sous 30 jours.
+AutoBrew est lié à des frameworks qui font partie de macOS et sont utilisés selon les conditions du SDK d'Apple, et non sous une licence open source : SwiftUI, AppKit, Foundation, Observation, UserNotifications, ServiceManagement, IOKit, CryptoKit, UniformTypeIdentifiers, WidgetKit, AppIntents et le système de journalisation unifié (`os`). Ils ne sont mentionnés qu'à titre d'exhaustivité.
 
 ---
 
-## 9. Vos obligations en cas de redistribution
+## 4. TEXTES DE LICENCE COURANTS
 
-Si vous redistribuez AutoBrew ou l'un de ses composants intégrés, vous devez :
+### 4.1 Licence MIT
 
-- Conserver les mentions de copyright et les textes de licence des sections 1 à 7
-- Reproduire les textes des licences MIT, BSD-2-Clause et zlib aux côtés du binaire
-- Ne pas retirer le fichier `LICENSE` de Sparkle livré dans `Sparkle.framework`
-- Respecter l'exigence d'attribution BSD-2-Clause pour `bsdiff` (sa mention de copyright doit accompagner les redistributions binaires)
+Voir les textes complets aux sections 3.1 et 3.2 ; informations complémentaires : https://opensource.org/licenses/MIT
+
+### 4.2 Licence BSD à 2 clauses (« simplifiée »)
+
+Les composants placés sous la licence BSD à 2 clauses sont soumis aux conditions disponibles à l'adresse :
+https://opensource.org/licenses/BSD-2-Clause
+
+### 4.3 Licence zlib
+
+Les composants placés sous la licence zlib sont soumis aux conditions disponibles à l'adresse :
+https://opensource.org/licenses/Zlib
 
 ---
 
-## 10. Signalement de problèmes
+## 5. CONSIDÉRATIONS JURIDIQUES PAR JURIDICTION
 
-Si vous identifiez une attribution manquante, une référence de licence incorrecte ou un composant listé qu'AutoBrew n'utilise plus, veuillez ouvrir un ticket sur [github.com/marcelrgberger/auto-brew/issues](https://github.com/marcelrgberger/auto-brew/issues) ou écrire à hello@digitalfreedom.co.za.
+### 5.1 Union européenne
+
+- Le respect des licences open source est exigé par le droit d'auteur de l'UE (directive 2001/29/CE)
+- La directive de l'UE sur les programmes d'ordinateur (2009/24/CE) autorise la décompilation à des fins d'interopérabilité
+- Le Cyber Resilience Act (règlement (UE) 2024/2847) peut imposer des obligations supplémentaires aux logiciels commerciaux intégrant des composants open source
+
+### 5.2 Allemagne
+
+- L'UrhG (Urheberrechtsgesetz) régit le droit d'auteur sur les logiciels
+- Les licences open source sont en règle générale opposables en vertu du droit allemand des contrats
+- Les juridictions allemandes ont fait appliquer la GPL et d'autres licences open source (par exemple LG München I, LG Hamburg)
+
+### 5.3 États-Unis
+
+- Le Copyright Act (17 U.S.C.) régit le droit d'auteur sur les logiciels
+- Les licences open source sont opposables en tant que licences de droit d'auteur
+- Les dispositions d'exonération (safe harbor) du DMCA peuvent s'appliquer
+
+### 5.4 Royaume-Uni
+
+- Le Copyright, Designs and Patents Act 1988 régit le droit d'auteur sur les logiciels
+- Les licences open source sont opposables en vertu du droit anglais des contrats et du droit d'auteur
+
+### 5.5 Japon
+
+- La loi sur le droit d'auteur (著作権法) régit le droit d'auteur sur les logiciels
+- Les licences open source sont reconnues et opposables
+
+### 5.6 Autres juridictions
+
+- L'opposabilité des licences open source peut varier selon les juridictions
+- Le droit d'auteur local régit les droits et obligations des licenciés
 
 ---
 
-## 11. Contact
+## 6. MISES À JOUR
 
-Berger & Rosenstock GbR (sous le nom commercial DigitalFreedom)
-Dieselstr. 22e
-61231 Bad Nauheim
-Allemagne
-Courriel : hello@digitalfreedom.co.za
+Le présent document est mis à jour lorsque de nouveaux composants open source sont ajoutés ou que des composants existants sont mis à jour. La date de « Dernière mise à jour » figurant en tête reflète la révision la plus récente.
+
+Les attributions manquantes ou incorrectes peuvent être signalées à l'adresse https://github.com/marcelrgberger/auto-brew/issues ou à hello@digitalfreedom.co.za.
+
+---
+
+## 7. CONTACT
+
+Pour toute question relative aux composants open source, au respect des licences ou aux demandes de code source :
+
+DigitalFreedom
+Une marque de DigitalFreedom Global LLC
+30 N Gould St, Ste N
+Sheridan, WY 82801
+United States
+E-mail : hello@digitalfreedom.co.za
 Site web : https://digitalfreedom.co.za
 
 ---
 
-(c) 2026 DigitalFreedom — Berger & Rosenstock GbR.
+(c) 2025-2026 DigitalFreedom Global LLC. Tous droits réservés.
 
-*Note : la présente mention de copyright couvre le présent document lui-même ; les composants open source listés sont soumis à leurs licences respectives.*
+*Remarque : la mention de droit d'auteur ci-dessus s'applique au présent document lui-même, et non aux composants open source qui y sont énumérés, lesquels sont soumis à leurs licences respectives.*

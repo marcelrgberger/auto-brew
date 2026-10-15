@@ -41,7 +41,10 @@ final class SnapshotService {
     static let shared = SnapshotService()
     static let schemaVersion = 1
 
-    private let storageRoot: URL
+    /// Where snapshots are written for this instance: the external
+    /// location chosen in Settings when reachable, otherwise the default
+    /// Application Support path. Resolved once at init.
+    let storageRoot: URL
     let home: URL
     private let logger = Logger(subsystem: "za.co.digitalfreedom.AutoBrew", category: "Snapshot")
     private let fm = FileManager.default

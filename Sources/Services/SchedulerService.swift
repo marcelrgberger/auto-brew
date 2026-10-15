@@ -210,16 +210,22 @@ final class SchedulerService {
             ledgerStore.purge(keeping: activeKeys)
 
             // Carry the user's prior decisions forward and surface anything
-            // new that needs a verdict.
+            // new that needs a verdict. Approved updates move into
+            // `autoInstall`; they stay in the store until their upgrade
+            // succeeded, so a failed or skipped run keeps the approval for
+            // the next run.
             let priorPendingCount = pendingStore.pendingCount
-            pendingStore.replace(with: bundle.needsApproval)
-            let newPendingCount = pendingStore.pendingCount
+            let autoInstallKeys = Set(bundle.autoInstall.map(Self.pendingKey(for:)))
+            let approvedInFlight = pendingStore.updates.filter {
+                $0.decision.isApproved
+                    && autoInstallKeys.contains(PendingUpdatesStore.key(kind: $0.kind, token: $0.token))
+            }
+            let approvedInFlightKeys = Set(approvedInFlight.map { PendingUpdatesStore.key(kind: $0.kind, token: $0.token) })
+            pendingStore.replace(with: bundle.needsApproval + approvedInFlight)
 
             // 3. Pick everything that's allowed to install right now.
-            let formulaeToUpgrade = bundle.autoInstall.filter { !$0.isCask }.map(\.name)
-            let casksToUpgrade = bundle.autoInstall.filter { $0.isCask }
-            let casksToUpgradeNames = casksToUpgrade.map(\.name)
-            let approvedTokens = Set(pendingStore.approvedTokens)
+            var formulaeToUpgrade = bundle.autoInstall.filter { !$0.isCask }.map(\.name)
+            var casksToUpgrade = bundle.autoInstall.filter { $0.isCask }
 
             // Before brew rewrites the .app, capture user data per cask so
             // the History view can offer a one-click rollback. Failures are
@@ -230,16 +236,36 @@ final class SchedulerService {
                 preSnapshots = await capturePreUpgradeSnapshots(forCasks: casksToUpgrade)
             }
 
+            // The user may undo or reject an approval while snapshots are
+            // taken. Re-check right before launching, with no suspension
+            // point in between, and drop withdrawn packages from this run.
+            let withdrawnKeys = approvedInFlightKeys.subtracting(pendingStore.approvedKeys)
+            if !withdrawnKeys.isEmpty {
+                formulaeToUpgrade.removeAll { withdrawnKeys.contains(PendingUpdatesStore.key(kind: .formula, token: $0)) }
+                casksToUpgrade.removeAll { withdrawnKeys.contains(Self.pendingKey(for: $0)) }
+            }
+            let casksToUpgradeNames = casksToUpgrade.map(\.name)
+
             if formulaeToUpgrade.isEmpty && casksToUpgradeNames.isEmpty {
-                logger.info("Nothing to upgrade — \(bundle.waitingForCooldown.count) waiting, \(bundle.needsApproval.count) pending approval")
+                logger.info("Nothing to upgrade — \(bundle.waitingForCooldown.count) waiting, \(self.pendingStore.pendingCount) pending approval")
             } else {
                 do {
                     let outcomes = try await brewManager.runUpgrade(formulae: formulaeToUpgrade, casks: casksToUpgradeNames)
-                    // Only drop approved entries from the pending list after
-                    // the upgrade actually went through — a failure should
-                    // leave them queued so the next run retries.
-                    pendingStore.remove(tokens: approvedTokens)
+                    // Drop an approval only once its package upgraded: a
+                    // formula failure throws, so returning means formulae
+                    // went through; casks need an explicit `.succeeded`.
+                    // Failed or unclear casks keep their approval.
+                    var upgradedKeys = Set(formulaeToUpgrade.map { PendingUpdatesStore.key(kind: .formula, token: $0) })
+                    for cask in casksToUpgrade where outcomes[cask.name] == .succeeded {
+                        upgradedKeys.insert(Self.pendingKey(for: cask))
+                    }
+                    pendingStore.remove(keys: approvedInFlightKeys.intersection(upgradedKeys))
                     recordUpgradeHistory(for: casksToUpgrade, preSnapshots: preSnapshots, outcomes: outcomes, runThrew: false)
+                } catch BrewError.busy {
+                    // Nothing ran: write no history (it would mask pending
+                    // retries) and fail the run so it is not marked done.
+                    upgradeError = BrewError.busy
+                    logger.warning("Upgrade skipped — Homebrew is busy with another operation")
                 } catch {
                     // Swallow here so cleanup still runs; rethrow shape is
                     // preserved via `upgradeError` below.
@@ -284,6 +310,9 @@ final class SchedulerService {
             //   - pending-approval notification: only when *new* entries
             //     showed up since the last run, so the user isn't pinged
             //     about the same list over and over.
+            // Counted now rather than before the upgrade: approvals withdrawn
+            // during snapshot capture turn rows back into pending ones.
+            let newPendingCount = pendingStore.pendingCount
             if settings.showNotifications {
                 notificationManager.showCompletionNotification(success: true)
                 if newPendingCount > priorPendingCount {
@@ -294,7 +323,7 @@ final class SchedulerService {
                     notificationManager.showPendingApprovals(count: newPendingCount, sampleNames: Array(preview))
                 }
             }
-            logger.info("Brew run done — \(bundle.autoInstall.count) upgraded, \(bundle.waitingForCooldown.count) waiting, \(newPendingCount) pending")
+            logger.info("Brew run done — \(formulaeToUpgrade.count + casksToUpgrade.count) upgraded, \(bundle.waitingForCooldown.count) waiting, \(newPendingCount) pending")
         } catch {
             state = .failed(error.localizedDescription)
             if settings.showNotifications {
@@ -383,30 +412,16 @@ final class SchedulerService {
     /// not touched — a retry is not a fresh user-facing run.
     private func runRetryDuePass() async {
         guard !pipelineInProgress, brewManager.isHomebrewInstalled else { return }
-        let now = Date()
-        let candidates = historyStore.entries.filter { entry in
-            guard entry.outcome == .failed,
-                  let nextRetryAt = entry.nextRetryAt,
-                  nextRetryAt <= now,
-                  entry.retryCount < UpgradeHistoryEntry.maxRetries else { return false }
-            return true
-        }
-        guard !candidates.isEmpty else { return }
+        let dueCandidates = UpgradeHistoryEntry.retryCandidates(in: historyStore.entries, now: Date())
+            .filter(isRetryAllowed)
+        guard !dueCandidates.isEmpty else { return }
 
-        // Deduplicate by token — only the newest entry per token is
-        // the source of truth for this retry pass.
-        var seen = Set<String>()
-        let uniqueCandidates = candidates.filter { entry in
-            seen.insert(entry.token).inserted
-        }
-        let tokens = uniqueCandidates.map(\.token)
-
-        logger.info("Retry pass: \(tokens.count) failed cask(s) due — \(tokens.joined(separator: ", "), privacy: .public)")
+        logger.info("Retry pass: \(dueCandidates.count) failed cask(s) due — \(dueCandidates.map(\.token).joined(separator: ", "), privacy: .public)")
 
         pipelineInProgress = true
         defer { pipelineInProgress = false }
 
-        let snapshotMap = await capturePreUpgradeSnapshots(forCasks: uniqueCandidates.map { entry in
+        let snapshotMap = await capturePreUpgradeSnapshots(forCasks: dueCandidates.map { entry in
             OutdatedPackage(
                 name: entry.token,
                 currentVersion: entry.fromVersion,
@@ -415,9 +430,26 @@ final class SchedulerService {
             )
         })
 
+        // While snapshots are taken, a manual upgrade may supersede a row or
+        // an approval may be withdrawn. Re-check both with no suspension
+        // point before launching.
+        let stillDue = Set(UpgradeHistoryEntry.retryCandidates(in: historyStore.entries, now: Date()).map(\.id))
+        let uniqueCandidates = dueCandidates.filter { stillDue.contains($0.id) && isRetryAllowed($0) }
+        guard !uniqueCandidates.isEmpty else { return }
+        let tokens = uniqueCandidates.map(\.token)
+        let approvedAtLaunch = pendingStore.approvedKeys
+
         do {
             let outcomes = try await brewManager.runUpgrade(formulae: [], casks: tokens)
+            // An approval kept after the original failure is carried out now,
+            // even if the user touched it while brew was running.
+            let upgradedKeys = Set(tokens.filter { outcomes[$0] == .succeeded }
+                .map { PendingUpdatesStore.key(kind: .cask, token: $0) })
+            pendingStore.remove(keys: upgradedKeys.intersection(approvedAtLaunch))
             recordRetryHistory(for: uniqueCandidates, preSnapshots: snapshotMap, outcomes: outcomes, runThrew: false)
+        } catch BrewError.busy {
+            // Nothing ran; leave the rows due so the next pass picks them up.
+            logger.warning("Retry pass skipped — Homebrew is busy with another operation")
         } catch {
             recordRetryHistory(for: uniqueCandidates, preSnapshots: snapshotMap, outcomes: [:], runThrew: true)
             logger.warning("Retry pass failed: \(error.localizedDescription, privacy: .public)")
@@ -513,10 +545,10 @@ final class SchedulerService {
     /// only got there from the catch branch.
     ///
     /// For failed casks we carry the retry counter forward from the
-    /// last entry for the same token, so a third consecutive failure
-    /// lands on `retryCount=2` and a fourth (sticky-failed) would land
-    /// on `retryCount=3` with `nextRetryAt=nil` — the retry pass
-    /// ignores those.
+    /// last failure of the same token: the first failure lands on
+    /// `retryCount=1` (retry in 1 h), then 2 (4 h) and 3 (12 h); the
+    /// failure after that keeps `retryCount=3` with `nextRetryAt=nil`,
+    /// which the retry pass ignores.
     private func recordUpgradeHistory(for casks: [OutdatedPackage],
                                       preSnapshots: [String: PreUpgradeContext],
                                       outcomes: [String: CaskUpgradeOutcome],
@@ -547,28 +579,25 @@ final class SchedulerService {
         }
     }
 
-    /// Looks at the most-recent prior history entry for `token` and
-    /// computes the new retry state. Success and unclear outcomes
-    /// reset the counter; failures increment and produce the next
-    /// backoff window — until the budget is exhausted, at which point
-    /// the row becomes sticky-failed (`nextRetryAt == nil`).
+    /// New retry state for `token`; see `UpgradeHistoryEntry.retryState`.
     private func computeRetryState(for token: String,
                                    outcome: CaskUpgradeOutcome,
                                    now: Date) -> (retryCount: Int, nextRetryAt: Date?) {
-        switch outcome {
-        case .succeeded, .attempted:
-            return (0, nil)
-        case .failed:
-            let previousFailure = historyStore.entries
-                .first(where: { $0.token == token && $0.outcome == .failed })
-            let previousRetryCount = previousFailure?.retryCount ?? 0
-            let nextRetryAt = UpgradeHistoryEntry.nextRetryDate(previousRetryCount: previousRetryCount, now: now)
-            // When the budget is exhausted the new entry still
-            // carries the saturated retryCount so the UI can render
-            // "Retries exhausted" instead of "Attempt 4".
-            let newRetryCount = min(previousRetryCount + 1, UpgradeHistoryEntry.maxRetries)
-            return (newRetryCount, nextRetryAt)
+        UpgradeHistoryEntry.retryState(after: outcome, token: token, history: historyStore.entries, now: now)
+    }
+
+    /// A retry may run unless the cask has a pending entry whose approval
+    /// was withdrawn (undone or rejected). Casks whose policy never asked
+    /// for approval have no pending entry and always qualify.
+    private func isRetryAllowed(_ entry: UpgradeHistoryEntry) -> Bool {
+        guard let pending = pendingStore.updates.first(where: { $0.kind == .cask && $0.token == entry.token }) else {
+            return true
         }
+        return pending.decision.isApproved
+    }
+
+    private static func pendingKey(for package: OutdatedPackage) -> String {
+        PendingUpdatesStore.key(kind: package.isCask ? .cask : .formula, token: package.name)
     }
 
     private init() {}

@@ -1,106 +1,285 @@
-# END USER LICENCE AGREEMENT (EULA)
+<!-- doc-id: EULA | lang: en | area: apps/documents | version: 1.1.1 | valid-from: 2026-10-13 | supersedes: 1.1.0; telephone number removed from § 19.8 | owner: Marcel R. G. Berger | next-review: 2027-08-31 -->
+<!-- generated-for: AutoBrew | generated: 2026-10-15 | source: legal/apps/documents/EULA.en.md | adaptations: direct distribution instead of app stores (§ 2, § 17.5, § 19, § 20, § 21), MIT License (§ 3, § 4, § 5, § 14, § 22), free of charge with paid-feature reservation (§ 6), Homebrew (§ 9) -->
+# END USER LICENSE AGREEMENT (EULA)
 
-## AutoBrew
+## Global Multi-Platform License Agreement
 
-**Effective Date:** May 2026
-**Last Updated:** May 2026
+**Application:** AutoBrew
 
-This End User Licence Agreement ("EULA", "Agreement") is a legal contract between you ("User", "you") and the publisher of AutoBrew, **Berger & Rosenstock GbR** trading as **DigitalFreedom** ("Publisher", "we", "us", "our").
+**Effective Date:** 15 October 2026
 
-By installing, copying, or otherwise using AutoBrew (the "Software") you agree to be bound by the terms of this EULA.
-
----
-
-## 1. THE SOFTWARE
-
-AutoBrew is a macOS menu-bar utility that automates Homebrew updates, browses the Homebrew cask catalog, and manages app snapshots. It is published under the DigitalFreedom brand and licensed to you under the terms below.
-
-### 1.1 Licence model
-
-AutoBrew is released as **free open-source software** under the MIT Licence. The full text of the MIT Licence is reproduced in Section 6 and in the [Open-Source Licenses](OpenSourceLicenses.md) document. The MIT Licence governs the source code; this EULA covers binary distribution and your obligations as a user of the binary.
-
-### 1.2 Reservation regarding future paid features
-
-The Publisher reserves the right to introduce optional **paid features**, **paid editions**, or **paid add-on services** at any time. Any such future changes will:
-
-- Be announced in advance via the application UI and the official release notes
-- Apply only on a forward-looking basis (i.e. existing free functionality of a version you have already installed remains free to use)
-- Leave the open-source core under the MIT Licence — the source code at [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew) stays available under the same licence regardless of any paid additions
-
-The current absence of any paid feature does not constitute a guarantee that AutoBrew will remain free of paid features forever.
-
-### 1.3 Open-source scope vs. paid features
-
-The MIT Licence applies to the AutoBrew source code as published in the official repository at [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew). **Forks and derivatives of that codebase are explicitly permitted** under the MIT Licence terms — we welcome the community building on top of AutoBrew.
-
-Any **future paid features**, **paid editions**, or **paid add-on services** (see Section 1.2) will be released under a **separate proprietary licence** and will **not** form part of the MIT-licensed codebase. In particular:
-
-- The source code of paid features will not be published in the MIT repository
-- Copying, decompiling, reverse-engineering, or otherwise reproducing the implementation of any proprietary paid feature shipped by AutoBrew is not permitted, except as expressly allowed by applicable mandatory law (e.g. § 69e UrhG / Art. 6 of EU Directive 2009/24/EC for interoperability)
-- This restriction applies to the paid-feature implementation specifically — it does not restrict the right of any third party to develop comparable functionality independently and from scratch
-
-The trademarks **"AutoBrew"** and **"DigitalFreedom"** may not be used by forks or derivatives that offer competing paid features — see Section 3 of this EULA and the [Trademark](Trademark.md) disclaimer.
-
-### 1.4 Distribution channels
-
-The official AutoBrew binary is distributed exclusively through:
-
-- **GitHub Releases** at [github.com/marcelrgberger/auto-brew/releases](https://github.com/marcelrgberger/auto-brew/releases) — notarized DMG files signed with the Apple Developer ID certificate
-- The **Homebrew tap** at [github.com/marcelrgberger/homebrew-tap](https://github.com/marcelrgberger/homebrew-tap) — `brew install --cask autobrew`
-
-AutoBrew is **not** distributed through the Apple App Store, the Google Play Store, or any third-party download portal. If you obtained AutoBrew from anywhere else, the binary is unverified and not covered by this EULA.
+**Publisher:**
+DigitalFreedom
+A brand of DigitalFreedom Global LLC
+30 N Gould St, Ste N
+Sheridan, WY 82801
+United States
+Contact: hello@digitalfreedom.co.za
+Website: https://digitalfreedom.co.za
 
 ---
 
-## 2. GRANT OF LICENCE
+## 1. ACCEPTANCE OF TERMS
 
-Subject to your compliance with this EULA and the MIT Licence, the Publisher grants you a worldwide, royalty-free, non-exclusive licence to:
+By installing, accessing, or using AutoBrew, its software, or related services ("the App"), you agree to be bound by this Agreement.
 
-- Install and run AutoBrew on any number of Macs you own or control
-- Modify the source code and create derivative works
-- Redistribute the Software in source or binary form
+If you do not agree, you must not use the App.
 
 ---
 
-## 3. RESTRICTIONS
+## 2. SCOPE OF APPLICATION
 
-You may not:
+This Agreement applies to the official AutoBrew binaries distributed by the Publisher through:
 
-- Remove, alter, or obscure the copyright notices, the MIT licence text, or the embedded Sparkle / bsdiff / sais-lite / pdqsort licence notices when redistributing
-- Use the trademarks **"AutoBrew"** and **"DigitalFreedom"** in the name of a fork or derivative without our prior written consent (see the [Trademark](Trademark.md) document)
-- Misrepresent your fork as the official AutoBrew distribution
+- GitHub Releases at https://github.com/marcelrgberger/auto-brew/releases — notarized disk images signed with an Apple Developer ID certificate
+- The Homebrew tap at https://github.com/marcelrgberger/homebrew-tap
 
----
+The App is not distributed through the Apple App Store, the Google Play Store, or any other download portal. A binary obtained from anywhere else is not an official distribution of the Publisher.
 
-## 4. THIRD-PARTY COMPONENTS
+The App is provided as free, open-source software.
 
-AutoBrew bundles the following open-source components, each governed by its own licence (see the [Open-Source Licenses](OpenSourceLicenses.md) document for the full list and the verbatim licence texts):
+### 2.1 Global scope
 
-- **Sparkle** (MIT) — in-app auto-updates
-- **bsdiff / bspatch** (BSD-2-Clause) — bundled inside Sparkle for binary deltas
-- **sais-lite** (MIT) — bundled inside Sparkle
-- **pdqsort** (zlib) — bundled inside Sparkle
-
-AutoBrew also relies at runtime on **Homebrew** (BSD-2-Clause) — invoked via process spawning, not embedded. Homebrew must be installed separately; AutoBrew will guide you through its installation on first launch.
-
-The MIT, BSD-2-Clause, and zlib licences applicable to these components remain in force independently of this EULA. In the event of conflict between this EULA and an open-source licence, the open-source licence prevails for the affected component.
+The App can be downloaded in every country from which the channels above can be reached. This Agreement applies globally to all such users, regardless of the country in which the App is downloaded, installed or used. The Publisher adopts the European Union General Data Protection Regulation (GDPR) and related EU law as its baseline standard and applies it as a global floor; mandatory consumer-protection and other statutory rights granted by the user's country of residence remain unaffected and prevail wherever they are more protective.
 
 ---
 
-## 5. NO PAYMENT, NO ACCOUNT (CURRENT STATE)
+## 3. LICENSE GRANT
 
-AutoBrew is currently free of charge. The Software does not require registration, sign-up, or any payment, and at the time of this EULA there are no in-app purchases, no subscriptions, no paid features, and no trial mechanics.
+The source code of the App is published at https://github.com/marcelrgberger/auto-brew under the MIT License, reproduced in Section 22. The MIT License governs your rights to use, copy, modify, merge, publish, distribute, sublicense and sell copies of the App. Nothing in this Agreement restricts the rights the MIT License grants you.
 
-The **Sponsor** link inside AutoBrew routes to GitHub Sponsors and is **entirely voluntary**. Any contribution is treated as a donation and confers no additional entitlements.
+Subject to this Agreement, the Publisher grants you, for the official binaries, a license to:
 
-**Reservation:** See Section 1.2 — the Publisher reserves the right to introduce optional paid features, paid editions, or paid add-on services in the future. Any such future paid offerings will only apply to users who explicitly opt in; the current free functionality you have installed will not be retroactively gated.
+- Use the App on devices you own or control
+- Access and use functionalities according to intended purpose
+
+For open-source components, the applicable open-source licenses shall prevail.
 
 ---
 
-## 6. MIT LICENCE (verbatim)
+## 4. OPEN SOURCE COMPONENTS
+
+The App includes open-source software.
+
+- Such components are governed by their respective licenses
+- This Agreement does not override or restrict rights granted under open-source licenses
+- The list of open-source components and their licence texts is provided in the Open-Source Licenses document shipped with the App (Settings → Legal → Open-Source Licenses)
+
+You are responsible for complying with applicable open-source licenses.
+
+---
+
+## 5. RESTRICTIONS
+
+You shall not:
+
+- Circumvent security or access control mechanisms
+- Use the App unlawfully or in violation of third-party rights
+- Remove or alter the copyright notices and licence texts of the App or of its bundled components when redistributing it
+- Present a fork or derivative as the official AutoBrew distribution
+- Use the marks **AutoBrew** and **DigitalFreedom**, which belong to DigitalFreedom Global LLC, as the name of a fork or derivative, for a competing paid product or service, or in a way that suggests endorsement by the Publisher — the MIT License grants no trademark rights; descriptive references such as "fork of AutoBrew" remain permitted (Trademark disclaimer, Section 4)
+- Reverse-engineer or decompile proprietary components that may be offered in future (Section 6) except where permitted by law
+
+---
+
+## 6. COMMERCIAL TERMS
+
+The App is offered free of charge. There are no in-app purchases, no subscriptions and no payment route in the App.
+
+The **Sponsor** link in the App leads to GitHub Sponsors and is entirely voluntary. A contribution is a donation and confers no entitlement to features or support.
+
+**Reservation regarding future paid features.** The Publisher may introduce optional paid features, paid editions or paid add-on services in future versions. Any such offering will be announced in advance in the App and in the release notes, applies only from then on — functionality of a version you have already installed that is free remains free to use — and leaves the source code published under the MIT License available under that licence. Proprietary paid features would be released under a separate licence, would not form part of the MIT-licensed code, and their implementation may not be copied, decompiled or reverse-engineered except as permitted by mandatory law (for example Art. 6 of Directive 2009/24/EC for interoperability). The right of anyone to develop comparable functionality independently remains unaffected. Terms for any paid offering are published before it is offered.
+
+---
+
+## 7. USER RESPONSIBILITY
+
+You are solely responsible for:
+
+- All activities performed using the App
+- All data processed, stored, or transmitted
+- Compliance with applicable laws and regulations
+
+Use of the App may result in unintended actions, including data modification or deletion.
+
+---
+
+## 8. DATA AND PRIVACY
+
+The App runs on your Mac. It stores its settings, caches and snapshots locally and contacts the third-party services described in the Privacy Policy.
+
+Unless explicitly stated otherwise:
+
+- Data may be stored locally or processed via third-party services
+- The Publisher does not guarantee data security or integrity
+- You are responsible for backups
+
+A separate Privacy Policy, shipped with the App (Settings → Legal → Privacy Policy), governs data processing.
+
+---
+
+## 9. THIRD-PARTY SERVICES
+
+The App may interact with third-party services. In particular, it runs the `brew` command of the Homebrew installation on your Mac, and Homebrew installs, upgrades and removes software published by third parties.
+
+The Publisher:
+
+- Does not control third-party services
+- Is not responsible for their availability or behavior
+- Is not liable for damages caused by such services
+
+Use of third-party services is subject to their terms.
+
+---
+
+## 10. DISCLAIMER OF WARRANTIES
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE APP IS PROVIDED "AS IS" WITHOUT WARRANTIES OF ANY KIND.
+
+This includes, but is not limited to:
+
+- MERCHANTABILITY
+- FITNESS FOR A PARTICULAR PURPOSE
+- ACCURACY OR RELIABILITY
+- SECURITY OR AVAILABILITY
+
+---
+
+## 11. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE PUBLISHER SHALL NOT BE LIABLE FOR:
+
+- INDIRECT OR CONSEQUENTIAL DAMAGES
+- LOSS OF DATA, PROFITS, OR BUSINESS
+- SYSTEM FAILURES OR SECURITY INCIDENTS
+
+TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID FOR THE APP (IF ANY).
+
+---
+
+## 12. HIGH-RISK USE
+
+The App is not intended for use in:
+
+- Safety-critical systems
+- Medical applications
+- Financial trading systems
+- Critical infrastructure
+
+Use in such contexts is at your own risk.
+
+---
+
+## 13. INDEMNIFICATION
+
+You agree to indemnify the Publisher against claims arising from:
+
+- Your use of the App
+- Violation of this Agreement
+- Violation of applicable law
+
+---
+
+## 14. TERMINATION
+
+The Publisher may terminate this Agreement at any time.
+
+Upon termination, you must cease use and delete all copies of the App. Rights you hold under the MIT License are not affected by a termination of this Agreement.
+
+---
+
+## 15. EXPORT AND SANCTIONS
+
+You agree to comply with all applicable export control and sanctions laws.
+
+---
+
+## 16. GOVERNING LAW
+
+This Agreement shall be governed by the laws of the State of Wyoming, United States of America, excluding its conflict-of-law rules and the UN Convention on Contracts for the International Sale of Goods.
+
+Mandatory consumer protection laws of your country of residence remain unaffected.
+
+---
+
+## 17. REGIONAL PROVISIONS
+
+### 17.1 European Union
+
+- Mandatory consumer rights (including warranty rights) are not excluded
+- Liability exclusions apply only to the extent permitted under EU law
+
+### 17.2 United States
+
+- Some states do not allow limitation of certain warranties or liabilities
+- In such cases, limitations apply to the maximum extent permitted
+
+### 17.3 United Kingdom
+
+- Nothing excludes liability for death or personal injury caused by negligence
+- Consumer Rights Act protections remain unaffected
+
+### 17.4 Canada
+
+- Consumer protection laws vary by province and may override parts of this Agreement
+
+### 17.5 Australia and New Zealand
+
+<!-- verbatim: ACL-prescribed-form | no-translate -->
+> Our goods and services come with guarantees that cannot be excluded under the Australian Consumer Law. For major failures with the service, you are entitled:
+>
+> - to cancel your service contract with us; and
+> - to a refund for the unused portion, or to compensation for its reduced value.
+>
+> You are also entitled to choose a refund or replacement for major failures with goods. If a failure with the goods or a service does not amount to a major failure, you are entitled to have the failure rectified in a reasonable time. If this is not done you are entitled to a refund for the goods and to cancel the contract for the service and obtain a refund of any unused portion. You are also entitled to be compensated for any other reasonably foreseeable loss or damage from a failure in the goods or service.
+<!-- /verbatim -->
+
+The notice above qualifies every warranty disclaimer and liability limitation in this Agreement and prevails over them. The guarantees attach to the Publisher as supplier — the App is supplied directly by the Publisher, without a store acting as seller or agent. Section 64 ACL and s. 43 of the New Zealand Consumer Guarantees Act void any contracting-out.
+
+### 17.6 Other Jurisdictions
+
+- Where local law restricts provisions of this Agreement, such provisions shall apply only to the extent permitted
+
+---
+
+## 18. SEVERABILITY
+
+If any provision is invalid, the remainder remains in effect.
+
+---
+
+## 19. APPLE APP STORE — ADDITIONAL TERMS
+
+This section applies **only** to copies of the App acquired through the Apple App Store. The App is not distributed through the Apple App Store, so Apple's minimum terms for a custom licence agreement have no application to it.
+
+**19.8 Developer name and address.** Questions, complaints and claims relating to the App are directed to: DigitalFreedom Global LLC, 30 N Gould St, Ste N, Sheridan, WY 82801, United States · `support@digitalfreedom.co.za` · https://support.apps.digitalfreedom.co.za
+
+---
+
+## 20. GOOGLE PLAY — ADDITIONAL TERMS
+
+This section applies **only** to copies of the App acquired through Google Play. The App is not distributed through Google Play, so this section has no application.
+
+**20.4** Questions, complaints and claims relating to the App are directed to the Publisher at the address in § 19.8.
+
+---
+
+## 21. ENTIRE AGREEMENT
+
+This Agreement constitutes the entire agreement between you and the Publisher.
+
+It supplements the MIT License under which the App's source code is published. In the event of conflict between this Agreement and the MIT License or another open-source licence, that licence prevails for the code it covers.
+
+---
+
+## 22. MIT LICENSE (VERBATIM)
+
+The licence text of the App, as published in its source repository:
 
 ```
-Copyright (c) 2026 Marcel R. G. Berger
+MIT License
+
+Copyright (c) 2026 DigitalFreedom Global LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -117,57 +296,14 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
 ---
 
-## 7. DISCLAIMER OF WARRANTY
-
-The Software is provided **"AS IS"** without warranty of any kind, express or implied. The Publisher does not warrant that the Software will be uninterrupted or error-free, that AutoBrew's interaction with Homebrew or with individual casks will always succeed, or that snapshots will perfectly capture every aspect of an application's state.
-
-Statutory warranty rights that cannot be excluded by contract under your local consumer-protection law (e.g. the German Mängelhaftung under §§ 434 ff. BGB, where applicable) remain unaffected.
+**BY USING THE APP, YOU AGREE TO THIS AGREEMENT.**
 
 ---
 
-## 8. LIMITATION OF LIABILITY
-
-To the maximum extent permitted by applicable law, the Publisher is not liable for any indirect, incidental, consequential, exemplary, or punitive damages — including data loss, lost profits, or damage arising from third-party software (Homebrew, individual casks) invoked through AutoBrew.
-
-For users habitually resident in Germany or the EU, our liability for damage caused by **gross negligence or intentional misconduct**, for **injury to life, body or health**, and under the **German Product Liability Act (ProdHaftG)** remains unaffected.
-
----
-
-## 9. EXPORT CONTROL
-
-The Software contains no cryptography beyond what Apple's macOS and the Sparkle framework provide by default. The export of macOS itself is governed by Apple's terms; you remain responsible for compliance with export-control laws applicable to your jurisdiction.
-
----
-
-## 10. TERMINATION
-
-This EULA is effective until terminated. It terminates automatically without notice if you fail to comply with any of its terms. You may also terminate it at any time by uninstalling AutoBrew. Upon termination you must cease all use of the Software and remove all copies in your control.
-
----
-
-## 11. GOVERNING LAW AND JURISDICTION
-
-This EULA is governed by the laws of the Federal Republic of Germany, excluding the UN Convention on Contracts for the International Sale of Goods (CISG). Mandatory consumer-protection law of the user's country of residence applies in addition.
-
-The non-exclusive place of jurisdiction is Bad Nauheim, Germany. Consumers may sue at their domicile where local law allows it.
-
----
-
-## 12. CONTACT
-
-Berger & Rosenstock GbR (trading as DigitalFreedom)
-Dieselstr. 22e
-61231 Bad Nauheim
-Germany
-Email: hello@digitalfreedom.co.za
-Website: https://digitalfreedom.co.za
-
----
-
-(c) 2026 DigitalFreedom — Berger & Rosenstock GbR.
+(c) 2025-2026 DigitalFreedom Global LLC. All rights reserved.

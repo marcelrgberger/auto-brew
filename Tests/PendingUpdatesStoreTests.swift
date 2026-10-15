@@ -18,11 +18,12 @@ final class PendingUpdatesStoreTests: XCTestCase {
         try await super.tearDown()
     }
 
-    private func make(_ token: String, version: String, decision: ApprovalDecision = .pending) -> PendingUpdate {
+    private func make(_ token: String, version: String, decision: ApprovalDecision = .pending,
+                      kind: PackageKind = .cask) -> PendingUpdate {
         PendingUpdate(
             token: token,
             displayName: token,
-            kind: .cask,
+            kind: kind,
             currentVersion: "1.0.0",
             availableVersion: version,
             bumpType: .major,
@@ -69,13 +70,18 @@ final class PendingUpdatesStoreTests: XCTestCase {
         XCTAssertTrue(store.updates.first?.decision.isPending ?? false)
     }
 
-    func testRemoveDropsListedTokens() {
+    func testRemoveDropsListedKeysOnly() {
+        // A cask and a formula may share a token; removing the cask's
+        // entry must leave the formula's decision alone.
         store.replace(with: [
-            make("vscode", version: "2.0.0"),
+            make("node", version: "2.0.0", decision: .approved(at: Date()), kind: .cask),
+            make("node", version: "22.0.0", decision: .rejected(at: Date()), kind: .formula),
             make("docker", version: "5.0.0")
         ])
-        store.remove(tokens: ["vscode"])
-        XCTAssertEqual(store.updates.map(\.token), ["docker"])
+        store.remove(keys: [PendingUpdatesStore.key(kind: .cask, token: "node")])
+        XCTAssertEqual(store.updates.map(\.token), ["node", "docker"])
+        XCTAssertEqual(store.updates.first?.kind, .formula)
+        XCTAssertTrue(store.updates.first?.decision.isRejected ?? false)
     }
 
     func testPendingCountOnlyCountsPendingDecisions() {
@@ -85,12 +91,12 @@ final class PendingUpdatesStoreTests: XCTestCase {
         XCTAssertEqual(store.pendingCount, 1)
     }
 
-    func testApprovedTokensIsBuiltFromApprovedEntries() {
+    func testApprovedKeysAreBuiltFromApprovedEntries() {
         store.replace(with: [
             make("vscode", version: "2.0.0", decision: .approved(at: Date())),
             make("docker", version: "5.0.0", decision: .pending)
         ])
-        XCTAssertEqual(store.approvedTokens, ["vscode"])
+        XCTAssertEqual(store.approvedKeys, [PendingUpdatesStore.key(kind: .cask, token: "vscode")])
     }
 
     func testPersistsAcrossInstances() {

@@ -14,8 +14,13 @@ final class LegalBundleAnchor {}
 /// routes the request to the user's language (or to `en.lproj` when missing).
 enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
     case privacy
+    case californiaNotice
     case terms
     case eula
+    case legalFramework
+    case supportPolicy
+    case securityInformation
+    case vulnerabilityDisclosure
     case impressum
     case trademark
     case openSource
@@ -27,11 +32,34 @@ enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
     var titleKey: String {
         switch self {
         case .privacy: return "Privacy Policy"
+        case .californiaNotice: return "California Notice at Collection"
         case .terms: return "Terms of Use"
         case .eula: return "EULA"
+        case .legalFramework: return "Legal Framework Overview"
+        case .supportPolicy: return "Support and Update Policy"
+        case .securityInformation: return "Security Information"
+        case .vulnerabilityDisclosure: return "Vulnerability Disclosure"
         case .impressum: return "Imprint"
         case .trademark: return "Trademark"
         case .openSource: return "Open-Source Licenses"
+        }
+    }
+
+    /// SF Symbol shown next to the document in the Settings legal hub and
+    /// in the Legal window's sidebar.
+    var systemImage: String {
+        switch self {
+        case .privacy: return "hand.raised"
+        case .californiaNotice: return "list.bullet.clipboard"
+        case .terms: return "doc.text"
+        case .eula: return "doc.badge.gearshape"
+        case .legalFramework: return "list.number"
+        case .supportPolicy: return "clock.arrow.circlepath"
+        case .securityInformation: return "lock.shield"
+        case .vulnerabilityDisclosure: return "ladybug"
+        case .impressum: return "building.columns"
+        case .trademark: return "r.square"
+        case .openSource: return "shippingbox"
         }
     }
 
@@ -41,8 +69,13 @@ enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
     var filename: String {
         switch self {
         case .privacy: return "PrivacyPolicy"
+        case .californiaNotice: return "CaliforniaNoticeAtCollection"
         case .terms: return "TermsOfUse"
         case .eula: return "EULA"
+        case .legalFramework: return "LegalFrameworkOverview"
+        case .supportPolicy: return "SupportAndUpdatePolicy"
+        case .securityInformation: return "SecurityInformation"
+        case .vulnerabilityDisclosure: return "VulnerabilityDisclosure"
         case .impressum: return "Impressum"
         case .trademark: return "Trademark"
         case .openSource: return "OpenSourceLicenses"
@@ -58,7 +91,13 @@ enum LegalDocument: String, CaseIterable, Identifiable, Sendable {
             return String(localized: "Document not available.")
         }
         do {
+            // Source/version headers and `verbatim` markers are HTML comments
+            // for maintaining the documents; MarkdownParser would show them
+            // as plain paragraphs, so they are removed before display. An
+            // unterminated `<!--` is removed through the end of the text.
             return try String(contentsOf: url, encoding: .utf8)
+                .replacingOccurrences(of: #"(?s)<!--.*?(?:-->|\z)"#, with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {
             legalLogger.error("LegalDocument: failed to read \(self.filename, privacy: .public).md: \(error.localizedDescription, privacy: .public)")
             return String(localized: "Document not available.")
