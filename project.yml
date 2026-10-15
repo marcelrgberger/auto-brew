@@ -3,7 +3,7 @@ options:
   bundleIdPrefix: za.co.digitalfreedom
   deploymentTarget:
     macOS: "14.0"
-  xcodeVersion: "26"
+  xcodeVersion: "27"
   minimumXcodeGenVersion: "2.42.0"
   generateEmptyDirectories: true
   groupSortPosition: top
