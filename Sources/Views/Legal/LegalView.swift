@@ -12,28 +12,22 @@ struct LegalView: View {
     @State private var blocksCache: [LegalDocument: [MarkdownBlock]] = [:]
 
     var body: some View {
-        let selection = Binding(
-            get: { navigation.requestedDocument },
-            set: { navigation.requestedDocument = $0 }
-        )
-
-        VStack(spacing: 0) {
-            // VoiceOver needs the real label even though we hide it visually,
-            // otherwise the segmented picker is announced as "Picker" with no
-            // context about what's being selected.
-            Picker("Legal document", selection: selection) {
-                ForEach(LegalDocument.allCases) { doc in
-                    Text(LocalizedStringKey(doc.titleKey)).tag(doc)
-                }
+        // Sidebar list instead of a segmented picker: with eleven
+        // documents a segmented control no longer fits the window, while a
+        // list scales with any number of documents and keeps every title
+        // readable in all languages.
+        NavigationSplitView {
+            List(LegalDocument.allCases, selection: Binding<LegalDocument?>(
+                get: { navigation.requestedDocument },
+                set: { if let doc = $0 { navigation.requestedDocument = doc } }
+            )) { doc in
+                Label(LocalizedStringKey(doc.titleKey), systemImage: doc.systemImage)
+                    .tag(doc)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            .listStyle(.sidebar)
             .accessibilityLabel(Text("Legal document"))
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-
-            Divider()
-
+            .navigationSplitViewColumnWidth(min: 200, ideal: 230, max: 300)
+        } detail: {
             // `.id(...)` on the ScrollView forces SwiftUI to rebuild the
             // scrollable container when the selected document changes, which
             // resets the scroll offset to the top — otherwise switching from

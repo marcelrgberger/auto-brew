@@ -9,6 +9,8 @@ enum BrewError: LocalizedError, Sendable {
     case updateFailed(String)
     case upgradeFailed(String)
     case cleanupFailed(String)
+    /// Another brew operation is already running; nothing was executed.
+    case busy
 
     var errorDescription: String? {
         switch self {
@@ -17,6 +19,7 @@ enum BrewError: LocalizedError, Sendable {
         case .updateFailed(let msg): String(localized: "Update failed: \(msg)")
         case .upgradeFailed(let msg): String(localized: "Upgrade failed: \(msg)")
         case .cleanupFailed(let msg): String(localized: "Cleanup failed: \(msg)")
+        case .busy: String(localized: "Homebrew is busy with another operation")
         }
     }
 }

@@ -1,106 +1,285 @@
+<!-- doc-id: EULA | lang: en | area: apps/documents | version: 1.1.1 | valid-from: 2026-10-13 | supersedes: 1.1.0; telephone number removed from § 19.8 | owner: Marcel R. G. Berger | next-review: 2027-08-31 -->
+<!-- generated-for: AutoBrew | generated: 2026-10-15 | source: legal/apps/documents/EULA.en.md | adaptations: direct distribution instead of app stores (§ 2, § 17.5, § 19, § 20, § 21), MIT License (§ 3, § 4, § 5, § 14, § 22), free of charge with paid-feature reservation (§ 6), Homebrew (§ 9) | translated-from: en -->
 # ENDBENUTZER-LIZENZVERTRAG (EULA)
 
-## AutoBrew
+## Weltweiter plattformübergreifender Lizenzvertrag
 
-**Gültig ab:** Mai 2026
-**Zuletzt aktualisiert:** Mai 2026
+**Anwendung:** AutoBrew
 
-Dieser Endbenutzer-Lizenzvertrag („EULA", „Vertrag") ist eine rechtsverbindliche Vereinbarung zwischen dem Nutzer („Nutzer", „Sie") und dem Herausgeber von AutoBrew, der **Berger & Rosenstock GbR**, handelnd unter der Marke **DigitalFreedom** („Anbieter", „wir", „uns", „unser").
+**Gültig ab:** 15. Oktober 2026
 
-Mit der Installation, dem Kopieren oder einer sonstigen Nutzung von AutoBrew (der „Software") erklärt sich der Nutzer mit den Bedingungen dieses EULA einverstanden.
-
----
-
-## 1. DIE SOFTWARE
-
-AutoBrew ist ein Menüleisten-Werkzeug für macOS, das Homebrew-Updates automatisiert, den Homebrew-Cask-Katalog durchsucht und App-Snapshots verwaltet. Die Software wird unter der Marke DigitalFreedom veröffentlicht und dem Nutzer zu den nachfolgenden Bedingungen lizenziert.
-
-### 1.1 Lizenzmodell
-
-AutoBrew wird als **kostenfreie Open-Source-Software** unter der MIT-Lizenz veröffentlicht. Der vollständige Text der MIT-Lizenz ist in Abschnitt 6 sowie im Dokument [Open-Source-Lizenzen](OpenSourceLicenses.md) wiedergegeben. Die MIT-Lizenz regelt den Quellcode; dieser EULA regelt die Verbreitung der Binärdatei und die Pflichten des Nutzers im Umgang mit der Binärdatei.
-
-### 1.2 Vorbehalt hinsichtlich künftiger kostenpflichtiger Funktionen
-
-Der Anbieter behält sich vor, jederzeit optionale **kostenpflichtige Funktionen**, **kostenpflichtige Editionen** oder **kostenpflichtige Zusatzdienste** einzuführen. Für jede solche künftige Änderung gilt:
-
-- Sie wird vorab in der Anwendungsoberfläche sowie in den offiziellen Release-Notes angekündigt
-- Sie wirkt ausschließlich zukunftsgerichtet (d. h. die bestehenden kostenfreien Funktionen einer bereits installierten Version bleiben kostenfrei nutzbar)
-- Der Open-Source-Kern bleibt unter der MIT-Lizenz — der Quellcode unter [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew) bleibt unabhängig von etwaigen kostenpflichtigen Ergänzungen unter derselben Lizenz verfügbar
-
-Das derzeitige Fehlen jeglicher kostenpflichtiger Funktionen begründet keine Garantie, dass AutoBrew dauerhaft frei von kostenpflichtigen Funktionen bleiben wird.
-
-### 1.3 Open-Source-Umfang vs. kostenpflichtige Funktionen
-
-Die MIT-Lizenz gilt für den AutoBrew-Quellcode in der Form, in der er im offiziellen Repository unter [github.com/marcelrgberger/auto-brew](https://github.com/marcelrgberger/auto-brew) veröffentlicht ist. **Forks und abgeleitete Werke dieses Codebestands sind ausdrücklich gestattet** unter den Bedingungen der MIT-Lizenz — wir begrüßen es, wenn die Community auf AutoBrew aufbaut.
-
-Etwaige **künftige kostenpflichtige Funktionen**, **kostenpflichtige Editionen** oder **kostenpflichtige Zusatzdienste** (siehe Abschnitt 1.2) werden unter einer **gesonderten proprietären Lizenz** veröffentlicht und sind **nicht** Bestandteil des unter MIT lizenzierten Codebestands. Insbesondere gilt:
-
-- Der Quellcode kostenpflichtiger Funktionen wird nicht im MIT-Repository veröffentlicht
-- Das Kopieren, Dekompilieren, Reverse Engineering oder sonstige Reproduzieren der Implementierung einer von AutoBrew ausgelieferten kostenpflichtigen Funktion ist nicht gestattet, ausgenommen in dem nach zwingendem Recht ausdrücklich zulässigen Umfang (z. B. § 69e UrhG bzw. Art. 6 der EU-Richtlinie 2009/24/EG zur Herstellung von Interoperabilität)
-- Diese Beschränkung bezieht sich gezielt auf die Implementierung der kostenpflichtigen Funktion — sie schränkt das Recht eines Dritten, vergleichbare Funktionalität unabhängig und von Grund auf neu zu entwickeln, nicht ein
-
-Die Marken **„AutoBrew"** und **„DigitalFreedom"** dürfen von Forks oder abgeleiteten Werken, die konkurrierende kostenpflichtige Funktionen anbieten, nicht verwendet werden — siehe Abschnitt 3 dieses EULA sowie das Dokument [Markenhinweis](Trademark.md).
-
-### 1.4 Vertriebskanäle
-
-Die offizielle AutoBrew-Binärdatei wird ausschließlich über folgende Kanäle vertrieben:
-
-- **GitHub Releases** unter [github.com/marcelrgberger/auto-brew/releases](https://github.com/marcelrgberger/auto-brew/releases) — notarisierte DMG-Dateien, signiert mit dem Apple-Developer-ID-Zertifikat
-- Den **Homebrew-Tap** unter [github.com/marcelrgberger/homebrew-tap](https://github.com/marcelrgberger/homebrew-tap) — `brew install --cask autobrew`
-
-AutoBrew wird **nicht** über den Apple App Store, den Google Play Store oder ein sonstiges Download-Portal Dritter vertrieben. Wurde AutoBrew aus einer anderen Quelle bezogen, ist die Binärdatei nicht verifiziert und nicht von diesem EULA erfasst.
+**Herausgeber:**
+DigitalFreedom
+Eine Marke der DigitalFreedom Global LLC
+30 N Gould St, Ste N
+Sheridan, WY 82801
+United States
+Kontakt: hello@digitalfreedom.co.za
+Website: https://digitalfreedom.co.za
 
 ---
 
-## 2. LIZENZGEWÄHRUNG
+## 1. ANNAHME DER BEDINGUNGEN
 
-Vorbehaltlich der Einhaltung dieses EULA und der MIT-Lizenz gewährt der Anbieter dem Nutzer eine weltweite, gebührenfreie, nicht-ausschließliche Lizenz zu folgenden Zwecken:
+Durch die Installation, den Aufruf oder die Nutzung von AutoBrew, seiner Software oder damit verbundener Dienste („die App“) erklären Sie sich mit diesem Vertrag einverstanden.
 
-- Installation und Ausführung von AutoBrew auf einer beliebigen Anzahl von Macs, die der Nutzer besitzt oder über die er die Verfügungsgewalt hat
-- Veränderung des Quellcodes und Erstellung abgeleiteter Werke
-- Weitergabe der Software in Quell- oder Binärform
+Wenn Sie nicht einverstanden sind, dürfen Sie die App nicht nutzen.
 
 ---
 
-## 3. BESCHRÄNKUNGEN
+## 2. ANWENDUNGSBEREICH
 
-Der Nutzer darf nicht:
+Dieser Vertrag gilt für die offiziellen AutoBrew-Binärdateien, die der Herausgeber über folgende Kanäle vertreibt:
 
-- Bei der Weitergabe die Urheberrechtsvermerke, den MIT-Lizenztext oder die eingebetteten Lizenzhinweise von Sparkle / bsdiff / sais-lite / pdqsort entfernen, verändern oder verschleiern
-- Die Marken **„AutoBrew"** und **„DigitalFreedom"** im Namen eines Forks oder abgeleiteten Werks ohne unsere vorherige schriftliche Zustimmung verwenden (siehe Dokument [Markenhinweis](Trademark.md))
-- Den eigenen Fork als offizielle AutoBrew-Distribution ausgeben
+- GitHub Releases unter https://github.com/marcelrgberger/auto-brew/releases — notarisierte Disk-Images, signiert mit einem Apple-Developer-ID-Zertifikat
+- den Homebrew-Tap unter https://github.com/marcelrgberger/homebrew-tap
 
----
+Die App wird nicht über den Apple App Store, den Google Play Store oder ein anderes Downloadportal vertrieben. Eine anderweitig bezogene Binärdatei ist keine offizielle Distribution des Herausgebers.
 
-## 4. DRITTKOMPONENTEN
+Die App wird als kostenlose Open-Source-Software bereitgestellt.
 
-AutoBrew bündelt die folgenden Open-Source-Komponenten, die jeweils ihrer eigenen Lizenz unterliegen (vollständige Liste und wortgetreue Lizenztexte siehe Dokument [Open-Source-Lizenzen](OpenSourceLicenses.md)):
+### 2.1 Weltweiter Geltungsbereich
 
-- **Sparkle** (MIT) — in-app Auto-Updates
-- **bsdiff / bspatch** (BSD-2-Clause) — in Sparkle gebündelt für Binär-Deltas
-- **sais-lite** (MIT) — in Sparkle gebündelt
-- **pdqsort** (zlib) — in Sparkle gebündelt
-
-AutoBrew nutzt zur Laufzeit zusätzlich **Homebrew** (BSD-2-Clause) — aufgerufen über Prozessstart, nicht eingebettet. Homebrew muss separat installiert sein; AutoBrew führt den Nutzer beim ersten Start durch die Installation.
-
-Die MIT-, BSD-2-Clause- und zlib-Lizenzen, die auf diese Komponenten anwendbar sind, bleiben unabhängig von diesem EULA in Kraft. Im Falle eines Konflikts zwischen diesem EULA und einer Open-Source-Lizenz geht die Open-Source-Lizenz für die betroffene Komponente vor.
+Die App kann in jedem Land heruntergeladen werden, von dem aus die oben genannten Kanäle erreichbar sind. Dieser Vertrag gilt weltweit für alle diese Nutzer, unabhängig davon, in welchem Land die App heruntergeladen, installiert oder genutzt wird. Der Herausgeber legt die Datenschutz-Grundverordnung der Europäischen Union (DSGVO) und das damit verbundene EU-Recht als Grundstandard zugrunde und wendet sie als weltweiten Mindeststandard an; zwingende Verbraucherschutzrechte und sonstige gesetzliche Rechte, die das Wohnsitzland des Nutzers gewährt, bleiben unberührt und gehen überall dort vor, wo sie einen weitergehenden Schutz bieten.
 
 ---
 
-## 5. KEINE ZAHLUNG, KEIN KONTO (DERZEITIGER STAND)
+## 3. LIZENZEINRÄUMUNG
 
-AutoBrew ist derzeit kostenfrei. Die Software erfordert weder Registrierung noch Anmeldung oder Zahlung, und zum Zeitpunkt dieses EULA gibt es keine In-App-Käufe, keine Abonnements, keine kostenpflichtigen Funktionen und keine Testperioden-Mechanik.
+Der Quellcode der App ist unter https://github.com/marcelrgberger/auto-brew unter der MIT-Lizenz veröffentlicht, die in Abschnitt 22 wiedergegeben ist. Die MIT-Lizenz regelt Ihre Rechte, Kopien der App zu nutzen, zu kopieren, zu verändern, zusammenzuführen, zu veröffentlichen, zu verbreiten, unterzulizenzieren und zu verkaufen. Nichts in diesem Vertrag schränkt die Rechte ein, die Ihnen die MIT-Lizenz einräumt.
 
-Der **Sponsor**-Link innerhalb von AutoBrew führt zu GitHub Sponsors und ist **vollständig freiwillig**. Jeder Beitrag wird als Spende behandelt und begründet keine weiteren Ansprüche.
+Vorbehaltlich dieses Vertrags räumt Ihnen der Herausgeber für die offiziellen Binärdateien eine Lizenz ein,
 
-**Vorbehalt:** Siehe Abschnitt 1.2 — der Anbieter behält sich vor, in Zukunft optionale kostenpflichtige Funktionen, kostenpflichtige Editionen oder kostenpflichtige Zusatzdienste einzuführen. Etwaige künftige kostenpflichtige Angebote gelten nur für Nutzer, die ausdrücklich opt-in zustimmen; die derzeit installierten kostenfreien Funktionen werden nicht rückwirkend hinter einer Bezahlschranke verborgen.
+- die App auf Geräten zu nutzen, die Ihnen gehören oder die Sie kontrollieren
+- auf die Funktionen bestimmungsgemäß zuzugreifen und sie zu nutzen
+
+Für Open-Source-Komponenten haben die jeweils anwendbaren Open-Source-Lizenzen Vorrang.
 
 ---
 
-## 6. MIT-LIZENZ (wortgetreu)
+## 4. OPEN-SOURCE-KOMPONENTEN
+
+Die App enthält Open-Source-Software.
+
+- Solche Komponenten unterliegen ihren jeweiligen Lizenzen
+- Dieser Vertrag setzt Rechte, die nach Open-Source-Lizenzen eingeräumt werden, weder außer Kraft noch schränkt er sie ein
+- Die Liste der Open-Source-Komponenten und ihre Lizenztexte enthält das mit der App ausgelieferte Dokument Open-Source-Lizenzen (Einstellungen → Rechtliches → Open-Source-Lizenzen)
+
+Sie sind für die Einhaltung der anwendbaren Open-Source-Lizenzen verantwortlich.
+
+---
+
+## 5. BESCHRÄNKUNGEN
+
+Sie dürfen nicht:
+
+- Sicherheits- oder Zugangskontrollmechanismen umgehen
+- die App rechtswidrig oder unter Verletzung von Rechten Dritter nutzen
+- bei der Weiterverbreitung die Urheberrechtsvermerke und Lizenztexte der App oder ihrer mitgelieferten Komponenten entfernen oder verändern
+- einen Fork oder ein abgeleitetes Werk als offizielle AutoBrew-Distribution ausgeben
+- die Marken **AutoBrew** und **DigitalFreedom**, die der DigitalFreedom Global LLC gehören, als Namen eines Forks oder abgeleiteten Werks, für ein konkurrierendes kostenpflichtiges Produkt oder einen solchen Dienst oder in einer Weise verwenden, die eine Billigung durch den Herausgeber nahelegt — die MIT-Lizenz räumt keine Markenrechte ein; beschreibende Bezugnahmen wie „Fork von AutoBrew“ bleiben zulässig (Markenrechtshinweis, Abschnitt 4)
+- proprietäre Komponenten, die künftig angeboten werden können (Abschnitt 6), zurückentwickeln (Reverse Engineering) oder dekompilieren, außer soweit gesetzlich zulässig
+
+---
+
+## 6. KOMMERZIELLE BEDINGUNGEN
+
+Die App wird kostenlos angeboten. Es gibt keine In-App-Käufe, keine Abonnements und keinen Zahlungsweg in der App.
+
+Der Link **Sponsor** in der App führt zu GitHub Sponsors und ist vollständig freiwillig. Ein Beitrag ist eine Spende und begründet keinen Anspruch auf Funktionen oder Support.
+
+**Vorbehalt für künftige kostenpflichtige Funktionen.** Der Herausgeber kann in künftigen Versionen optionale kostenpflichtige Funktionen, kostenpflichtige Editionen oder kostenpflichtige Zusatzdienste einführen. Ein solches Angebot wird vorab in der App und in den Versionshinweisen angekündigt, gilt erst ab diesem Zeitpunkt — kostenlose Funktionen einer bereits installierten Version bleiben kostenlos nutzbar — und lässt den unter der MIT-Lizenz veröffentlichten Quellcode unter dieser Lizenz verfügbar. Proprietäre kostenpflichtige Funktionen würden unter einer gesonderten Lizenz veröffentlicht, wären nicht Teil des MIT-lizenzierten Codes, und ihre Implementierung darf nicht kopiert, dekompiliert oder zurückentwickelt werden, außer soweit zwingendes Recht dies erlaubt (zum Beispiel Art. 6 der Richtlinie 2009/24/EG zur Herstellung der Interoperabilität). Das Recht jedes Dritten, vergleichbare Funktionen unabhängig zu entwickeln, bleibt unberührt. Die Bedingungen für ein kostenpflichtiges Angebot werden veröffentlicht, bevor es angeboten wird.
+
+---
+
+## 7. VERANTWORTUNG DES NUTZERS
+
+Sie allein sind verantwortlich für:
+
+- alle mit der App ausgeführten Aktivitäten
+- alle verarbeiteten, gespeicherten oder übertragenen Daten
+- die Einhaltung der anwendbaren Gesetze und Vorschriften
+
+Die Nutzung der App kann zu unbeabsichtigten Vorgängen führen, einschließlich der Veränderung oder Löschung von Daten.
+
+---
+
+## 8. DATEN UND DATENSCHUTZ
+
+Die App läuft auf Ihrem Mac. Sie speichert ihre Einstellungen, Caches und Snapshots lokal und kontaktiert die in der Datenschutzerklärung beschriebenen Dienste Dritter.
+
+Sofern nicht ausdrücklich anders angegeben:
+
+- können Daten lokal gespeichert oder über Dienste Dritter verarbeitet werden
+- übernimmt der Herausgeber keine Gewähr für die Sicherheit oder Integrität der Daten
+- sind Sie für Datensicherungen verantwortlich
+
+Für die Datenverarbeitung gilt eine gesonderte, mit der App ausgelieferte Datenschutzerklärung (Einstellungen → Rechtliches → Datenschutzerklärung).
+
+---
+
+## 9. DIENSTE DRITTER
+
+Die App kann mit Diensten Dritter interagieren. Insbesondere führt sie den Befehl `brew` der Homebrew-Installation auf Ihrem Mac aus, und Homebrew installiert, aktualisiert und entfernt von Dritten veröffentlichte Software.
+
+Der Herausgeber:
+
+- hat keine Kontrolle über Dienste Dritter
+- ist für deren Verfügbarkeit oder Verhalten nicht verantwortlich
+- haftet nicht für Schäden, die durch solche Dienste verursacht werden
+
+Die Nutzung von Diensten Dritter unterliegt deren Bedingungen.
+
+---
+
+## 10. GEWÄHRLEISTUNGSAUSSCHLUSS
+
+IM GESETZLICH GRÖSSTMÖGLICHEN UMFANG WIRD DIE APP „WIE BESEHEN“ OHNE GEWÄHRLEISTUNG JEGLICHER ART BEREITGESTELLT.
+
+Dies umfasst insbesondere, aber nicht ausschließlich:
+
+- MARKTGÄNGIGKEIT
+- EIGNUNG FÜR EINEN BESTIMMTEN ZWECK
+- RICHTIGKEIT ODER ZUVERLÄSSIGKEIT
+- SICHERHEIT ODER VERFÜGBARKEIT
+
+---
+
+## 11. HAFTUNGSBESCHRÄNKUNG
+
+IM GESETZLICH GRÖSSTMÖGLICHEN UMFANG HAFTET DER HERAUSGEBER NICHT FÜR:
+
+- INDIREKTE SCHÄDEN ODER FOLGESCHÄDEN
+- VERLUST VON DATEN, GEWINN ODER GESCHÄFT
+- SYSTEMAUSFÄLLE ODER SICHERHEITSVORFÄLLE
+
+DIE GESAMTHAFTUNG ÜBERSTEIGT NICHT DEN FÜR DIE APP GEZAHLTEN BETRAG (SOFERN EIN SOLCHER GEZAHLT WURDE).
+
+---
+
+## 12. NUTZUNG MIT HOHEM RISIKO
+
+Die App ist nicht bestimmt für den Einsatz in:
+
+- sicherheitskritischen Systemen
+- medizinischen Anwendungen
+- Systemen für den Finanzhandel
+- kritischen Infrastrukturen
+
+Die Nutzung in solchen Zusammenhängen erfolgt auf Ihr eigenes Risiko.
+
+---
+
+## 13. FREISTELLUNG
+
+Sie verpflichten sich, den Herausgeber von Ansprüchen freizustellen, die sich ergeben aus:
+
+- Ihrer Nutzung der App
+- einem Verstoß gegen diesen Vertrag
+- einem Verstoß gegen anwendbares Recht
+
+---
+
+## 14. BEENDIGUNG
+
+Der Herausgeber kann diesen Vertrag jederzeit beenden.
+
+Mit der Beendigung müssen Sie die Nutzung einstellen und alle Kopien der App löschen. Rechte, die Ihnen nach der MIT-Lizenz zustehen, werden durch eine Beendigung dieses Vertrags nicht berührt.
+
+---
+
+## 15. EXPORT UND SANKTIONEN
+
+Sie verpflichten sich, alle anwendbaren Exportkontroll- und Sanktionsvorschriften einzuhalten.
+
+---
+
+## 16. ANWENDBARES RECHT
+
+Dieser Vertrag unterliegt dem Recht des Bundesstaates Wyoming, Vereinigte Staaten von Amerika, unter Ausschluss seiner Kollisionsnormen und des UN-Übereinkommens über Verträge über den internationalen Warenkauf.
+
+Zwingende Verbraucherschutzgesetze Ihres Wohnsitzlandes bleiben unberührt.
+
+---
+
+## 17. REGIONALE BESTIMMUNGEN
+
+### 17.1 Europäische Union
+
+- Zwingende Verbraucherrechte (einschließlich Gewährleistungsrechten) werden nicht ausgeschlossen
+- Haftungsausschlüsse gelten nur, soweit nach EU-Recht zulässig
+
+### 17.2 Vereinigte Staaten
+
+- Einige Bundesstaaten lassen die Beschränkung bestimmter Gewährleistungen oder Haftungen nicht zu
+- In diesen Fällen gelten die Beschränkungen im größtmöglichen zulässigen Umfang
+
+### 17.3 Vereinigtes Königreich
+
+- Nichts schließt die Haftung für fahrlässig verursachten Tod oder Personenschäden aus
+- Die Schutzvorschriften des Consumer Rights Act bleiben unberührt
+
+### 17.4 Kanada
+
+- Verbraucherschutzgesetze unterscheiden sich je nach Provinz und können Teile dieses Vertrags verdrängen
+
+### 17.5 Australien und Neuseeland
+
+<!-- verbatim: ACL-prescribed-form | no-translate -->
+> Our goods and services come with guarantees that cannot be excluded under the Australian Consumer Law. For major failures with the service, you are entitled:
+>
+> - to cancel your service contract with us; and
+> - to a refund for the unused portion, or to compensation for its reduced value.
+>
+> You are also entitled to choose a refund or replacement for major failures with goods. If a failure with the goods or a service does not amount to a major failure, you are entitled to have the failure rectified in a reasonable time. If this is not done you are entitled to a refund for the goods and to cancel the contract for the service and obtain a refund of any unused portion. You are also entitled to be compensated for any other reasonably foreseeable loss or damage from a failure in the goods or service.
+<!-- /verbatim -->
+
+Der vorstehende Hinweis schränkt jeden Gewährleistungsausschluss und jede Haftungsbeschränkung in diesem Vertrag ein und geht ihnen vor. Die Garantien treffen den Herausgeber als Leistungserbringer (supplier) — die App wird direkt vom Herausgeber bereitgestellt, ohne dass ein Store als Verkäufer oder Vertreter handelt. Section 64 ACL und s. 43 des neuseeländischen Consumer Guarantees Act erklären jede abweichende Vereinbarung für nichtig.
+
+### 17.6 Sonstige Rechtsordnungen
+
+- Soweit örtliches Recht Bestimmungen dieses Vertrags einschränkt, gelten diese Bestimmungen nur im zulässigen Umfang
+
+---
+
+## 18. SALVATORISCHE KLAUSEL
+
+Ist eine Bestimmung unwirksam, bleibt der übrige Vertrag wirksam.
+
+---
+
+## 19. APPLE APP STORE — ZUSÄTZLICHE BEDINGUNGEN
+
+Dieser Abschnitt gilt **nur** für Kopien der App, die über den Apple App Store erworben wurden. Die App wird nicht über den Apple App Store vertrieben; Apples Mindestbedingungen für einen individuellen Lizenzvertrag finden auf sie daher keine Anwendung.
+
+**19.8 Name und Anschrift des Entwicklers.** Fragen, Beschwerden und Ansprüche im Zusammenhang mit der App sind zu richten an: DigitalFreedom Global LLC, 30 N Gould St, Ste N, Sheridan, WY 82801, United States · `support@digitalfreedom.co.za` · https://support.apps.digitalfreedom.co.za
+
+---
+
+## 20. GOOGLE PLAY — ZUSÄTZLICHE BEDINGUNGEN
+
+Dieser Abschnitt gilt **nur** für Kopien der App, die über Google Play erworben wurden. Die App wird nicht über Google Play vertrieben; dieser Abschnitt findet daher keine Anwendung.
+
+**20.4** Fragen, Beschwerden und Ansprüche im Zusammenhang mit der App sind an den Herausgeber unter der in § 19.8 genannten Anschrift zu richten.
+
+---
+
+## 21. GESAMTE VEREINBARUNG
+
+Dieser Vertrag stellt die gesamte Vereinbarung zwischen Ihnen und dem Herausgeber dar.
+
+Er ergänzt die MIT-Lizenz, unter der der Quellcode der App veröffentlicht ist. Bei einem Widerspruch zwischen diesem Vertrag und der MIT-Lizenz oder einer anderen Open-Source-Lizenz hat diese Lizenz für den von ihr erfassten Code Vorrang.
+
+---
+
+## 22. MIT-LIZENZ (WÖRTLICH)
+
+Der Lizenztext der App, wie er in ihrem Quell-Repository veröffentlicht ist (im englischen Original):
 
 ```
-Copyright (c) 2026 Marcel R. G. Berger
+MIT License
+
+Copyright (c) 2026 DigitalFreedom Global LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -117,57 +296,14 @@ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 ```
 
 ---
 
-## 7. GEWÄHRLEISTUNGSAUSSCHLUSS
-
-Die Software wird **„wie besehen"** ohne jegliche ausdrückliche oder konkludente Gewährleistung bereitgestellt. Der Anbieter gewährleistet nicht, dass die Software unterbrechungs- oder fehlerfrei läuft, dass das Zusammenwirken von AutoBrew mit Homebrew oder mit einzelnen Casks stets gelingt oder dass Snapshots jeden Aspekt des Anwendungszustands vollständig erfassen.
-
-Gesetzliche Gewährleistungsrechte, die nach dem örtlichen Verbraucherschutzrecht nicht vertraglich ausgeschlossen werden können (z. B. die deutsche Mängelhaftung gemäß §§ 434 ff. BGB, soweit anwendbar), bleiben unberührt.
+**MIT DER NUTZUNG DER APP STIMMEN SIE DIESEM VERTRAG ZU.**
 
 ---
 
-## 8. HAFTUNGSBESCHRÄNKUNG
-
-Soweit nach geltendem Recht zulässig, haftet der Anbieter nicht für indirekte, beiläufige, Folge-, exemplarische oder Strafschäden — einschließlich Datenverlust, entgangener Gewinne oder Schäden aus Drittsoftware (Homebrew, einzelne Casks), die über AutoBrew aufgerufen wird.
-
-Für Nutzer mit gewöhnlichem Aufenthalt in Deutschland oder der EU bleibt unsere Haftung für Schäden aus **grober Fahrlässigkeit oder Vorsatz**, für **Verletzungen des Lebens, des Körpers oder der Gesundheit** sowie nach dem **deutschen Produkthaftungsgesetz (ProdHaftG)** unberührt.
-
----
-
-## 9. EXPORTKONTROLLE
-
-Die Software enthält keine Kryptographie über das hinaus, was Apples macOS und das Sparkle-Framework standardmäßig bereitstellen. Der Export von macOS selbst unterliegt den Bedingungen von Apple; der Nutzer bleibt verantwortlich für die Einhaltung der für seine Rechtsordnung anwendbaren Exportkontrollvorschriften.
-
----
-
-## 10. BEENDIGUNG
-
-Dieser EULA gilt bis zur Beendigung. Er endet automatisch ohne Vorankündigung, wenn der Nutzer eine seiner Bestimmungen verletzt. Der Nutzer kann ihn zudem jederzeit durch Deinstallation von AutoBrew beenden. Nach Beendigung hat der Nutzer jede Nutzung der Software einzustellen und alle in seiner Verfügungsgewalt befindlichen Kopien zu entfernen.
-
----
-
-## 11. ANWENDBARES RECHT UND GERICHTSSTAND
-
-Dieser EULA unterliegt dem Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG). Zwingendes Verbraucherschutzrecht des Aufenthaltslandes des Nutzers gilt ergänzend.
-
-Der nicht-ausschließliche Gerichtsstand ist Bad Nauheim, Deutschland. Verbrauchern bleibt es unbenommen, an ihrem Wohnsitzgericht zu klagen, soweit das örtliche Recht dies zulässt.
-
----
-
-## 12. KONTAKT
-
-Berger & Rosenstock GbR (handelnd unter der Marke DigitalFreedom)
-Dieselstr. 22e
-61231 Bad Nauheim
-Deutschland
-E-Mail: hello@digitalfreedom.co.za
-Website: https://digitalfreedom.co.za
-
----
-
-(c) 2026 DigitalFreedom — Berger & Rosenstock GbR.
+(c) 2025-2026 DigitalFreedom Global LLC. Alle Rechte vorbehalten.

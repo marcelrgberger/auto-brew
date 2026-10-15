@@ -102,8 +102,20 @@ struct InstalledAppsView: View {
                 snapshotID: snapshotID,
                 outcome: .succeeded
             )
+            // The update is installed, so any pending decision for it
+            // (for instance an approval kept after a failed scheduled run)
+            // is settled.
+            PendingUpdatesStore.shared.remove(keys: [PendingUpdatesStore.key(kind: .cask, token: token)])
             await store.refresh()
         } catch {
+            // Continue the backoff of an earlier automatic failure instead
+            // of resetting it; a fresh failure schedules the first retry.
+            let retry = UpgradeHistoryEntry.retryState(
+                after: .failed,
+                token: token,
+                history: UpgradeHistoryStore.shared.entries,
+                now: Date()
+            )
             PreUpgradeSnapshot.record(
                 token: token,
                 displayName: app.displayName,
@@ -111,7 +123,9 @@ struct InstalledAppsView: View {
                 fromVersion: fromVersion,
                 toVersion: toVersion,
                 snapshotID: snapshotID,
-                outcome: .failed
+                outcome: .failed,
+                retryCount: retry.retryCount,
+                nextRetryAt: retry.nextRetryAt
             )
             operationError = error.localizedDescription
         }

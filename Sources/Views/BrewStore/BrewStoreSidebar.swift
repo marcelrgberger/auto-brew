@@ -63,7 +63,7 @@ struct BrewStoreSidebar: View {
                     externalLinkRow(
                         title: String(localized: "Help & Support"),
                         systemImage: "questionmark.circle",
-                        url: "https://support.digitalfreedom.co.za/help/767340152"
+                        url: "https://support.apps.digitalfreedom.co.za"
                     )
                     externalLinkRow(
                         title: String(localized: "Sponsor this Project"),

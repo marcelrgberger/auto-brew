@@ -54,9 +54,12 @@ struct UpgradeHistoryView: View {
 
     private var list: some View {
         ScrollView {
+            // Only the newest row per cask can still be retried; older
+            // failures were superseded by a later attempt.
+            let latestIDs = Set(UpgradeHistoryEntry.latestPerToken(in: historyStore.entries).map(\.id))
             LazyVStack(spacing: 8) {
                 ForEach(historyStore.entries) { entry in
-                    row(for: entry)
+                    row(for: entry, isLatest: latestIDs.contains(entry.id))
                 }
             }
             .padding(16)
@@ -64,7 +67,7 @@ struct UpgradeHistoryView: View {
     }
 
     @ViewBuilder
-    private func row(for entry: UpgradeHistoryEntry) -> some View {
+    private func row(for entry: UpgradeHistoryEntry, isLatest: Bool) -> some View {
         HStack(alignment: .center, spacing: 12) {
             statusIcon(for: entry)
 
@@ -84,7 +87,7 @@ struct UpgradeHistoryView: View {
                         .foregroundStyle(.secondary)
                 }
                 .font(.callout)
-                retryBadge(for: entry)
+                retryBadge(for: entry, isLatest: isLatest)
             }
 
             Spacer()
@@ -96,9 +99,9 @@ struct UpgradeHistoryView: View {
     }
 
     @ViewBuilder
-    private func retryBadge(for entry: UpgradeHistoryEntry) -> some View {
+    private func retryBadge(for entry: UpgradeHistoryEntry, isLatest: Bool) -> some View {
         if entry.outcome == .failed {
-            if let nextRetry = entry.nextRetryAt, nextRetry > Date() {
+            if isLatest, let nextRetry = entry.nextRetryAt, nextRetry > Date() {
                 Label {
                     Text(String(localized: "Auto-retry \(nextRetry, format: .relative(presentation: .named))"))
                 } icon: {
@@ -107,7 +110,7 @@ struct UpgradeHistoryView: View {
                 .font(.caption2)
                 .foregroundStyle(.orange)
                 .help(String(localized: "AutoBrew will retry this upgrade automatically. Backoff: 1 h, then 4 h, then 12 h — up to three attempts."))
-            } else if entry.retryCount >= UpgradeHistoryEntry.maxRetries {
+            } else if entry.nextRetryAt == nil, entry.retryCount >= UpgradeHistoryEntry.maxRetries {
                 Label {
                     Text(String(localized: "Retries exhausted"))
                 } icon: {

@@ -119,7 +119,10 @@ final class BrewManager {
     /// an empty map.
     @discardableResult
     func runUpgrade(formulae: [String]?, casks: [String]?) async throws -> [String: CaskUpgradeOutcome] {
-        guard !isRunning else { return [:] }
+        // Throw rather than return an empty map: callers record history
+        // and drop approvals from the result, which must not happen for a
+        // run that never started.
+        guard !isRunning else { throw BrewError.busy }
         guard let brew = brewExecutable, let path = brewPath else {
             throw BrewError.notFound
         }

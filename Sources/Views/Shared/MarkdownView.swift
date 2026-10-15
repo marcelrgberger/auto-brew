@@ -197,16 +197,27 @@ enum MarkdownParser {
 
         while index < rawLines.count {
             let rawLine = rawLines[index]
-            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            var line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Blockquote marker — the legal templates quote statutory text
+            // (e.g. the Australian Consumer Law notice) as `> ...`. Unwrap it
+            // so the quoted paragraphs and bullets render as normal blocks
+            // instead of showing a literal `>`.
+            let isQuoted = line.hasPrefix(">")
+            if isQuoted {
+                line = String(line.dropFirst()).trimmingCharacters(in: .whitespaces)
+            }
 
             // Fenced code block — preserve interior whitespace verbatim, do
             // not trim. Opening fence may carry a language tag we discard.
+            // A fence opened inside a quote is read with the quote marker
+            // removed from every interior line, so its closing `> ```` is
+            // recognised the same way the opening one was.
             if line.hasPrefix("```") {
                 flushAll()
                 var codeLines: [String] = []
                 index += 1
                 while index < rawLines.count {
-                    let next = rawLines[index]
+                    let next = isQuoted ? unquote(rawLines[index]) : rawLines[index]
                     if next.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("```") {
                         index += 1
                         break
@@ -295,6 +306,17 @@ enum MarkdownParser {
 
         flushAll()
         return blocks
+    }
+
+    /// Removes a leading blockquote marker (`>` plus one optional space)
+    /// while keeping the remaining indentation, for lines inside a quoted
+    /// code block. Lines without a marker are returned unchanged.
+    private static func unquote(_ rawLine: String) -> String {
+        let leading = rawLine.prefix(while: { $0 == " " || $0 == "\t" })
+        let rest = rawLine.dropFirst(leading.count)
+        guard rest.hasPrefix(">") else { return rawLine }
+        let afterMarker = rest.dropFirst()
+        return String(afterMarker.hasPrefix(" ") ? afterMarker.dropFirst() : afterMarker)
     }
 
     /// Recognises `1. text`, `42. text`, etc. Returns the trimmed text after
