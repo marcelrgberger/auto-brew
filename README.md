@@ -605,7 +605,7 @@ Older releases (macOS 13 Ventura and earlier) are not supported — AutoBrew rel
 
 ### Build requirements (developers only)
 
-- Xcode 26+ (the macOS 26 SDK is required because the UI references Liquid Glass APIs behind `if #available(macOS 26, *)` gates — older SDKs cannot resolve the symbols even though the binary still deploys to macOS 14+)
+- Xcode 27.0. Every CI build — dev check, beta and release — selects Xcode 27.0 on the GitHub `xcode-27` runner image (`setup-xcode` with `xcode-version: '27.0'`); use the same version locally so local and CI builds compile identically. `project.yml` sets `xcodeVersion: "27"`, which only marks the generated project as current for Xcode 27 and does not select the compiler. The macOS 26 SDK or newer is required because the UI references Liquid Glass APIs behind `if #available(macOS 26, *)` gates — older SDKs cannot resolve the symbols even though the binary still deploys to macOS 14+)
 - Swift 6.0
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 
@@ -1576,7 +1576,7 @@ AutoBrew ships a single binary that targets macOS 14 (Sonoma) and up, but picks 
 | `adaptiveProminentButtonStyle()` | `.buttonStyle(.glassProminent)` | `.buttonStyle(.borderedProminent)` |
 | `adaptiveBorderedButtonStyle()` | `.buttonStyle(.glass)` | `.buttonStyle(.bordered)` |
 
-Most chrome goes through these helpers, so a new platform tier or a tighter fallback is mostly a change in one place. Not every call-site does: a few views still use plain SwiftUI styles directly (for example `.buttonStyle(.bordered)` in `UpgradeHistoryView` and `.symbolEffect(.pulse)` on the mug in `MenuBarView`), and those are not adapted per platform. Building the project still requires Xcode 26+ because the Liquid Glass symbols (`glassEffect`, `.glass`, `.glassProminent`) come from the macOS 26 SDK — but the produced binary deploys cleanly to macOS 14.
+Most chrome goes through these helpers, so a new platform tier or a tighter fallback is mostly a change in one place. Not every call-site does: a few views still use plain SwiftUI styles directly (for example `.buttonStyle(.bordered)` in `UpgradeHistoryView` and `.symbolEffect(.pulse)` on the mug in `MenuBarView`), and those are not adapted per platform. Building the project needs at least the macOS 26 SDK (the project builds with Xcode 27.0, see Build requirements) because the Liquid Glass symbols (`glassEffect`, `.glass`, `.glassProminent`) come from the macOS 26 SDK — but the produced binary deploys cleanly to macOS 14.
 
 ## Project Structure
 

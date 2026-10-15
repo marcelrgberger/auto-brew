@@ -1,10 +1,10 @@
 <!-- doc-id: CRA_USER_INFORMATION | lang: en | area: apps/documents | version: 1.0.0 | valid-from: 2026-09-01 | supersedes: none | owner: Marcel R. G. Berger | next-review: 2027-06-01 -->
-<!-- generated-for: AutoBrew | generated: 2026-10-15 | source: legal/apps/documents/CRA_USER_INFORMATION.en.md | SBOM: none published (no SBOM found in the repository); portfolio transport-encryption sentence replaced by AutoBrew facts (§ 4); placeholders: APP_NAME=AutoBrew, APP_VERSION=2.5.3, BUNDLE_ID=za.co.digitalfreedom.AutoBrew, SUPPORT_END=October 2031 for 2.5.3 (GitHub release 2026-10-15) and five years from release for later versions, APP_DOMAIN: no product domain (§ 6 states that the declaration is not yet issued), AUTH_METHOD=none, storage=on the Mac; adaptations: direct distribution and Sparkle updates (§ 3, § 8), generator instruction in the header replaced by a user-facing statement, sibling links replaced by document names | translated-from: en -->
+<!-- generated-for: AutoBrew | generated: 2026-10-15 | source: legal/apps/documents/CRA_USER_INFORMATION.en.md | SBOM: none published (no SBOM found in the repository); portfolio transport-encryption sentence replaced by AutoBrew facts (§ 4); placeholders: APP_NAME=AutoBrew, APP_VERSION=2.5.4, BUNDLE_ID=za.co.digitalfreedom.AutoBrew, SUPPORT_END=October 2031 for 2.5.4 (GitHub release 2026-10-15) and five years from release for later versions, APP_DOMAIN: no product domain (§ 6 states that the declaration is not yet issued), AUTH_METHOD=none, storage=on the Mac; adaptations: direct distribution and Sparkle updates (§ 3, § 8), generator instruction in the header replaced by a user-facing statement, sibling links replaced by document names | translated-from: en -->
 # INFORMACIÓN DE SEGURIDAD DE ESTE PRODUCTO
 
 ## Información e instrucciones para el usuario — Anexo II, Reglamento (UE) 2024/2847 (Reglamento de Ciberresiliencia)
 
-**Producto:** AutoBrew, versión 2.5.3 y posteriores
+**Producto:** AutoBrew, versión 2.5.4 y posteriores
 **Aplicable desde:** el Anexo II del Reglamento de Ciberresiliencia se aplica a los productos introducidos en el mercado de la UE a partir del
 **11 de diciembre de 2027**, y antes a cualquier producto existente que sea objeto de una modificación sustancial.
 Esta información se facilita para AutoBrew con antelación a esa fecha.
@@ -50,7 +50,7 @@ La declaración UE de conformidad es obligatoria a partir del 11 de diciembre de
 
 ## 7. Soporte técnico y periodo de soporte
 
-Las vulnerabilidades de seguridad se gestionan y se proporcionan actualizaciones de seguridad **al menos hasta octubre de 2031 para la versión 2.5.3** (publicada en GitHub Releases el 15 de octubre de 2026) y, para cada versión posterior, al menos hasta el mismo mes cinco años después de que esa versión se publique en GitHub Releases.
+Las vulnerabilidades de seguridad se gestionan y se proporcionan actualizaciones de seguridad **al menos hasta octubre de 2031 para la versión 2.5.4** (publicada en GitHub Releases el 15 de octubre de 2026) y, para cada versión posterior, al menos hasta el mismo mes cinco años después de que esa versión se publique en GitHub Releases.
 El compromiso general y lo que incluye el "soporte" figuran en la Política de soporte y actualizaciones (Ajustes → Legal → Política de soporte y actualizaciones). Solicitudes de soporte:
 <https://support.apps.digitalfreedom.co.za>.
 
