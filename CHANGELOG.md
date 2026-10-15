@@ -13,6 +13,8 @@ user-facing, and free of internal jargon.
 
 ## [Unreleased]
 
+## [2.5.3] — 2026-10-15
+
 ### Added
 - **Expanded legal hub.** Five new documents sit next to the existing ones: Legal Framework Overview, Support and Update Policy, Security Information, Vulnerability Disclosure and the California Notice at Collection — eleven in total. The Legal window now lists them in a sidebar instead of a segmented picker, so every title stays readable in all languages.
 - **Legal documents in every app language.** All eleven legal documents are now available in English, German, French, Italian, Dutch, Polish, Portuguese (Brazil) and Spanish.
@@ -117,7 +119,11 @@ user-facing, and free of internal jargon.
 ### Added
 - First public release. Menu-bar app that orchestrates `brew update → outdated → policy gate → upgrade → cleanup` with idle or scheduled triggers, sleep/wake recovery, and a selective per-bump-type update policy.
 
-[Unreleased]: https://github.com/marcelrgberger/auto-brew/compare/v2.4.0...HEAD
+[Unreleased]: https://github.com/marcelrgberger/auto-brew/compare/v2.5.3...HEAD
+[2.5.3]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.3
+[2.5.2]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.2
+[2.5.1]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.1
+[2.5.0]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.5.0
 [2.4.0]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.4.0
 [2.3.0]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.3.0
 [2.2.2]: https://github.com/marcelrgberger/auto-brew/releases/tag/v2.2.2
