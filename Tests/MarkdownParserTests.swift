@@ -57,4 +57,19 @@ final class MarkdownParserTests: XCTestCase {
             .paragraph("Closing paragraph.")
         ])
     }
+
+    func testBlockquoteMarkersAreUnwrapped() {
+        let blocks = MarkdownParser.parse("> Quoted text\n>\n> - first\n> - second")
+        XCTAssertEqual(blocks, [
+            .paragraph("Quoted text"),
+            .bulletList(["first", "second"])
+        ])
+    }
+    func testQuotedCodeFenceClosesInsideQuote() {
+        let blocks = MarkdownParser.parse("> ```\n> line one\n>   indented\n> ```\n\nAfter the quote.")
+        XCTAssertEqual(blocks, [
+            .codeBlock("line one\n  indented"),
+            .paragraph("After the quote.")
+        ])
+    }
 }

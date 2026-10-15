@@ -14,7 +14,12 @@ struct SettingsView: View {
     var onBack: () -> Void
 
     var body: some View {
-        ScrollView {
+        // Header stays fixed; the Form provides its own scrolling. Nesting
+        // a grouped Form inside a ScrollView gives SwiftUI no definite
+        // intrinsic height, which on macOS 26 collapses the MenuBarExtra
+        // `.window` popover to a single row. A plain VStack with a fixed
+        // frame keeps the popover at a stable size.
+        VStack(spacing: 0) {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
@@ -130,8 +135,9 @@ struct SettingsView: View {
                         Text(String(localized: "Snapshot storage"))
                         Spacer()
                         Button(String(localized: "Open in Finder")) {
-                            let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-                                .appendingPathComponent("AutoBrew/Snapshots")
+                            // Open the root snapshots are actually written to, so an
+                            // external storage location is honoured here too.
+                            let url = SnapshotService.shared.storageRoot
                             try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
                             NSWorkspace.shared.open(url)
                         }
@@ -247,10 +253,10 @@ struct SettingsView: View {
                     HStack {
                         Text("Operated by")
                         Spacer()
-                        Text("Berger & Rosenstock GbR")
+                        Text("DigitalFreedom Global LLC")
                             .foregroundStyle(.secondary)
                     }
-                    Link(destination: URL(string: "https://support.digitalfreedom.co.za/help/767340152")!) {
+                    Link(destination: URL(string: "https://support.apps.digitalfreedom.co.za")!) {
                         HStack {
                             Label("Help & Support", systemImage: "questionmark.circle")
                             Spacer()
@@ -304,18 +310,11 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
         }
-        .frame(maxWidth: 320, maxHeight: 460)
+        .frame(width: 320, height: 460)
     }
 
     private func icon(for document: LegalDocument) -> String {
-        switch document {
-        case .privacy: return "hand.raised"
-        case .terms: return "doc.text"
-        case .eula: return "doc.badge.gearshape"
-        case .impressum: return "building.columns"
-        case .trademark: return "r.square"
-        case .openSource: return "shippingbox"
-        }
+        document.systemImage
     }
 
     /// Reads the on-disk icon cache directly so the size shown reflects

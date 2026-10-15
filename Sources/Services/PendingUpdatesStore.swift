@@ -67,7 +67,12 @@ final class PendingUpdatesStore {
     }
 
     private static func key(for update: PendingUpdate) -> String {
-        "\(update.kind.rawValue)::\(update.token)"
+        key(kind: update.kind, token: update.token)
+    }
+
+    /// Identity of a pending entry: a cask and a formula may share a token.
+    static func key(kind: PackageKind, token: String) -> String {
+        "\(kind.rawValue)::\(token)"
     }
 
     func approve(_ id: PendingUpdate.ID, now: Date = Date()) {
@@ -82,19 +87,17 @@ final class PendingUpdatesStore {
         update(id) { $0.decision = .pending }
     }
 
-    /// Removes entries whose decision has been carried out (approved →
-    /// installed) or whose package is no longer outdated. Called after a
-    /// scheduler run.
-    func remove(tokens: Set<String>) {
-        guard !tokens.isEmpty else { return }
-        updates.removeAll { tokens.contains($0.token) }
+    /// Removes the entries whose `(kind, token)` key is in `keys`; see
+    /// `key(kind:token:)`.
+    func remove(keys: Set<String>) {
+        guard !keys.isEmpty else { return }
+        updates.removeAll { keys.contains(Self.key(for: $0)) }
         save()
     }
 
-    /// Returns the tokens of currently approved updates so the scheduler can
-    /// fold them into the next `brew upgrade`.
-    var approvedTokens: [String] {
-        updates.compactMap { $0.decision.isApproved ? $0.token : nil }
+    /// `(kind, token)` keys of the entries currently approved.
+    var approvedKeys: Set<String> {
+        Set(updates.filter { $0.decision.isApproved }.map(Self.key(for:)))
     }
 
     // MARK: - Persistence
