@@ -605,7 +605,7 @@ Older releases (macOS 13 Ventura and earlier) are not supported — AutoBrew rel
 
 ### Build requirements (developers only)
 
-- Xcode 26+ (the macOS 26 SDK is required because the UI references Liquid Glass APIs behind `if #available(macOS 26, *)` gates — older SDKs cannot resolve the symbols even though the binary still deploys to macOS 14+)
+- Xcode 27 (`project.yml` pins `xcodeVersion: "27"`; CI builds with Xcode 27.0 on the GitHub `xcode-27` runner image). The macOS 26 SDK or newer is required because the UI references Liquid Glass APIs behind `if #available(macOS 26, *)` gates — older SDKs cannot resolve the symbols even though the binary still deploys to macOS 14+)
 - Swift 6.0
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)
 
