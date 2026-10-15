@@ -124,4 +124,48 @@ extension UpgradeHistoryEntry {
               previousRetryCount < backoffSchedule.count else { return nil }
         return now.addingTimeInterval(backoffSchedule[previousRetryCount])
     }
+
+    /// Entries the retry pass should re-run now. Only the newest entry
+    /// per token counts: once a later attempt succeeded, or failed with
+    /// a backoff window still in the future, older failed rows for the
+    /// same token must not trigger another run. `entries` is ordered
+    /// newest first, as `UpgradeHistoryStore` keeps it. An exhausted
+    /// budget is encoded as `nextRetryAt == nil` (see `retryState`).
+    static func retryCandidates(in entries: [UpgradeHistoryEntry], now: Date) -> [UpgradeHistoryEntry] {
+        latestPerToken(in: entries).filter { entry in
+            guard entry.outcome == .failed, let nextRetryAt = entry.nextRetryAt else { return false }
+            return nextRetryAt <= now
+        }
+    }
+
+    /// The newest entry of each token, in their original order.
+    /// `entries` is ordered newest first, as `UpgradeHistoryStore` keeps it.
+    static func latestPerToken(in entries: [UpgradeHistoryEntry]) -> [UpgradeHistoryEntry] {
+        var seen = Set<String>()
+        return entries.filter { seen.insert($0.token).inserted }
+    }
+
+    /// Retry state for a new history row with `outcome`, derived from the
+    /// newest earlier row of `token` in `history` (newest first): its count
+    /// carries over only when that row failed, so a success in between
+    /// starts a fresh budget. Success and unclear outcomes reset the
+    /// counter. Failures increment
+    /// it and schedule the next backoff window: the first failure retries
+    /// after 1 h, the next after 4 h, then 12 h; the failure after that is
+    /// sticky (`nextRetryAt == nil`) and keeps the saturated count so the
+    /// UI can show "Retries exhausted".
+    static func retryState(after outcome: CaskUpgradeOutcome,
+                           token: String,
+                           history: [UpgradeHistoryEntry],
+                           now: Date) -> (retryCount: Int, nextRetryAt: Date?) {
+        switch outcome {
+        case .succeeded, .attempted:
+            return (0, nil)
+        case .failed:
+            let previous = history.first(where: { $0.token == token })
+            let previousRetryCount = previous?.outcome == .failed ? previous?.retryCount ?? 0 : 0
+            let nextRetryAt = nextRetryDate(previousRetryCount: previousRetryCount, now: now)
+            return (min(previousRetryCount + 1, maxRetries), nextRetryAt)
+        }
+    }
 }
