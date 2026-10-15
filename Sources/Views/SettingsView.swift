@@ -253,10 +253,10 @@ struct SettingsView: View {
                     HStack {
                         Text("Operated by")
                         Spacer()
-                        Text("Berger & Rosenstock GbR")
+                        Text("DigitalFreedom Global LLC")
                             .foregroundStyle(.secondary)
                     }
-                    Link(destination: URL(string: "https://support.digitalfreedom.co.za/help/767340152")!) {
+                    Link(destination: URL(string: "https://support.apps.digitalfreedom.co.za")!) {
                         HStack {
                             Label("Help & Support", systemImage: "questionmark.circle")
                             Spacer()
@@ -314,14 +314,7 @@ struct SettingsView: View {
     }
 
     private func icon(for document: LegalDocument) -> String {
-        switch document {
-        case .privacy: return "hand.raised"
-        case .terms: return "doc.text"
-        case .eula: return "doc.badge.gearshape"
-        case .impressum: return "building.columns"
-        case .trademark: return "r.square"
-        case .openSource: return "shippingbox"
-        }
+        document.systemImage
     }
 
     /// Reads the on-disk icon cache directly so the size shown reflects

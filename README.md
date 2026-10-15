@@ -1285,4 +1285,4 @@ If you find AutoBrew useful, consider [sponsoring the project](https://github.co
 
 MIT License — see [LICENSE](LICENSE) for details.
 
-Copyright 2026 Marcel R. G. Berger.
+Copyright 2026 DigitalFreedom Global LLC.
