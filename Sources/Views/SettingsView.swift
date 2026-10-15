@@ -14,7 +14,12 @@ struct SettingsView: View {
     var onBack: () -> Void
 
     var body: some View {
-        ScrollView {
+        // Header stays fixed; the Form provides its own scrolling. Nesting
+        // a grouped Form inside a ScrollView gives SwiftUI no definite
+        // intrinsic height, which on macOS 26 collapses the MenuBarExtra
+        // `.window` popover to a single row. A plain VStack with a fixed
+        // frame keeps the popover at a stable size.
+        VStack(spacing: 0) {
             HStack {
                 Button(action: onBack) {
                     Label("Back", systemImage: "chevron.left")
@@ -304,7 +309,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
         }
-        .frame(maxWidth: 320, maxHeight: 460)
+        .frame(width: 320, height: 460)
     }
 
     private func icon(for document: LegalDocument) -> String {
