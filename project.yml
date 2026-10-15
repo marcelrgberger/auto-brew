@@ -22,9 +22,10 @@ options:
 packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
-    # Exact pin: Package.resolved is not committed, so a range would let CI
-    # pick up a newer Sparkle than local builds and the licence inventory.
-    exactVersion: "2.9.0"
+    # Sparkle 2.9.0, pinned to the tag's commit: Package.resolved is not
+    # committed, so a range would let CI pick up a newer Sparkle than local
+    # builds and the licence inventory, and a tag alone could be moved.
+    revision: 21d8df80440b1ca3b65fa82e40782f1e5a9e6ba2
 
 settings:
   base:
